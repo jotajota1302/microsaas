@@ -6,22 +6,27 @@ Producto híbrido para bares, peluquerías, clínicas, tiendas y alojamientos: u
 
 ## Primer paso de la sesión
 
-Usar `superpowers:brainstorming` para cerrar con JJ: catálogo inicial de piezas (3 modelos máximo), impresora/filamentos disponibles y si hay multicolor, dominio corto para el QR, y tienda (Etsy vs. propia). Después, en este orden: **host de QR dinámico** (componente compartido con los otros proyectos) → generador STL/3MF → modelo gratis en MakerWorld/Printables → 2 listados en Etsy → 10 negocios del barrio. La validación de 2 semanas está en `docs/mvp.md` §6.
+Research y brainstorming **hechos** (2026-08-20/21): el plan está en `docs/plan-2026-08-20.md` y las decisiones de producto están cerradas en su §12. **Empezar por la tarea T0** de su §8 (bootstrap) y seguir el orden T0 → T12; cada tarea trae criterio de "hecho". La validación de 2 semanas con umbrales está en §9 del plan (y en `docs/mvp.md` §6).
 
 ## Decisiones ya tomadas (no reabrir sin preguntar)
 
 - **No competimos con los generadores de QR→STL gratuitos** (QRCode2STL, PrintPal, etc.) ni con la tarjeta NFC digital (200+ vendedores). Vendemos la **pieza terminada + la página dinámica**; el configurador es un medio, no el producto.
-- **Precio**: pieza 20-35 € (según tamaño/colores), envío aparte; **Pro 9 €/mes o 79 €/año** (página editable, analítica, embudo de opiniones, respuestas IA); Básico incluido 12 meses con la pieza, luego 19 €/año o la página queda congelada (nunca rota: el QR siempre resuelve).
+- **Precio** (cerrado 2026-08-21): placa de opiniones **29,90 € con NFC NTAG213 incluido** (variante sin NFC 24,90 € como entrada en Etsy), WiFi 19,90 €, soporte de mesa 29,90 €; envío aparte 4,90 €. **Pro 9 €/mes o 79 €/año**. **Básico gratis para siempre** — la página nunca se congela ni se cobra (todo el mercado español vende "sin suscripción" y servirla cuesta ~0,002 €/mes); Pro se vende por embudo, IA y analítica, nunca por desbloquear lo básico.
+- **Cobros** (cerrado): **Stripe para todo** — Checkout directo con IVA 21 % para las piezas y **Stripe Managed Payments** (MoR) para Pro: 8,5 % efectivo frente al 11,6 % de Polar con tarjetas españolas. SMP exige revisión de elegibilidad: solicitarla en Fase 1.
+- **Impresora** (cerrado): **Elegoo Centauri Carbon 2 Combo** con sistema multifilamento → el bicolor sale de una pasada, sin `M600`. Perfiles en `models/params/*.json`.
+- **Dominio**: pendiente de elegir, **no bloquea**. Se desarrolla contra el `*.vercel.app` del proyecto y el host corto se lee de `PUBLIC_SHORT_HOST`; **nunca escribir el dominio a mano** en código ni tests. Comprarlo antes de T10 (va grabado en la pieza). Libres: `kitlocal.app`, y en `.es` `kitqr.es`, `qkit.es`, `placalocal.es`, `localkit.es`, `plaqa.es`.
 - **QR dinámico**: dominio corto propio (`q.<dominio>/<id>`), redirección 302, contador de escaneos sin cookies ni datos personales (fecha, hora, país por IP truncada, tipo de dispositivo). El **WiFi es la excepción**: el QR codifica la cadena `WIFI:` directamente (estático, sin redirección) porque debe funcionar sin conexión.
 - **Embudo de opiniones sin "review gating"**: la página pide opinión a todos y muestra a todos el enlace a Google; además ofrece "cuéntanoslo en privado". Filtrar a los descontentos para que no lleguen a Google viola las políticas de Google Business Profile y puede costar el perfil al cliente. Esto no se negocia.
-- **Respuestas a reseñas con IA**: en el MVP el dueño pega la reseña y la IA redacta la respuesta (sin API de Google; sin datos personales hacia MiniMax: la reseña se anonimiza quitando nombres). La integración con la API de Google Business Profile queda para después.
+- **Respuestas a reseñas con IA**: en el MVP el dueño pega la reseña y la IA redacta 2 variantes (sin API de Google; la integración con Google Business Profile queda para después). **Proveedor: Mistral Small en La Plateforme directo**, no MiniMax y **tampoco OpenRouter**: aquí somos encargados del tratamiento del negocio y hace falta DPA en la UE, que OpenRouter solo firma en Enterprise. Anonimizar (nombres, emails, teléfonos) es obligatorio **además** del DPA, no en su lugar: una reseña seudonimizada sigue siendo dato personal (EDPB 01/2025). Confirmar el DPA de Mistral antes de activar la función.
 - **Generador STL/3MF**: versión de QR mínima que quepa el enlace corto (versión 2-3), nivel de corrección M/Q, **módulo ≥ 1,2 mm para boquilla de 0,4**, zona de silencio de 4 módulos, relieve 0,6-1,0 mm o bicolor plano en 3MF; test de escaneo impreso antes de publicar cada modelo. Texto en relieve con el nombre del negocio.
 - **Cumplimiento físico**: inserto GPSR en cada pieza, dossier técnico de 1 página por modelo, registro de envases; diseños sin aspecto de juguete. IVA español (Stripe/Etsy); la suscripción va por MoR.
-- Stack: vanilla + Vercel Pro + Supabase compartido (schema `kit`) + generación de mallas en cliente (three.js/CSG o biblioteca STL ligera) o en función serverless. Sin frameworks de UI.
+- **Canales — MakerWorld prohíbe los enlaces externos** (Community Guidelines desde 1-01-2025: enlaces y QR a webs ajenas, con revocación de puntos e ingresos). Allí se publica el paramétrico **sin enlaces** y la captación es la marca grabada en la pieza; el enlace al configurador va en Printables y en la landing propia.
+- **Pago en la placa**: Bizum Pay para comercio (mayo 2026) usa **QR dinámico por operación**, no existe QR estático ni esquema `bizum://`. La placa "Paga aquí" apunta a nuestra página y de ahí a un enlace de pago con Bizum como método (Stripe o MONEI). **Nunca prometer "QR de Bizum"** en la ficha de producto.
+- Stack: vanilla + Vercel Pro + Supabase compartido (schema `kit`). **Generación de mallas 100 % en el cliente y sin dependencias pesadas**: `qrcodegen` vendorizado + triángulos escritos a mano + `opentype.js`/`earcut` para el texto (~260 KB). Descartados three.js (750 KB, sin exportador 3MF) y manifold-3d (530 KB). Sin frameworks de UI.
 
 ## Fases (cada una termina usable)
 
-1. Host de QR dinámico (`q.`) con panel mínimo + generador de la primera placa (reseñas Google) + modelo gratis publicado en MakerWorld/Printables con QR al configurador + 2 listados en Etsy + 10 visitas a negocios. Prueba de 2 semanas.
+1. Host de QR dinámico (`q.`) con panel mínimo + generador de la primera placa (reseñas Google) + modelo gratis publicado en MakerWorld (sin enlaces) y Printables + 2 listados en Etsy + 10 visitas a negocios. Prueba de 2 semanas. **Desglose tarea a tarea en `docs/plan-2026-08-20.md` §8 (T0-T12, ≈10 días-agente).**
 2. Catálogo de 3 piezas (reseñas, WiFi, pago/menú) con configurador web y pedido con pago.
 3. Pro: página editable (horario, carta, enlaces), embudo de opiniones, respuestas IA, analítica.
 4. Fulfilment: cola de impresión, etiquetas, inserto GPSR automático, tracking.
@@ -30,6 +35,7 @@ Usar `superpowers:brainstorming` para cerrar con JJ: catálogo inicial de piezas
 ## Estado
 
 - [x] Investigación de mercado y ranking (2026-08-20)
+- [x] Research propio + plan de implementación (`docs/plan-2026-08-20.md`) y decisiones de producto cerradas (2026-08-21)
 - [ ] Fase 1 — QR dinámico + primera placa + canales (prueba: __ descargas / __ favoritos / __ ventas / __ negocios)
 - [ ] Fase 2 — catálogo + configurador
 - [ ] Fase 3 — Pro
