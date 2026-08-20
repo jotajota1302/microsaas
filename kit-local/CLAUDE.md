@@ -2,7 +2,7 @@
 
 Producto híbrido para bares, peluquerías, clínicas, tiendas y alojamientos: una **placa o soporte impreso en 3D** (reseñas de Google, WiFi, pago, carta/menú, check-in) cuyo QR apunta a una **página dinámica nuestra** que el negocio puede cambiar para siempre, con analítica de escaneos. El plan Pro añade página editable, embudo de opiniones y respuestas a reseñas redactadas por IA. Es la puerta de entrada al agente de atención (OpenClaw aislado por cliente), que es el ingreso recurrente de verdad.
 
-**Lee antes de nada**: `docs/mvp.md` y `../CLAUDE.md` (stack, legal físico GPSR/envases, privacidad con IA: autoridad compartida con `viajeros/` y `cuentos/`). Investigación con fuentes: `../docs/portfolio-2026.md` (§3 A3, §1.3 canales físicos).
+**Lee antes de nada**: `docs/plan-2026-08-20.md` (research con cifras + plan de implementación tarea a tarea; §12 lista las decisiones pendientes de JJ), `docs/mvp.md` y `../CLAUDE.md` (stack, legal físico GPSR/envases, privacidad con IA: autoridad compartida con `viajeros/` y `cuentos/`). Investigación con fuentes: `../docs/portfolio-2026.md` (§3 A3, §1.3 canales físicos).
 
 ## Primer paso de la sesión
 
