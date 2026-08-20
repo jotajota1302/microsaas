@@ -6,6 +6,7 @@ Repo `microsaas` (github.com/jotajota1302/microsaas): **una carpeta por proyecto
 microsaas/
 ├── CLAUDE.md                 Este fichero: decisiones comunes
 ├── docs/portfolio-2026.md    Investigación y ranking (fuentes)
+├── docs/backlog.md           Ideas a futuro con su disparador; descartes razonados
 ├── viajeros/                 A1 · partes de viajeros SES.Hospedajes (B2B, pago por uso)
 ├── cuentos/                  A2 · cuentos y colorear personalizados (B2C + impreso)
 └── kit-local/                A3 · placa QR 3D + página dinámica (físico + suscripción)

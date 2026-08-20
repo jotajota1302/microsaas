@@ -10,6 +10,7 @@ Portafolio de micro-SaaS pequeños lanzados en paralelo desde España para el mu
 
 - **Decisiones comunes** (stack, privacidad con IA, cobros, suelo legal, convenciones): [`CLAUDE.md`](CLAUDE.md).
 - **Investigación y ranking con fuentes** (por qué estos tres y no otros, qué se descartó, canales, legal España): [`docs/portfolio-2026.md`](docs/portfolio-2026.md).
+- **Backlog de ideas a futuro** (Tier B/C/D con su disparador, descartes razonados, semillas): [`docs/backlog.md`](docs/backlog.md).
 - Cada proyecto: `CLAUDE.md` (instrucciones de sesión y checklist de fases) + `docs/mvp.md` (alcance, precio, arquitectura, prueba de validación con umbrales).
 
 Stack: HTML/JS vanilla · Vercel · Supabase · MiniMax (pago por uso) · Merchant of Record para cobros globales. Regla de oro heredada de proyectos anteriores: **la IA genera datos bajo schema, el código valida y decide.**
