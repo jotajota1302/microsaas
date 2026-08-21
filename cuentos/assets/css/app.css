@@ -197,21 +197,25 @@ footer a { color: var(--muted); }
 .reassure { display: flex; gap: .7rem; align-items: flex-start; background: var(--sea-soft); border-radius: 12px; padding: .9rem 1.1rem; max-width: 32rem; font-size: .95rem; color: var(--sea-dark); }
 .reassure svg { flex: none; margin-top: .15rem; }
 
-/* the fanned stack of real book pages */
-.fan { position: relative; min-height: 27rem; }
+/* the fanned stack of real book pages.
+   The front leaf stays in normal flow and the two behind it are the only
+   absolute ones, so the block is as tall as its content at every width. A
+   fixed min-height was right at exactly one column width: everywhere else the
+   caption landed on top of the page text. */
+.fan { position: relative; padding-top: 8.4rem; }
 .fan .leaf { position: absolute; background: var(--surface); border: 1px solid var(--hair); border-radius: 16px; overflow: hidden; box-shadow: 0 22px 44px -26px rgba(42,39,34,.5); }
 .fan .leaf img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
 .fan .leaf p { font-family: Andika, ui-sans-serif, sans-serif; padding: .8rem 1rem 1.1rem; font-size: .74rem; line-height: 1.65; color: var(--ink-soft); }
 /* the leaves behind show illustration only: their text would be half-covered
    by the front leaf, which reads as broken rather than as a stack */
 .fan .a p, .fan .b p { display: none; }
-.fan .a { left: 0; top: 1.8rem; width: 12.5rem; transform: rotate(-7deg); }
-.fan .b { right: 0; top: 0; width: 12.5rem; transform: rotate(6deg); }
-/* the front leaf spans the middle so the two behind it peek out on both
-   sides instead of burying one of them */
-.fan .c { left: 3.2rem; right: 3.2rem; top: 8.4rem; box-shadow: 0 34px 60px -30px rgba(42,39,34,.62); }
+.fan .a { position: absolute; left: 0; top: 1.8rem; width: 12.5rem; transform: rotate(-7deg); }
+.fan .b { position: absolute; right: 0; top: 0; width: 12.5rem; transform: rotate(6deg); }
+/* the front leaf is inset so the two behind it peek out on both sides
+   instead of burying one of them */
+.fan .c { position: relative; z-index: 2; margin: 0 3.2rem; box-shadow: 0 34px 60px -30px rgba(42,39,34,.62); }
 .fan .c p { font-size: .82rem; padding: .95rem 1.15rem 1.2rem; }
-.fan figcaption { position: absolute; left: 3.2rem; right: 3.2rem; bottom: -.2rem; text-align: center; font-size: .8rem; color: var(--muted); }
+.fan figcaption { margin: .7rem 3.2rem 0; text-align: center; font-size: .8rem; color: var(--muted); }
 
 /* full-bleed band, for the section that has to stop the scroll */
 .band { background: var(--surface); border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); padding: 3.6rem 0 3.8rem; }
@@ -256,10 +260,11 @@ footer a { color: var(--muted); }
 .qa p { font-size: .95rem; color: var(--ink-soft); }
 
 @media (max-width: 51.99rem) {
-  .fan { min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .fan { padding-top: 0; display: flex; flex-direction: column; gap: 1rem; }
   .fan .leaf { position: static; width: auto; transform: none; }
   .fan .a, .fan .b { display: none; }
-  .fan figcaption { position: static; width: auto; }
+  .fan .c { margin: 0; }
+  .fan figcaption { margin: 0; }
   .pair { grid-template-columns: 1fr 1.6rem 1fr; }
   .pair img { height: 11rem; }
   .includes { grid-template-columns: 1fr; }
@@ -390,3 +395,8 @@ dialog h3 { font-size: 1.15rem; }
 dialog input { font: inherit; padding: .6rem .7rem; border: 1px solid var(--hair); border-radius: 8px; background: var(--paper); }
 
 @media (max-width: 46rem) { .fbar { grid-template-columns: 8rem 1fr 2rem; font-size: .82rem; } }
+
+/* progress while the paid book is being drawn (never .bar: that is the header) */
+.pbar { background: var(--sunken); border-radius: 999px; height: .55rem; overflow: hidden; }
+.pbar span { display: block; height: 100%; background: var(--sea); border-radius: 999px; transition: width .4s ease; }
+@media (prefers-reduced-motion: reduce) { .pbar span { transition: none; } }

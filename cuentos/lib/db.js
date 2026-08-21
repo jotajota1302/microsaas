@@ -11,7 +11,7 @@ const { env, requireEnv } = require("./env.js");
 
 const SCRIPT_TTL_DAYS = 7;
 const FULL_TTL_DAYS = 30;
-const LOCK_MINUTES = 5;
+const LOCK_MINUTES = 2; // longer than any single invocation can run, short enough that a timeout is forgiven fast
 
 function newToken() {
   // 16 random bytes -> 22 url-safe characters, not enumerable
@@ -148,6 +148,22 @@ function createDb(client) {
           .order("created_at", { ascending: true })
           .limit(limit)
       );
+    },
+    /**
+     * The job still owed on an order, if any. Work is done in batches that fit
+     * inside one serverless invocation, so something has to ask for the next
+     * one: this is what the viewer polls and what the panel's button uses.
+     */
+    async runnableJobFor(orderId) {
+      const rows = await unwrap(
+        await t("jobs")
+          .select("*")
+          .eq("order_id", orderId)
+          .in("state", ["pending", "running"])
+          .order("created_at", { ascending: false })
+          .limit(1)
+      );
+      return (rows && rows[0]) || null;
     },
     async saveJob(id, patch) {
       return unwrap(await t("jobs").update(patch).eq("id", id).select().single());

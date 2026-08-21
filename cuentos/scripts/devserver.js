@@ -47,9 +47,32 @@ function announce(route, spentBefore, ms, body) {
   if (token && route.includes("/api/order")) console.log(`     cuento: ${BASE}/c/${token}`);
 }
 
+/*
+ * The same rewrites production uses, read from vercel.json rather than copied.
+ * Several endpoints share one function file (Vercel's Hobby plan allows twelve
+ * of them), so without this the dev server would answer 404 where production
+ * answers fine — the worst kind of difference between the two.
+ */
+const REWRITES = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8")).rewrites || [];
+
+function rewrite(pathname) {
+  for (const r of REWRITES) {
+    const re = new RegExp("^" + r.source.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/:[a-zA-Z]+/g, "([^/]+)") + "$");
+    if (re.test(pathname)) return r.destination;
+  }
+  return null;
+}
+
 http.createServer(async (req, res) => {
   const url = new URL(req.url, BASE);
   let p = decodeURIComponent(url.pathname);
+
+  const to = rewrite(p);
+  if (to) {
+    const [target, search] = to.split("?");
+    if (search) for (const [k, v] of new URLSearchParams(search)) url.searchParams.set(k, v);
+    p = target;
+  }
 
   if (p.startsWith("/api/")) {
     const file = path.join(ROOT, "api", p.slice(5).replace(/\/$/, "") + ".js");
@@ -78,7 +101,7 @@ http.createServer(async (req, res) => {
     }
   }
 
-  if (/^\/c\/[^/]+$/.test(p)) p = "/c/index.html"; // the rewrite from vercel.json
+  // (the /c/:token rewrite came from vercel.json, at the top of the request)
 
   let file = path.join(ROOT, p);
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, "index.html");

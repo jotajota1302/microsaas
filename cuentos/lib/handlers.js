@@ -14,6 +14,7 @@ const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
 const { send, readJson, rawBody, query, clientIp, requireMethod, requireSecret } = require("./http.js");
 const dashboard = require("./dashboard.js");
+const { SAMPLE_PAGES } = require("./steps.js");
 
 const CAPS = () => ({
   scriptsPerDay: Number(process.env.MAX_SCRIPTS_PER_DAY || 200),
@@ -116,6 +117,10 @@ function storyView(story, order, urls) {
     price: money.formatEur(order.price_cents, order.locale),
     priceCents: order.price_cents,
     status: order.status,
+    // How much of the book exists. After payment the viewer shows this as a
+    // progress bar instead of a spinner that says nothing.
+    illustrated: Object.keys(urls.pages || {}).length,
+    total: story.story.pages.length,
     etsyUrl: process.env.ETSY_LISTING_URL || null,
     // Whether the card route is live. Half-wired Stripe (no webhook secret)
     // deliberately reads as not live: it would take the money and deliver
@@ -137,9 +142,13 @@ function storyHandler(deps) {
 
     const urls = { pages: {}, coloring: [] };
     if (story.sheet_path) urls.sheet = await deps.db.signedUrl(BUCKET, story.sheet_path, SIGNED_SECONDS);
+    // What may be seen is decided by whether the book has been paid for, never
+    // by how many pages happen to exist. Counting them hid the two sample
+    // pages the moment the third was drawn — the buyer watched their preview
+    // disappear right after paying.
+    const paid = story.stage === "full" || ["paid", "needs_review", "delivered"].includes(order.status);
     for (const [i, p] of Object.entries(story.page_paths || {})) {
-      // before payment only the sample pages are visible; after it, all
-      if (story.stage === "full" || Object.keys(story.page_paths).length <= 2) {
+      if (paid || SAMPLE_PAGES.includes(Number(i))) {
         urls.pages[i] = await deps.db.signedUrl(BUCKET, p, SIGNED_SECONDS);
       }
     }
@@ -304,8 +313,43 @@ function stripeWebhookHandler(deps) {
     await deps.db.updateOrder(order.id, { status: "paid", channel: "web", external_ref: session.id });
     await deps.db.markPaid(story.id);
     const job = await deps.db.createJob({ orderId: order.id, storyId: story.id, kind: "full" });
+    // The book is NOT drawn here. Illustrating it takes minutes and a webhook
+    // that has not answered in seconds is a failed webhook to Stripe: it would
+    // retry, and each retry would start the work again. The job is queued and
+    // acknowledged; the viewer the customer is being returned to drives it,
+    // and the cron picks up whatever was left behind.
+    return send(res, 200, { queued: job.id });
+  };
+}
+
+// --- POST /api/resume { token } ----------------------------------------------------
+//
+// One invocation of a serverless function cannot illustrate twelve pages, so
+// the work is done in batches and something has to ask for the next one. That
+// something is whoever is looking at the story: the page polls this while
+// there is work owed. Safe to call at any time — the job lock means two
+// callers never do the same batch twice, and an idle story answers "done".
+
+function resumeHandler(deps) {
+  return async (req, res) => {
+    if (!requireMethod(req, res, "POST")) return;
+    const body = await readJson(req).catch(() => null);
+    if (!body || !body.token) return send(res, 400, { error: "bad_request" });
+
+    const story = await deps.db.getStoryByToken(body.token);
+    if (!story) return send(res, 404, { error: "not_found" });
+
+    const job = await deps.db.runnableJobFor(story.order_id);
+    if (!job) return send(res, 200, { state: "idle" });
+
     const result = await deps.runJob(job.id);
-    return send(res, 200, { state: result.state });
+    const after = await deps.db.getStoryByToken(body.token);
+    return send(res, 200, {
+      state: result.state,
+      kind: job.kind,
+      illustrated: Object.keys((after && after.page_paths) || {}).length,
+      total: (after && after.story && after.story.pages.length) || C.PAGE_COUNT,
+    });
   };
 }
 
@@ -357,11 +401,22 @@ function cronHandler(deps) {
   return async (req, res) => {
     if (!requireSecret(req, res, process.env.CRON_SECRET)) return;
 
-    const report = { resumed: 0, reminded: 0, purged: 0 };
+    const report = { resumed: 0, batches: 0, reminded: 0, purged: 0 };
 
+    // Work arrives in batches, so resuming a job once would move it one step a
+    // run. Keep pushing the same job while there is time left in this
+    // invocation; whatever is still owed is picked up by the next sweep.
+    const started = Date.now();
+    const BUDGET_MS = Number(process.env.CRON_BUDGET_MS || 45000);
     for (const job of await deps.db.staleJobs(5)) {
-      await deps.runJob(job.id);
       report.resumed++;
+      for (let i = 0; i < 30; i++) {
+        const result = await deps.runJob(job.id);
+        report.batches++;
+        if (result.state !== "pending" || !result.partial) break;
+        if (Date.now() - started > BUDGET_MS) break;
+      }
+      if (Date.now() - started > BUDGET_MS) break;
     }
 
     for (const story of await deps.db.storiesExpiringSoon(50)) {
@@ -460,8 +515,10 @@ function adminHandler(deps) {
         await deps.db.updateOrder(order.id, { status: "paid", channel: body.provider === "stripe" ? "web" : "etsy", external_ref: body.reference || null });
         await deps.db.markPaid(story.id);
         const job = await deps.db.createJob({ orderId: order.id, storyId: story.id, kind: "full" });
-        const result = await deps.runJob(job.id);
-        return send(res, 200, { state: result.state });
+        // Queued, not drawn here: the panel would sit on a dead request for
+        // minutes. It polls /api/resume with the token, exactly as the
+        // customer's own page does.
+        return send(res, 200, { queued: job.id, token: story.token });
       }
       case "approve": {
         const job = await deps.db.getJob(body.jobId);
@@ -499,5 +556,5 @@ function adminHandler(deps) {
 
 module.exports = {
   orderHandler, storyHandler, reviseHandler, approveHandler, waitlistHandler,
-  printInterestHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
+  printInterestHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, resumeHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
 };

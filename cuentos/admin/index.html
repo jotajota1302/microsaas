@@ -242,14 +242,41 @@
 
   async function act(body) {
     const msg = $("paidMsg");
+    let out = {};
     try {
       const res = await fetch("/api/admin", { method: "POST", headers: headers(), body: JSON.stringify(body) });
-      const out = await res.json().catch(() => ({}));
+      out = await res.json().catch(() => ({}));
       say(msg, res.ok ? "Hecho: " + JSON.stringify(out) : `Error ${res.status}: ${JSON.stringify(out)}`, res.ok ? "sea" : "alarm");
+      if (res.ok && out.queued && out.token) await drive(out.token, msg);
     } catch (e) {
       say(msg, "No se pudo conectar: " + e.message, "alarm");
     }
     load();
+  }
+
+  /*
+   * Marking a sale paid only queues the book: illustrating it is more work
+   * than one serverless call can hold, so it arrives in batches. This asks for
+   * the next one until there is nothing left, which is the same thing the
+   * customer's own page does while it is open.
+   */
+  async function drive(token, msg) {
+    for (let i = 0; i < 40; i++) {
+      let d = {};
+      try {
+        const res = await fetch("/api/resume", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+        d = await res.json().catch(() => ({}));
+      } catch (e) {
+        await new Promise((r) => setTimeout(r, 3000));
+        continue;
+      }
+      if (d.total) say(msg, `Dibujando: ${d.illustrated} de ${d.total} páginas…`, "sea");
+      if (d.state !== "pending" && d.state !== "locked") {
+        return say(msg, d.state === "needs_review" ? "Libro terminado: pendiente de tu revisión abajo." : `Trabajo: ${d.state}`, "sea");
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    say(msg, "Sigue en marcha. Recarga en un minuto.", "sea");
   }
 
   $("paid").onsubmit = (e) => {
@@ -257,7 +284,7 @@
     const token = $("paidToken").value.trim();
     if (!/^[A-Za-z0-9_-]{22}$/.test(token)) return say($("paidMsg"), "Ese token no tiene la forma correcta (22 caracteres).", "alarm");
     const b = $("paid").querySelector("button");
-    b.disabled = true; b.innerHTML = '<span class="spinner"></span> Generando el libro… un minuto';
+    b.disabled = true; b.innerHTML = '<span class="spinner"></span> Generando el libro…';
     act({ action: "mark_paid", token, reference: $("paidRef").value.trim(), provider: $("paidProvider").value })
       .finally(() => { b.disabled = false; b.textContent = "Pagado → generar el libro"; });
   };

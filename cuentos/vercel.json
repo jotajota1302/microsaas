@@ -1,23 +1,12 @@
 {
   "functions": {
-    "api/order.js": {
-      "maxDuration": 60
-    },
-    "api/revise.js": {
-      "maxDuration": 60
-    },
-    "api/approve.js": {
-      "maxDuration": 60
-    },
-    "api/job.js": {
-      "maxDuration": 60
-    },
-    "api/admin.js": {
-      "maxDuration": 60
-    },
-    "api/cron.js": {
-      "maxDuration": 60
-    }
+    "api/order.js": { "maxDuration": 60 },
+    "api/flow.js": { "maxDuration": 60 },
+    "api/admin.js": { "maxDuration": 60 },
+    "api/cron.js": { "maxDuration": 60 },
+    "api/misc.js": { "maxDuration": 60 },
+    "api/story.js": { "maxDuration": 30 },
+    "api/webhook-stripe.js": { "maxDuration": 30 }
   },
   "crons": [
     {
@@ -26,22 +15,23 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/c/:token",
-      "destination": "/c/index.html"
-    }
+    { "source": "/c/:token", "destination": "/c/index.html" },
+    { "source": "/api/revise", "destination": "/api/flow?fn=revise" },
+    { "source": "/api/approve", "destination": "/api/flow?fn=approve" },
+    { "source": "/api/checkout", "destination": "/api/flow?fn=checkout" },
+    { "source": "/api/resume", "destination": "/api/flow?fn=resume" },
+    { "source": "/api/config", "destination": "/api/misc?fn=config" },
+    { "source": "/api/waitlist", "destination": "/api/misc?fn=waitlist" },
+    { "source": "/api/print-interest", "destination": "/api/misc?fn=print-interest" },
+    { "source": "/api/recover", "destination": "/api/misc?fn=recover" },
+    { "source": "/api/job", "destination": "/api/misc?fn=job" }
   ],
-  "regions": [
-    "fra1"
-  ],
+  "regions": ["fra1"],
   "headers": [
     {
       "source": "/colorear/(img|pdf)/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, s-maxage=31536000, immutable"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=31536000, immutable" }
       ]
     }
   ]

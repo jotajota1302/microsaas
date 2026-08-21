@@ -39,6 +39,46 @@
     const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     let T = window.CUENTOS_I18N[window.cuentosLang()];
     let view = null;
+    let driving = false;
+
+    /** Paid for, not delivered yet: the book is being made or checked. */
+    const making = () => view && view.stage !== "full" && (view.status === "paid" || view.status === "needs_review");
+
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    /*
+     * A serverless function cannot illustrate twelve pages in one go, so the
+     * work comes in batches and someone has to ask for the next one. While
+     * this page is open, it is this page. Closing it is safe: the sweep on the
+     * server finishes what is left and the email still arrives.
+     */
+    async function drive() {
+      if (driving) return;
+      driving = true;
+      try {
+        for (;;) {
+          let data = {};
+          try {
+            const res = await fetch("/api/resume", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+            data = await res.json().catch(() => ({}));
+          } catch (e) {
+            await sleep(3000); // a dropped connection is not the end of the book
+            continue;
+          }
+          if (data.total) {
+            const fill = document.getElementById("barfill");
+            const note = document.getElementById("barnote");
+            if (fill) fill.style.width = `${Math.round((data.illustrated / data.total) * 100)}%`;
+            if (note) note.textContent = `${data.illustrated} ${T.making_count} ${data.total}`;
+          }
+          if (data.state === "pending" || data.state === "locked") { await sleep(1500); continue; }
+          break;
+        }
+      } finally {
+        driving = false;
+      }
+      await load();
+    }
 
     async function load() {
       const res = await fetch(`/api/story?token=${encodeURIComponent(token)}`);
@@ -99,7 +139,21 @@
 
       const intro = view.stage === "script" ? T.script_intro : view.stage === "sample" ? T.sample_intro : T.full_intro;
       let actions = "";
-      if (view.stage === "script") {
+      if (making()) {
+        // Paid and not delivered yet. Never show the buy card again here: it
+        // would read as "pay twice".
+        const pct = view.total ? Math.round((view.illustrated / view.total) * 100) : 0;
+        const checking = view.status === "needs_review";
+        actions = `
+          <div class="card stack" id="actions">
+            <h2>${checking ? T.review_title : T.making_title}</h2>
+            <p class="muted">${checking ? T.review_body : T.making_body}</p>
+            ${checking ? "" : `
+              <div class="pbar"><span id="barfill" style="width:${pct}%"></span></div>
+              <p class="muted" id="barnote" style="font-size:.9rem">${view.illustrated} ${T.making_count} ${view.total}</p>`}
+            <div id="amsg" class="note" hidden></div>
+          </div>`;
+      } else if (view.stage === "script") {
         actions = `
           <div class="card stack" id="actions">
             <div class="row">
@@ -150,7 +204,7 @@
       // At the sample gate the two drawn pages lead and the offer sits right
       // under them: that is the moment the buyer has just seen what they get.
       const drawn = view.pages.filter((p) => p.image);
-      const showcase = view.stage === "sample" && drawn.length
+      const showcase = view.stage === "sample" && !making() && drawn.length
         ? `<section class="stack"><h2>${T.sample_here}</h2><div class="book showcase">${pagesHtml(drawn)}</div></section>`
         : "";
       const nodraw = view.stage === "script"
@@ -162,7 +216,7 @@
 
       // No step is a dead end. From the sample you can still spend a free
       // rewrite and go back; from anywhere you can keep the link or start over.
-      const backOut = view.stage === "sample" && view.revisionsLeft
+      const backOut = view.stage === "sample" && !making() && view.revisionsLeft
         ? `<div class="card stack nodraw" id="backout">
              <h3>${T.back_title}</h3>
              <p class="muted">${T.back_body}</p>
@@ -196,6 +250,8 @@
         ${escape}`;
 
       bind();
+      // Only "paid" means work is owed: "needs_review" is a person's turn.
+      if (view.status === "paid" && view.stage !== "full") drive();
     }
 
     function busy(btn, text) { btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${text}`; }

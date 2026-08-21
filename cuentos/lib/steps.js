@@ -23,6 +23,18 @@ const SAMPLE_PAGES = [0, 5]; // page 1 and a middle one — never the ending
 const COLORING_FROM = [0, 3, 6, 9];
 const MAX_ATTEMPTS = 3;
 
+/*
+ * How much work one invocation does before saving and asking to be called
+ * again. A serverless function has a wall clock (60 s on Vercel's Hobby plan,
+ * 300 s on Pro) and illustrating twelve pages does not fit in either with any
+ * margin. Each batch is sized to finish in well under a minute — four pages
+ * is exactly one wave of renderPages' concurrency, two line-art edits run
+ * sequentially — and everything it produced is persisted before the function
+ * returns, so the next call resumes instead of starting over.
+ */
+const PAGE_BATCH = 4;
+const LINEART_BATCH = 2;
+
 const PLAN = {
   script: ["text", "review", "notify"],
   sample: ["sheet", "pages", "notify"],
@@ -115,12 +127,18 @@ const STEPS = {
   async pages(ctx, deps) {
     const story = ctx.story;
     const done = story.page_paths || {};
-    let indices;
-    if (ctx.job.kind === "sample") indices = SAMPLE_PAGES;
-    else if (ctx.job.kind === "retouch") indices = (ctx.job.input.pages || []).map(Number);
-    else indices = story.story.pages.map((_, i) => i).filter((i) => !done[String(i)]);
-    if (!indices.length) return { rendered: 0 };
+    const previous = ctx.job.steps.pages || {};
+    // A page that came back as a fallback leaves no path behind, so "not done"
+    // alone would ask for it again on every batch and the job would never end.
+    // What has been tried is remembered instead.
+    const tried = previous.attempted || [];
+    let queue;
+    if (ctx.job.kind === "retouch") queue = (ctx.job.input.pages || []).map(Number);
+    else if (ctx.job.kind === "sample") queue = SAMPLE_PAGES.filter((i) => !done[String(i)] && !tried.includes(i));
+    else queue = story.story.pages.map((_, i) => i).filter((i) => !done[String(i)] && !tried.includes(i));
+    if (!queue.length) return { rendered: 0, attempted: tried };
 
+    const indices = queue.slice(0, PAGE_BATCH);
     const sheet = await deps.db.download(BUCKET, story.sheet_path);
     const { pages, costUsd, fallbacks } = await deps.renderPages(
       { ...story.story, theme: story.story.theme },
@@ -137,10 +155,23 @@ const STEPS = {
         delete paths[String(p.index)];
       }
     }
-    const patch = { page_paths: paths, fallbacks: (story.fallbacks || 0) + fallbacks };
-    if (ctx.job.kind === "sample") patch.stage = "sample";
+    const totalFallbacks = (story.fallbacks || 0) + fallbacks;
+    const left = queue.length - indices.length;
+    const patch = { page_paths: paths, fallbacks: totalFallbacks };
+    if (ctx.job.kind === "sample" && !left) patch.stage = "sample";
     ctx.story = await deps.db.updateStory(story.id, patch);
-    return { rendered: pages.length, fallbacks, costCents: toCents(costUsd) };
+    // Per batch the renderer already refuses more than MAX_FALLBACKS; this is
+    // the same rule over the whole book, which batching would otherwise let
+    // through one undrawn page at a time.
+    if (totalFallbacks > 2) throw new StopForReview(`${totalFallbacks} pages could not be illustrated`);
+    return {
+      rendered: pages.length,
+      fallbacks: totalFallbacks,
+      costCents: toCents(costUsd),
+      attempted: tried.concat(indices),
+      partial: left > 0,
+      left,
+    };
   },
 
   async lineart(ctx, deps) {
@@ -152,9 +183,12 @@ const STEPS = {
     while (sources.length < C.COLORING_PAGE_COUNT && extra.length) sources.push(extra.shift());
     if (sources.length < C.COLORING_PAGE_COUNT) throw new StopForReview("not enough illustrated pages for the colouring section");
 
-    const paths = [];
+    // Line art is four sequential edits of ~15 s. They are done a couple at a
+    // time and saved, so the count already stored says where to carry on.
+    const paths = (story.coloring_paths || []).slice();
+    const end = Math.min(paths.length + LINEART_BATCH, C.COLORING_PAGE_COUNT);
     let cost = 0;
-    for (let k = 0; k < C.COLORING_PAGE_COUNT; k++) {
+    for (let k = paths.length; k < end; k++) {
       const src = await deps.db.download(BUCKET, story.page_paths[String(sources[k])]);
       const { buffer, costUsd } = await deps.toLineArt(src, hints[k]);
       const path = `${story.token}/c${pad(k)}.png`;
@@ -163,7 +197,8 @@ const STEPS = {
       cost += costUsd || 0;
     }
     ctx.story = await deps.db.updateStory(story.id, { coloring_paths: paths });
-    return { paths, costCents: toCents(cost) };
+    const left = C.COLORING_PAGE_COUNT - paths.length;
+    return { paths, costCents: toCents(cost), partial: left > 0, left };
   },
 
   async pdf(ctx, deps) {
@@ -239,6 +274,20 @@ async function runJob(jobId, deps) {
       log(`job ${job.id} (${job.kind}) step ${name}`);
       const result = await STEPS[name](ctx, deps);
       costCents += (result && result.costCents) || 0;
+      // A step that did as much as fits in one invocation says so. Its work is
+      // saved, the lock is released and the job stays pending: whoever calls
+      // next (the viewer, the cron, the panel) carries on from here.
+      if (result && result.partial) {
+        ctx.job.steps[name] = { done: false, at: new Date().toISOString(), ...result };
+        await db.saveJob(job.id, {
+          state: "pending",
+          steps: ctx.job.steps,
+          cost_cents: costCents,
+          story_id: ctx.story ? ctx.story.id : job.story_id,
+          locked_until: null,
+        });
+        return { state: "pending", partial: name, left: result.left };
+      }
       ctx.job.steps[name] = { done: true, at: new Date().toISOString(), ...result };
       await db.saveJob(job.id, { steps: ctx.job.steps, cost_cents: costCents, story_id: ctx.story ? ctx.story.id : job.story_id });
       if (costCents > ceiling) {
@@ -274,4 +323,4 @@ async function runJob(jobId, deps) {
   return { state: "done", costCents };
 }
 
-module.exports = { runJob, STEPS, PLAN, anonymise, toCents, StopForReview, SAMPLE_PAGES, COLORING_FROM, BUCKET, MAX_ATTEMPTS };
+module.exports = { runJob, STEPS, PLAN, anonymise, toCents, StopForReview, SAMPLE_PAGES, COLORING_FROM, BUCKET, MAX_ATTEMPTS, PAGE_BATCH, LINEART_BATCH };

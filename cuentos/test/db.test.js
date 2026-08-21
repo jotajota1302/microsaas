@@ -99,7 +99,7 @@ test("claimJob calls the claim_job function with the lock window", async () => {
   const job = await db.claimJob("j1");
   assert.strictEqual(job.id, "j1");
   assert.strictEqual(client.log.length, 0, "the claim must not go through a table update");
-  assert.deepStrictEqual(client.rpcLog, [["claim_job", { p_id: "j1", p_minutes: 5 }]]);
+  assert.deepStrictEqual(client.rpcLog, [["claim_job", { p_id: "j1", p_minutes: 2 }]]);
 });
 
 test("claimJob returns null when another worker holds the lock", async () => {

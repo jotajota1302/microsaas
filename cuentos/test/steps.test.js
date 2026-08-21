@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
-const { runJob, anonymise, PLAN, SAMPLE_PAGES } = require("../lib/steps.js");
+const { runJob, anonymise, PLAN, SAMPLE_PAGES, PAGE_BATCH } = require("../lib/steps.js");
 const valid = require("./fixtures/story-valid.json");
 
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
@@ -23,6 +23,20 @@ function memDb({ job, order, story = null }) {
     async upload(_, path, buffer) { state.files[path] = buffer; return path; },
     async download(_, path) { return state.files[path] || PNG; },
   };
+}
+
+/**
+ * What the viewer, the panel and the cron all do: keep asking until the job
+ * stops asking. Work comes in batches so one invocation fits inside a
+ * serverless function's wall clock, so "run it to the end" is a loop.
+ */
+async function drain(jobId, deps, max = 20) {
+  let r;
+  for (let i = 0; i < max; i++) {
+    r = await runJob(jobId, deps);
+    if (r.state !== "pending" || !r.partial) return r;
+  }
+  throw new Error("job never finished");
 }
 
 const ORDER = {
@@ -150,8 +164,8 @@ test("full job: renders the remaining 10 pages, 4 colouring pages, the PDF, then
     order: ORDER,
     story: { id: "s1", token: "tok", stage: "sample", story: { ...valid, theme: "mar" }, sheet_path: "tok/sheet.png", page_paths: { 0: "tok/p01.png", 5: "tok/p06.png" }, coloring_paths: [] },
   });
-  let asked;
-  const r = await runJob("j3", okDeps(db, { renderPages: async (_, __, { indices }) => { asked = indices; return { pages: indices.map((i) => ({ index: i, buffer: PNG })), costUsd: 0.34, fallbacks: 0 }; } }));
+  const asked = [];
+  const r = await drain("j3", okDeps(db, { renderPages: async (_, __, { indices }) => { asked.push(...indices); return { pages: indices.map((i) => ({ index: i, buffer: PNG })), costUsd: 0.034 * indices.length, fallbacks: 0 }; } }));
   assert.strictEqual(r.state, "needs_review");
   assert.match(r.reason, /awaiting human approval/);
   assert.strictEqual(asked.length, 10);
@@ -170,7 +184,7 @@ test("full job: the PDF gets the real names and the dedication", async () => {
     story: { id: "s1", token: "tok", stage: "sample", story: { ...valid, theme: "mar" }, sheet_path: "tok/sheet.png", page_paths: Object.fromEntries([...Array(12).keys()].map((i) => [i, `tok/p${i}.png`])), coloring_paths: [] },
   });
   let seen;
-  await runJob("j3", okDeps(db, { renderPdf: async (args) => { seen = args; return Buffer.from("%PDF"); } }));
+  await drain("j3", okDeps(db, { renderPdf: async (args) => { seen = args; return Buffer.from("%PDF"); } }));
   assert.strictEqual(seen.personalization.name, "Ana");
   assert.strictEqual(seen.personalization.people[0].name, "Carmen");
   assert.strictEqual(seen.personalization.dedication, "Para Ana");
@@ -240,4 +254,57 @@ test("anonymise passes the free note through and still strips every name", () =>
 test("anonymise drops a note that would carry a name straight through", () => {
   const out = anonymise({ theme: "mar", people: [], notes: "" });
   assert.strictEqual(out.notes, "");
+});
+
+// --- batching: the reason any of this survives a serverless wall clock -----------
+
+test("the full job never asks for more than one batch of pages at a time", async () => {
+  const db = memDb({
+    job: { id: "j5", kind: "full", order_id: "o1", story_id: "s1" },
+    order: ORDER,
+    story: { id: "s1", token: "tok", stage: "sample", story: { ...valid, theme: "mar" }, sheet_path: "tok/sheet.png", page_paths: {}, coloring_paths: [] },
+  });
+  const batches = [];
+  const r = await drain("j5", okDeps(db, {
+    renderPages: async (_, __, { indices }) => { batches.push(indices.length); return { pages: indices.map((i) => ({ index: i, buffer: PNG })), costUsd: 0.034 * indices.length, fallbacks: 0 }; },
+  }));
+  assert.strictEqual(r.state, "needs_review");
+  assert.ok(batches.length > 1, "twelve pages in one invocation is exactly what times out");
+  assert.ok(Math.max(...batches) <= PAGE_BATCH, `a batch of ${Math.max(...batches)} is over the budget`);
+  assert.strictEqual(batches.reduce((a, b) => a + b, 0), 12);
+  assert.strictEqual(Object.keys(db.state.story.page_paths).length, 12);
+});
+
+test("a page that keeps failing to draw does not loop forever", async () => {
+  const db = memDb({
+    job: { id: "j6", kind: "full", order_id: "o1", story_id: "s1" },
+    order: ORDER,
+    story: { id: "s1", token: "tok", stage: "sample", story: { ...valid, theme: "mar" }, sheet_path: "tok/sheet.png", page_paths: {}, coloring_paths: [] },
+  });
+  let calls = 0;
+  const r = await drain("j6", okDeps(db, {
+    // page 2 never comes back with an image: without remembering what was
+    // tried, "not drawn yet" would put it in every batch for ever.
+    renderPages: async (_, __, { indices }) => {
+      calls++;
+      const pages = indices.map((i) => (i === 2 ? { index: i, buffer: null, fallback: true } : { index: i, buffer: PNG }));
+      return { pages, costUsd: 0.034 * indices.length, fallbacks: pages.filter((p) => !p.buffer).length };
+    },
+  }));
+  assert.ok(calls <= 4, `${calls} batches for twelve pages means it went round again`);
+  assert.strictEqual(r.state, "needs_review");
+  assert.strictEqual(Object.keys(db.state.story.page_paths).length, 11);
+});
+
+test("line art comes two at a time and carries on where it stopped", async () => {
+  const db = memDb({
+    job: { id: "j7", kind: "full", order_id: "o1", story_id: "s1", steps: { pages: { done: true } } },
+    order: ORDER,
+    story: { id: "s1", token: "tok", stage: "sample", story: { ...valid, theme: "mar" }, sheet_path: "tok/sheet.png", page_paths: Object.fromEntries([...Array(12).keys()].map((i) => [i, `tok/p${i}.png`])), coloring_paths: [] },
+  });
+  let drawn = 0;
+  await drain("j7", okDeps(db, { toLineArt: async () => { drawn++; return { buffer: PNG, costUsd: 0.03 }; } }));
+  assert.strictEqual(drawn, 4, "four colouring pages, no more and no fewer");
+  assert.strictEqual(db.state.story.coloring_paths.length, 4);
+  assert.deepStrictEqual(db.state.story.coloring_paths, ["tok/c01.png", "tok/c02.png", "tok/c03.png", "tok/c04.png"]);
 });

@@ -269,7 +269,7 @@ test("cron: purges expired stories (files + personal data), sends reminders, res
   process.env.CRON_SECRET = "s3cret";
   await H.cronHandler({ db, runJob: async (id) => ran.push(id), sendEmail: async (m) => sent.push(m.kind) })(req({ method: "GET", headers: { authorization: "Bearer s3cret" } }), r);
   delete process.env.CRON_SECRET;
-  assert.deepStrictEqual(r.body, { resumed: 1, reminded: 1, purged: 1 });
+  assert.deepStrictEqual(r.body, { resumed: 1, batches: 1, reminded: 1, purged: 1 });
   assert.deepStrictEqual(ran, ["j5"]);
   const removed = db.calls.find((c) => c[0] === "remove")[2];
   assert.strictEqual(removed.length, 4);
@@ -596,7 +596,10 @@ test("a verified payment records the billing, marks the order paid and starts th
   assert.strictEqual(billing[1].amount_cents, 1290);
   assert.strictEqual(db.order.status, "paid");
   assert.strictEqual(db.order.channel, "web");
-  assert.strictEqual(jobs.length, 1, "the book is generated once");
+  // Queued, not drawn: a webhook that spends minutes illustrating is a webhook
+  // Stripe gives up on and retries, and every retry would start again.
+  assert.strictEqual(db.calls.find((c) => c[0] === "createJob")[1].kind, "full");
+  assert.strictEqual(jobs.length, 0, "the answer to Stripe must not wait for the book");
 });
 
 test("an event that is not a completed payment is acknowledged and ignored", async () => {
@@ -629,4 +632,83 @@ test("a completed session that is not actually paid does not deliver a book", as
   })(req({ body: {} }), r);
   assert.strictEqual(r.statusCode, 200);
   assert.strictEqual(ran, false);
+});
+
+// --- resume: the batch driver ------------------------------------------------------
+
+test("resume runs the job that is owed and reports how much of the book exists", async () => {
+  const db = fakeDb({ runnableJobFor: async () => ({ id: "j7", kind: "full" }) });
+  db.story.stage = "sample";
+  db.story.page_paths = { 0: "a", 1: "b", 5: "c" };
+  const r = res();
+  let ran = null;
+  await H.resumeHandler({ db, runJob: async (id) => { ran = id; return { state: "pending", partial: "pages" }; } })(
+    req({ body: { token: db.story.token } }), r
+  );
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(ran, "j7");
+  assert.strictEqual(r.body.state, "pending");
+  assert.strictEqual(r.body.illustrated, 3);
+  assert.strictEqual(r.body.total, valid.pages.length);
+});
+
+test("resume on a story with nothing owed is idle, not an error", async () => {
+  const db = fakeDb({ runnableJobFor: async () => null });
+  const r = res();
+  let ran = false;
+  await H.resumeHandler({ db, runJob: async () => { ran = true; } })(req({ body: { token: db.story.token } }), r);
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(r.body.state, "idle");
+  assert.strictEqual(ran, false, "an idle story must not start work");
+});
+
+test("resume refuses an unknown token", async () => {
+  const db = fakeDb({ runnableJobFor: async () => ({ id: "j7" }) });
+  const r = res();
+  await H.resumeHandler({ db, runJob: async () => ({ state: "done" }) })(req({ body: { token: "nope" } }), r);
+  assert.strictEqual(r.statusCode, 404);
+});
+
+// --- what the buyer may see --------------------------------------------------------
+
+test("after paying, the sample pages do not disappear as the rest are drawn", async () => {
+  // The rule used to be "show everything only if there are two pages or
+  // fewer", so the third illustration hid the two the buyer had just paid on.
+  const db = fakeDb();
+  db.story.stage = "sample";
+  db.order.status = "paid";
+  db.story.page_paths = { 0: "p0", 1: "p1", 5: "p5" };
+  const r = res();
+  await H.storyHandler({ db })(req({ method: "GET", query: { token: db.story.token } }), r);
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(r.body.illustrated, 3);
+  assert.ok(r.body.pages[0].image && r.body.pages[5].image, "the pages already paid for stay visible");
+});
+
+test("before paying, only the two sample pages are visible whatever else exists", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  db.order.status = "sample";
+  // a leftover from an interrupted run: it must not become a free preview
+  db.story.page_paths = { 0: "p0", 3: "p3", 5: "p5" };
+  const r = res();
+  await H.storyHandler({ db })(req({ method: "GET", query: { token: db.story.token } }), r);
+  assert.strictEqual(r.body.illustrated, 2);
+  assert.strictEqual(r.body.pages[3].image, null);
+});
+
+test("cron pushes a batched job to the end instead of one step per run", async () => {
+  // On a plan where the sweep runs once a day, one step per run would mean a
+  // week to illustrate a book nobody was watching.
+  const db = fakeDb({ staleJobs: async () => [{ id: "j9" }] });
+  const r = res();
+  const states = [{ state: "pending", partial: "pages" }, { state: "pending", partial: "pages" }, { state: "needs_review" }];
+  let n = 0;
+  process.env.CRON_SECRET = "s3cret";
+  await H.cronHandler({ db, runJob: async () => states[n++], sendEmail: async () => {} })(
+    req({ method: "GET", headers: { authorization: "Bearer s3cret" } }), r
+  );
+  delete process.env.CRON_SECRET;
+  assert.strictEqual(r.body.resumed, 1);
+  assert.strictEqual(r.body.batches, 3, "it kept going until the job stopped asking");
 });
