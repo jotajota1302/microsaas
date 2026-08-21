@@ -1,45 +1,67 @@
-# Proyecto: Cuentos y páginas para colorear personalizados
+# Proyecto: Cuentos personalizados en PDF
 
-Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizados (nombre, rasgos, mascota, afición del niño) generados como JSON validado + ilustraciones de estilo fijo, entregados en PDF y como **libro impreso** por POD europeo; y páginas para colorear por créditos. Reutiliza el motor del RPG (`../../rpg-narrativo/`): IA que genera datos bajo schema, validador, catálogo de estilo de imágenes MiniMax.
+Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizados **en PDF**, generados como JSON validado + ilustraciones de estilo fijo. El diferencial no es el aspecto del niño sino **su vida**: su familia y amigos como personajes, el momento que está viviendo y el tono. El gancho es una **vista previa personalizada en una URL temporal** generada antes de cobrar. Sin imprenta ni envíos en el MVP (decisión 2026-08-21). Reutiliza el motor del RPG (`../../rpg-narrativo/`): IA que genera datos bajo schema, validador como única puerta, catálogo de estilo fijo.
 
-**Lee antes de nada**: `docs/mvp.md` y `../CLAUDE.md` (stack, privacidad con IA, legal: autoridad compartida con `viajeros/` y `kit-local/`). Investigación con fuentes: `../docs/portfolio-2026.md` (§3 A2). Motor a reutilizar: `../../rpg-narrativo/api/generate.js`, `lib/validate-chapter.js`, `lib/asset-catalog.js`, `scripts/generate-assets.js`.
-
-## Primer paso de la sesión
-
-Usar `superpowers:brainstorming` para cerrar con JJ: formato del cuento (páginas, longitud), estilo visual único, qué se personaliza y qué no, y el POD. Luego construir el **mínimo que cobra**: landing ES/EN + 1 cuento de muestra + generación de 1 cuento personalizado de pago. La validación de 2 semanas está en `docs/mvp.md` §6.
+**Lee antes de nada**: `docs/mvp.md` (alcance y precios, **v2**), `docs/superpowers/specs/2026-08-20-cuentos-design.md` (diseño técnico; **la revisión del 21-08 al final prevalece**), `docs/fase-0-resultados.md` (lo medido contra las API reales), `docs/research-2026-08.md` (investigación con ~60 fuentes) y `../CLAUDE.md` (stack, privacidad con IA, legal: autoridad compartida con `viajeros/` y `kit-local/`).
 
 ## Decisiones ya tomadas (no reabrir sin preguntar)
 
-- **Sin fotos del niño en el MVP.** Personalización por texto (nombre, pelo, gafas, mascota, afición). Enviar la foto de un menor a MiniMax (sin DPA, datos en EE. UU./Singapur) está prohibido por `../CLAUDE.md`. Si más adelante se quiere parecido real, proveedor con DPA en la UE y consentimiento explícito.
-- **El nombre del niño no viaja a la IA**: se genera el cuento con un marcador (`{{NOMBRE}}`) y se sustituye en el servidor al renderizar. Así el prompt no contiene datos personales.
-- **Precio**: cuento digital PDF **4,99 €**; libro impreso **24,90 €** (envío aparte); páginas para colorear **4,99 € / 20 créditos**. Una vista previa gratis (primeras 2 páginas con marca de agua), nada más gratis. Cobro digital por **MoR** (Polar / Stripe Managed Payments); impreso por Stripe o checkout del POD.
-- **Estilo visual único y fijo** por colección (como la tinta gótica del RPG): prompts con el mismo sufijo de estilo, personaje descrito igual en todas las páginas; el validador comprueba que cada página trae `image_hint` y que el cuento cumple estructura (planteamiento, problema, intento, resolución, moraleja suave).
-- **Contenido**: lista de temas permitidos y filtro de prompts; nada de violencia, miedo intenso ni marcas. Revisión automática del texto por el modelo (segunda pasada) + muestreo manual al principio.
-- **Colorear**: image-01 con prompt de line-art + umbralizado a blanco y negro puro en servidor (sharp/canvas) + PDF A4. Galería pre-generada gratuita como activo SEO ("dibujos para colorear de {tema}"); lo personalizado es de pago.
-- Stack: vanilla + Vercel Pro + Supabase compartido (schema `cuentos`) + MiniMax PAYG. Sin frameworks.
+### Modelo de negocio (2026-08-21)
+
+- **Solo PDF en el MVP, a 12,90 € en español y 14,90 € en inglés** (fijado con la investigación de Etsy: el tramo de 5-7 $ es «IA commodity»; el medio, 15-20 $). Si la prueba da ≥ 5 ventas, ES sube a 14,90 €. Cero envíos, cero logística; el único trabajo manual son ~5 minutos de revisión por pedido pagado. El impreso **no se construye**: un botón «Quiero el libro impreso» mide la demanda; con ≥ 25 % de compradores se reabre (fase 5).
+- **Embudo en dos puertas, generado antes de cobrar, en una URL temporal** (`/c/<token>`, misma app de Vercel, sin despliegue por cliente): (1) **guion** — el texto completo (≈ 0,01 €), con **hasta 2 rondas de «cambiar algo»** (instrucción corta moderada; el modelo reescribe, el validador decide); (2) **muestra ilustrada** — solo tras aprobar el guion: portadilla + ficha + **2 escenas, nunca la resolución** (≈ 0,21 €); (3) **pago** — el resto + colorear + PDF + **1 retoque incluido** (3 ilustraciones o 1 página). Enlace por email; caduca a 7 días (30 pagado); recordatorios días 5 y 7. El curioso cuesta un céntimo.
+- **Techos de gasto, de fuera adentro**: guardrail de OpenRouter **5 $/día** en la clave; `MAX_SCRIPTS_PER_DAY` 200, `MAX_SAMPLES_PER_DAY` 40; Turnstile; 3 guiones por IP y día. Al tocar techo, lista de espera. La web **nunca se apaga**. Métricas: guion → muestra y muestra → pago; si muestra → pago < 3 %, la muestra pasa a pago simbólico.
+- **El diferencial es la historia, no la cara**: hasta 2 personas (nombre + relación + edad), momento vital (7 opciones cerradas) y tono (3). Los nombres viajan como `{{NOMBRE}}`, `{{PERSONA1}}`, `{{PERSONA2}}`; la relación («su abuela») sí va al modelo porque no identifica a nadie.
+- **Sin foto, aparcada con condiciones**: el decálogo de la AEPD (27-01-2026, recogido en `../CLAUDE.md`) prohíbe meter imágenes de personas en herramientas de IA sin encargado en la UE. Solo se reabre con tracción demostrada, Vertex AI en región UE, consentimiento expreso y registro de actividades. Además no diferencia (la usan CuentosIA, ToonyStory, Lullaby, Hekaya) y concentra las peores reseñas del sector.
+- **Sin anuncios**: con un margen de 9-11 € y un CPA de 25-50 €, no cuadran. Canales: Etsy (principal), web propia, vídeo real, Pinterest, grupos de crianza.
+- **Cobro: Stripe Managed Payments lo integra Edu más adelante** (decisión 2026-08-21): `api/checkout.js` y `api/webhook-stripe.js` son la costura, el resto del sistema no sabe nada de Stripe. Hasta entonces la web cobra **vía Etsy** (el botón «Completar el cuento» lleva a la ficha de Etsy con el token del cuento en la personalización) y el estado `full` se activa a mano desde la cola de revisión al ver el pedido de Etsy. Después, **solo Stripe Managed Payments** en la web (MoR; IVA 4 % del PDF como libro, 21 % los créditos) y **Etsy** como canal paralelo (18 % de comisión con IVA; declarar IA obligatoriamente; PDF < 20 MB; archivo adjunto al completar el pedido). **Polar descartado**: su AUP prohíbe servicios dirigidos a menores. Plan B: Creem.
+
+### Producto
+
+- **Formato**: 18 páginas cuadradas 20×20 cm — portadilla + 12 escenas de una página (ilustración arriba, texto de 60-90 palabras abajo) + 4 colorear con escenas del propio cuento + ficha de personajes y colofón con aviso de IA. Imágenes a 1K: basta para pantalla e impresión en casa. Sin sangrado ni lomo.
+- **Estilo visual**: colección «Acuarela» — acuarela infantil suave, línea de tinta ligera, paleta cálida limitada, papel visible, sin texto en la imagen. Sufijo de prompt inmutable (`STYLE` en `lib/collection.js`). Cambiarlo = colección nueva.
+- **Estructura narrativa fija y validada por código**: setup → problem → ≥ 2 attempt → resolution; la afición del niño resuelve el conflicto; el momento fija el problema; la moraleja se muestra, nunca se enuncia. **Género del protagonista obligatorio** (el español concuerda; sin el dato el modelo lo inventa — medido). **«herida» fuera de la lista negra** (un ala herida es el argumento más común de la literatura infantil).
+- **Muestra gratuita genérica**: además de la vista previa personalizada, la landing enseña un cuento de demostración con el nombre insertado al instante (coste cero, sin IA).
+
+### Técnica
+
+- **Texto**: OpenRouter con structured outputs (modelo por elegir en la fase 0). El prompt incluye **la forma exacta del JSON**: medido que un modelo que no aplica el schema (MiniMax) falla el 100 % sin ella y 0 % con ella. Coste < 0,02 $/cuento; se elige por español y fiabilidad, no por precio.
+- **Imagen: Nano Banana 2 (`google/gemini-3.1-flash-image`) vía OpenRouter**, medido el 21-08 con dos personajes: mismo personaje, misma acuarela, 0 bloqueos, 14 s, 0,07 $/imagen, cuadrado con `image_config.aspect_ratio: "1:1"`. La hoja de personaje entera va como única referencia (no se recorta). **MiniMax `image-01` descartado**: 1024 px, 40-65 s y la referencia se comía el estilo. **Seedream/fal.ai ya no hacen falta.** `lib/images.js` sigue escondiendo el proveedor tras `IMAGE_PROVIDER`; el VLM verifica personaje y estilo como red de seguridad.
+- **Generación asíncrona por jobs** en tres tramos sobre la misma máquina de estados persistida en Supabase: `script` (texto → validar, repetible con la instrucción del usuario), `sample` (hoja → 2 escenas) y `full` (resto → line-art → PDF → revisión humana → email), más `retouch`. Reintento por paso y cron de barrido. Techo de coste por cuento: **1,50 €** sumando los dos tramos.
+- **Contenido**: campos cerrados salvo nombres y dedicatoria; filtro local + modelo **antes de generar**; lista negra; segunda pasada del modelo; revisión humana en todo pedido pagado.
+- **Colorear**: el line-art lo genera el modelo editando la ilustración; sharp solo limpia y umbraliza. Galería gratuita por tema como activo SEO **con captura de email**.
+- **Privacidad**: ningún nombre viaja a la IA; sin fotos; datos personales a `null` al caducar el cuento (7 días sin pagar, 30 pagado); facturas 4-6 años.
+- Stack: vanilla + Vercel Pro + Supabase compartido (schema `cuentos`) + **OpenRouter para texto e imagen** (una clave, guardrail de 5 $/día). Sin frameworks.
+- **En local, `.env` manda sobre el entorno heredado** (`lib/env.js`): una clave vieja en las variables globales de Windows enmascaró la del proyecto el 21-08. En Vercel no hay fichero, así que allí mandan las variables de la plataforma.
 
 ## Fases (cada una termina usable)
 
-1. Cuento de muestra + landing con precio + checkout; prueba de 2 semanas.
-2. Generación personalizada de pago: formulario → JSON validado → imágenes → PDF → email con enlace de descarga (expira). Reintentos y fallback a ilustración de catálogo si una imagen falla (como el RPG).
-3. Libro impreso vía API de POD (ver `docs/mvp.md` §4) con QR al cuento digital (QR dinámico de `kit-local` cuando exista).
-4. Páginas para colorear: galería SEO + generador por créditos.
-5. SEO programático ES/EN (temas × edades), vídeo corto, afiliados de blogs de crianza.
+0. **Spikes**: consistencia de imagen **y de estilo** en Seedream y Nano Banana, comparativa de modelos de texto por OpenRouter, solicitud de Stripe MP. (El POD sale del camino crítico; su script queda.)
+1. **El mínimo que cobra**: formulario con personas/momento/tono → guion en `/c/<token>` (con cambios) → muestra ilustrada → pago → libro completo en la misma URL (con retoque); revisión humana; web ES/EN con muestra instantánea; tope diario; botón de interés por el impreso; 20 páginas de colorear gratis; ficha en Etsy.
+2. **Colorear por créditos**: generador personalizado, créditos, galería a 50 temas, Pinterest.
+3. **Campaña Navidad/Reyes**: 2-3 colecciones más, afiliación 20 %, vídeo real.
+4. **SEO programático y LatAm**: temas × edades en ES/EN, precios en MXN/USD.
+5. **Impreso** (solo si el botón de interés ≥ 25 %): PDF de imprenta, Gelato/Peecho, tracking. Todo lo investigado y los scripts quedan en el repo.
 
 ## Estado
 
 - [x] Investigación de mercado y ranking (2026-08-20)
-- [ ] Fase 1 — muestra + landing + checkout (prueba: __ visitas / __ altas / __ pagos)
-- [ ] Fase 2 — generación de pago
-- [ ] Fase 3 — impreso
-- [ ] Fase 4 — colorear
-- [ ] Fase 5 — SEO y canales
+- [x] Investigación profunda: competencia, POD, modelos de IA, cobros/legal, canales (`docs/research-2026-08.md`)
+- [x] Diseño aprobado y plan de 22 tareas (`docs/superpowers/`)
+- [x] Giro a solo PDF con vista previa en URL temporal (mvp.md v2, revisión del spec y del plan, 2026-08-21)
+- [ ] Fase 0 — spikes (motor: 123 tests ✅; MiniMax medido y descartado; **Nano Banana 2 vía OpenRouter elegido**; modelo de texto en curso; Stripe MP pendiente de JJ)
+- [ ] Fase 1 — mínimo que cobra (prueba: __ vistas previas / __ % conversión a pago / __ pagos / __ % interés impreso)
+- [ ] Fase 2 — colorear por créditos
+- [ ] Fase 3 — campaña Navidad/Reyes
+- [ ] Fase 4 — SEO y LatAm
+- [ ] Fase 5 — impreso (condicionada al botón de interés)
 
 Al completar una fase, actualiza este checklist. Lo que afecte a los tres proyectos va en `../CLAUDE.md`.
 
 ## Convenciones
 
 - Código y comentarios en inglés; textos del producto en español e inglés.
-- Esquema JSON del cuento en `schema/`; el validador es la única puerta hacia el render.
-- Coste objetivo por cuento generado < 0,25 € (texto + 8-12 imágenes).
-- El repo git es el padre (`microsaas/`); no crear repos anidados. Repo público: nada de secretos ni datos reales.
+- `npm test` (Node 22, `node --test "test/**/*.test.js"`; en Windows `--test test/` no funciona). Nada entra sin su test.
+- Esquema JSON del cuento en `schema/`; `lib/validate-story.js` es la **única** puerta hacia el visor y el PDF.
+- Ningún dato personal en los prompts, ninguna foto, borrado al caducar.
+- El repo git es el padre (`microsaas/`); no crear repos anidados. Repo público: nada de secretos ni datos reales. `out/` (imágenes y PDF generados) y `.env` están ignorados.

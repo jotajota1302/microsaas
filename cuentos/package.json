@@ -1,0 +1,22 @@
+{
+  "name": "cuentos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Personalised children's stories: validated JSON + fixed-style illustrations, delivered as PDF and printed book.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "spike:images": "node scripts/spike-images.js",
+    "spike:text": "node scripts/spike-text.js",
+    "spike:pod": "node scripts/spike-pod.js",
+    "spike:sheet": "node scripts/spike-contact-sheet.js"
+  },
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@supabase/supabase-js": "^2.108.1",
+    "pdf-lib": "^1.17.1",
+    "resend": "^4.0.0",
+    "sharp": "^0.33.5",
+    "stripe": "^17.0.0"
+  }
+}

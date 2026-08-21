@@ -1,0 +1,90 @@
+{
+  "title": "{{NOMBRE}} y el faro apagado",
+  "dedication_hint": "Para quien no se rinde cuando algo parece roto.",
+  "character_sheet": {
+    "appearance": "a 6-year-old girl with curly brown hair, light skin and round glasses, cheerful and curious",
+    "outfit": "a mustard yellow raincoat over a white t-shirt, blue trousers and red rubber boots",
+    "companion": "a fluffy grey cat that follows her everywhere"
+  },
+  "pages": [
+    {
+      "n": 1,
+      "beat": "setup",
+      "text": "{{NOMBRE}} vivía en una casa azul que miraba al mar. Cada mañana bajaba a la playa con su gato y contaba las olas hasta perder la cuenta. Le gustaba dibujar en la arena con un palo largo: barcos, peces, castillos que el agua se llevaba sin pedir permiso. Aquella mañana, sin embargo, la playa estaba distinta. El faro del final del muelle, que siempre encendía su luz al caer la tarde, estaba apagado y oscuro.",
+      "image_hint": "a blue house above a wide beach at dawn, a girl and a grey cat walking on wet sand, a dark lighthouse far away"
+    },
+    {
+      "n": 2,
+      "beat": "problem",
+      "text": "—El faro lleva tres noches sin luz —dijo la mujer que remendaba redes junto a las barcas—. Y sin luz, los barcos no saben volver a casa. {{NOMBRE}} miró la torre blanca, tan quieta como un lápiz olvidado encima de una mesa. Su gato se estiró y bostezó, porque los gatos bostezan justo cuando ocurren las cosas importantes. Entonces ella se ajustó las gafas, respiró hondo y decidió que iría a ver qué le pasaba al faro.",
+      "image_hint": "an old woman mending fishing nets beside wooden boats, a small girl with glasses listening, grey morning light"
+    },
+    {
+      "n": 3,
+      "beat": "attempt",
+      "text": "El camino hasta el faro era largo y estaba lleno de piedras redondas que rodaban solas. {{NOMBRE}} subió despacio, agarrándose a la barandilla oxidada, mientras el viento le daba pequeños empujones en la espalda. Cuando llegó arriba, empujó la puerta con las dos manos y entró. Dentro olía a sal y a madera mojada. Una escalera de caracol se enroscaba hacia el techo como la concha de un caracol enorme y muy paciente.",
+      "image_hint": "a stone path climbing to a white lighthouse door, wind bending the grass, a girl pushing the heavy door open"
+    },
+    {
+      "n": 4,
+      "beat": "attempt",
+      "text": "Arriba, en la sala de la lámpara, encontró el cristal cubierto de polvo y de sal. {{NOMBRE}} pensó que quizá bastaba con limpiarlo bien. Frotó y frotó con la manga hasta que el cristal quedó brillante como un espejo recién lavado. Después esperó. Contó hasta cincuenta, muy despacio. Pero la lámpara siguió apagada, tan callada como antes, y el mar de fuera se puso gris y empezó a murmurar.",
+      "image_hint": "inside a lighthouse lantern room, a huge glass lens, a girl polishing it with her sleeve, dusty light"
+    },
+    {
+      "n": 5,
+      "beat": "attempt",
+      "text": "Bajó otra vez y buscó por todas partes: detrás de los baúles, debajo de la mesa, dentro de un armario que crujía al abrirse. Encontró una cuerda gruesa, un cuaderno con dibujos de barcos y una caja de herramientas oxidadas. Nada que sirviera para encender una luz. Su gato, mientras tanto, maullaba sin parar delante de una puertecita pequeña que ella no había visto hasta entonces.",
+      "image_hint": "a cluttered round room with trunks, coiled rope and a toolbox, a grey cat meowing at a tiny low door"
+    },
+    {
+      "n": 6,
+      "beat": "attempt",
+      "text": "La puertecita daba a un cuarto diminuto, del tamaño de un armario. Dentro había una rueda de metal, un tubo grueso y un cartel que el tiempo había borrado casi del todo. {{NOMBRE}} giró la rueda con todas sus fuerzas. No pasó nada. La giró al revés. Tampoco. Se sentó en el suelo con la barbilla apoyada en las rodillas y pensó que a lo mejor el faro estaba simplemente cansado.",
+      "image_hint": "a very small machine room with a rusty metal wheel and a thick pipe, a girl sitting on the floor thinking"
+    },
+    {
+      "n": 7,
+      "beat": "attempt",
+      "text": "Pero {{NOMBRE}} sabía una cosa que sabe todo el que dibuja: cuando algo no sale, hay que mirarlo desde otro sitio. Se tumbó boca arriba en el suelo frío y miró el techo del cuartito con mucha calma. Y allí, justo encima de su cabeza, vio un tubo torcido, doblado como una pajita mordida. Alguien lo había golpeado sin querer, y por ahí ya no pasaba nada de nada.",
+      "image_hint": "low angle view of a girl lying on the floor looking up at a bent pipe on the ceiling, warm lamp light"
+    },
+    {
+      "n": 8,
+      "beat": "attempt",
+      "text": "Con la cuerda que había encontrado y con mucha paciencia, {{NOMBRE}} ató el tubo a la barandilla y tiró poco a poco, como quien despierta a alguien que duerme. El metal se quejó. Chirrió muy fuerte. Y entonces, con un chasquido seco, el tubo volvió a su sitio. Dentro de la pared se oyó un rumor, como el de una tripa contenta, y el cuartito olió de pronto a aceite limpio.",
+      "image_hint": "a girl pulling a rope tied to a bent pipe, the pipe straightening, dust falling in the lamplight"
+    },
+    {
+      "n": 9,
+      "beat": "attempt",
+      "text": "Subió corriendo los escalones de dos en dos, con el gato pisándole los talones. En la sala de la lámpara, el cristal limpio la esperaba. {{NOMBRE}} giró la rueda pequeña que había junto a la ventana, la que no se había atrevido a tocar antes. Se oyó un clic. Luego otro. Y después un silencio tan largo que le dio tiempo a arrepentirse de haber subido hasta allí.",
+      "image_hint": "a girl and a cat racing up a spiral staircase, then her hand on a small brass wheel by a window"
+    },
+    {
+      "n": 10,
+      "beat": "attempt",
+      "text": "La luz llegó de golpe. Primero fue un parpadeo naranja, tímido, como una vela que duda si encenderse. Después creció, se hizo blanca y salió disparada por la ventana hacia el mar, larga como un brazo que señala el camino a casa. {{NOMBRE}} se tapó los ojos con la mano y se rió sola, y su gato dio un salto que le salió mucho más alto de lo que pensaba.",
+      "image_hint": "a lighthouse beam bursting out over a dark sea, a girl shielding her eyes and laughing, a cat leaping"
+    },
+    {
+      "n": 11,
+      "beat": "attempt",
+      "text": "Desde abajo, en el pueblo, la gente salió a las puertas para mirar. Las barcas que estaban lejos, allí donde el agua se junta con el cielo, giraron despacio y pusieron rumbo al muelle. La mujer de las redes levantó la mano y saludó hacia lo alto de la torre, donde una niña con gafas y un gato saludaban también, muy serios y muy contentos.",
+      "image_hint": "a small coastal village at night seen from above, people at their doors, boats turning toward the lit pier"
+    },
+    {
+      "n": 12,
+      "beat": "resolution",
+      "text": "Aquella noche {{NOMBRE}} durmió con la ventana abierta y la luz del faro barriendo su habitación cada pocos segundos, como una caricia que iba y venía. Antes de cerrar los ojos dibujó en su cuaderno un tubo torcido y, al lado, una flecha. Porque las cosas que parecen rotas casi nunca lo están del todo: solo esperan a que alguien se atreva a mirarlas desde otro sitio.",
+      "image_hint": "a girl asleep in a small bedroom with an open window, a sweeping beam of light across the wall, a cat curled up"
+    }
+  ],
+  "coloring_hints": [
+    "a lighthouse on a pier with waves below, simple bold outlines",
+    "a girl and a cat climbing a spiral staircase",
+    "a small machine room with a wheel and pipes",
+    "fishing boats returning to a village pier at night"
+  ],
+  "moral": "Lo que parece roto casi nunca lo está del todo: hay que mirarlo desde otro sitio."
+}
