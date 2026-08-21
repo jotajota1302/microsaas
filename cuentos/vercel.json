@@ -30,5 +30,8 @@
       "source": "/c/:token",
       "destination": "/c/index.html"
     }
+  ],
+  "regions": [
+    "fra1"
   ]
 }
