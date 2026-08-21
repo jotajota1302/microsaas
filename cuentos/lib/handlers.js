@@ -12,7 +12,7 @@ const C = require("./collection.js");
 const money = require("./money.js");
 const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
-const { send, readJson, query, clientIp, requireMethod, requireSecret, bearer } = require("./http.js");
+const { send, readJson, query, clientIp, requireMethod, requireSecret } = require("./http.js");
 
 const CAPS = () => ({
   scriptsPerDay: Number(process.env.MAX_SCRIPTS_PER_DAY || 200),

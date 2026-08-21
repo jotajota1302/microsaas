@@ -375,3 +375,11 @@ test("clientIp prefers the platform's x-real-ip and never the first forwarded ho
   assert.strictEqual(clientIp({ headers: { "x-forwarded-for": "1.1.1.1, 2.2.2.2, 5.5.5.5" } }), "5.5.5.5");
   assert.strictEqual(clientIp({ headers: {}, socket: { remoteAddress: "7.7.7.7" } }), "7.7.7.7");
 });
+
+test("secretsMatch is exact and tolerates different lengths without throwing", () => {
+  const { secretsMatch } = require("../lib/http.js");
+  assert.strictEqual(secretsMatch("abc", "abc"), true);
+  assert.strictEqual(secretsMatch("abc", "abd"), false);
+  assert.strictEqual(secretsMatch("", "abc"), false);
+  assert.strictEqual(secretsMatch("a-very-long-token-indeed", "abc"), false);
+});

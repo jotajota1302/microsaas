@@ -1,5 +1,7 @@
 /* Tiny helpers for Vercel Node functions. No framework. */
 
+const crypto = require("crypto");
+
 function send(res, status, body) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -35,10 +37,21 @@ function clientIp(req) {
   return (req.socket && req.socket.remoteAddress) || "";
 }
 
+/** Constant-time compare, so a wrong token cannot be guessed byte by byte. */
+function secretsMatch(given, expected) {
+  const a = Buffer.from(String(given));
+  const b = Buffer.from(String(expected));
+  // timingSafeEqual throws on different lengths; hash first so the compared
+  // buffers are always the same size and the length itself leaks nothing.
+  const ha = crypto.createHash("sha256").update(a).digest();
+  const hb = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+
 /** Fail closed: an endpoint guarded by a secret refuses everything until the secret exists. */
 function requireSecret(req, res, secret) {
   if (!secret) { send(res, 503, { error: "not_configured" }); return false; }
-  if (bearer(req) !== secret) { send(res, 401, { error: "unauthorized" }); return false; }
+  if (!secretsMatch(bearer(req), secret)) { send(res, 401, { error: "unauthorized" }); return false; }
   return true;
 }
 
@@ -53,4 +66,4 @@ function bearer(req) {
   return String(h).replace(/^Bearer\s+/i, "").trim();
 }
 
-module.exports = { send, readJson, query, clientIp, requireMethod, requireSecret, bearer };
+module.exports = { send, readJson, query, clientIp, requireMethod, requireSecret, secretsMatch, bearer };
