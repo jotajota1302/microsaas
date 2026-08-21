@@ -71,7 +71,7 @@ Al completar una fase, actualiza este checklist. Lo que afecte a los tres proyec
 
 - Proyecto `cuentos` (`prj_uYO3eSPFwizuU0QuIIofr86nqW2g`, equipo «Jose Juan Jimenez's projects», `team_KYUeymJfHRERJG11yR7W6qoF`), enlazado a `jotajota1302/microsaas` con `cuentos/` como raíz. Cada push a `main` despliega a producción. Alias de rama: `cuentos-git-main-jose-juan-jimenezs-projects.vercel.app`.
 - **El equipo está en Hobby** (2026-08-21). `vercel.json` lleva por eso cron **diario** (`0 6 * * *`) y `maxDuration: 60`. El diseño necesita **Pro**: cron cada minuto (reanudar jobs, recordatorios) y 300 s en `order`/`approve`/`admin` (el tramo `full` son ~14 imágenes + PDF). Al pasar a Pro: cron `* * * * *` y `maxDuration: 300`. Hobby además prohíbe el uso comercial: no se vende desde Hobby.
-- Variables de entorno necesarias en Vercel: `OPENROUTER_API_KEY`, `TEXT_MODEL`, `IMAGE_PROVIDER=openrouter`, `OPENROUTER_IMAGE_MODEL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, `PUBLIC_BASE_URL`, `ADMIN_TOKEN`, `CRON_SECRET`, `ETSY_LISTING_URL` (cuando exista), `IP_SALT`.
+- Variables de entorno necesarias en Vercel: `OPENROUTER_API_KEY`, `TEXT_MODEL`, `IMAGE_PROVIDER=openrouter`, `OPENROUTER_IMAGE_MODEL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, `PUBLIC_BASE_URL`, `ADMIN_TOKEN`, `CRON_SECRET`, `ETSY_LISTING_URL` (cuando exista), `IP_SALT`, `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` (filtro de bots; sin ellas no se exige y los topes son la única defensa).
 
 ## Convenciones
 

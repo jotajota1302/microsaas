@@ -143,6 +143,24 @@
     }
     addBtn.onclick = addPerson;
 
+    // The bot filter, if this deployment has one. The site key is public by
+    // design; the secret only ever lives on the server.
+    let tsWidget = null;
+    (async () => {
+      let cfg = {};
+      try { cfg = await (await fetch("/api/config")).json(); } catch (e) { return; }
+      if (!cfg.turnstileSiteKey) return;
+      const holder = document.createElement("div");
+      holder.id = "ts";
+      holder.style.marginTop = ".6rem";
+      document.getElementById("submit").parentNode.insertBefore(holder, document.getElementById("submit"));
+      const s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      s.async = true;
+      s.onload = () => { tsWidget = window.turnstile.render("#ts", { sitekey: cfg.turnstileSiteKey }); };
+      document.head.appendChild(s);
+    })();
+
     const form = document.getElementById("f");
     const msg = document.getElementById("msg");
     const submit = document.getElementById("submit");
@@ -165,6 +183,12 @@
           })),
         },
       };
+      // Turnstile only exists when it is configured; when it is, the token is
+      // required, so an unsolved challenge stops here rather than at the API.
+      if (window.turnstile && document.getElementById("ts")) {
+        body.turnstile = window.turnstile.getResponse(tsWidget);
+        if (!body.turnstile) { show(T.error, "alarm"); return; }
+      }
       submit.disabled = true; submit.innerHTML = `<span class="spinner"></span> ${T.writing}`;
       try {
         const res = await fetch("/api/order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
