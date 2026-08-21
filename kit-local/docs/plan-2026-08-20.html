@@ -1,0 +1,550 @@
+<title>Placa y Página</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+<style>
+  :root{
+    --paper:#F6F5F1;
+    --paper-2:#EDEBE4;
+    --card:#FFFFFF;
+    --ink:#15181A;
+    --ink-2:#4B5155;
+    --ink-3:#767C80;
+    --rule:#DAD7CD;
+    --accent:#C33B2A;      /* rojo toldo */
+    --accent-soft:#F6E3DF;
+    --green:#0F5C4A;       /* verde botella */
+    --green-soft:#DDEAE4;
+    --amber:#8A6410;
+    --amber-soft:#F5E9CE;
+    --shadow:0 1px 2px rgba(21,24,26,.06), 0 8px 24px -16px rgba(21,24,26,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#131618;
+      --paper-2:#1B1F21;
+      --card:#1B1F21;
+      --ink:#EDEAE3;
+      --ink-2:#AFB5B7;
+      --ink-3:#828A8D;
+      --rule:#2C3235;
+      --accent:#F0836E;
+      --accent-soft:#3A211C;
+      --green:#6FC0A6;
+      --green-soft:#17322B;
+      --amber:#E0B457;
+      --amber-soft:#33280F;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#131618;
+    --paper-2:#1B1F21;
+    --card:#1B1F21;
+    --ink:#EDEAE3;
+    --ink-2:#AFB5B7;
+    --ink-3:#828A8D;
+    --rule:#2C3235;
+    --accent:#F0836E;
+    --accent-soft:#3A211C;
+    --green:#6FC0A6;
+    --green-soft:#17322B;
+    --amber:#E0B457;
+    --amber-soft:#33280F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+    font-size:17px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+  h1,h2,h3,.mono,.eyebrow,th,.num{font-family:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif}
+  .mono,.num,code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+  h2,h3{text-wrap:balance}
+
+  /* ---------- cabecera ---------- */
+  header.top{
+    border-bottom:1px solid var(--rule);
+    background:
+      repeating-linear-gradient(0deg, transparent 0 7px, color-mix(in srgb, var(--ink) 4%, transparent) 7px 8px),
+      var(--paper-2);
+  }
+  .top-inner{max-width:1080px;margin:0 auto;padding:52px 24px 40px;display:grid;gap:28px;grid-template-columns:1fr auto;align-items:end}
+  @media(max-width:760px){.top-inner{grid-template-columns:1fr;padding:36px 20px 30px}}
+  .eyebrow{
+    font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap
+  }
+  .eyebrow span{color:var(--ink-3)}
+  h1{
+    font-size:clamp(38px,6vw,64px);line-height:1.02;margin:0 0 14px;font-weight:800;letter-spacing:-.02em
+  }
+  .dek{margin:0;max-width:56ch;color:var(--ink-2);font-size:19px}
+  .plate{
+    width:132px;height:132px;flex:none;border-radius:10px;
+    background:var(--card);border:1px solid var(--rule);box-shadow:var(--shadow);
+    display:grid;place-items:center;padding:12px
+  }
+  @media(max-width:760px){.plate{width:104px;height:104px}}
+
+  /* ---------- estructura ---------- */
+  section{padding-top:56px;scroll-margin-top:12px}
+  h2{
+    font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-3);margin:0 0 6px;
+    display:flex;align-items:baseline;gap:12px
+  }
+  h2::before{
+    content:attr(data-n);color:var(--accent);font-variant-numeric:tabular-nums;font-size:12px
+  }
+  .h-lead{font-size:clamp(24px,3.2vw,32px);font-weight:600;line-height:1.2;margin:0 0 20px;letter-spacing:-.01em;font-family:"Bricolage Grotesque",sans-serif}
+  p{margin:0 0 16px;max-width:68ch}
+  .lede{font-size:19px}
+  a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+  hr{border:0;border-top:1px solid var(--rule);margin:56px 0 0}
+
+  /* ---------- cifras ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0 8px}
+  @media(max-width:860px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px 16px 14px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden
+  }
+  .stat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+  .stat.g::after{background:var(--green)}
+  .stat.a::after{background:var(--amber)}
+  .stat .num{display:block;font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+  .stat .lbl{display:block;font-size:13px;color:var(--ink-3);margin-top:6px;font-family:"Bricolage Grotesque",sans-serif;line-height:1.35}
+
+  /* ---------- tablas ---------- */
+  .scroll{overflow-x:auto;margin:0 0 22px;border:1px solid var(--rule);border-radius:8px;background:var(--card)}
+  table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{
+    font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600;
+    background:var(--paper-2);position:sticky;top:0
+  }
+  tbody tr:last-child td{border-bottom:0}
+  td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.total td{font-weight:600;background:var(--paper-2)}
+  .src{font-size:13px;color:var(--ink-3);margin:-8px 0 24px}
+
+  /* ---------- chips ---------- */
+  .chip{
+    display:inline-block;font-family:"Bricolage Grotesque",sans-serif;font-size:11.5px;font-weight:600;
+    letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:999px;white-space:nowrap
+  }
+  .chip.new{background:var(--accent-soft);color:var(--accent)}
+  .chip.ok{background:var(--green-soft);color:var(--green)}
+  .chip.warn{background:var(--amber-soft);color:var(--amber)}
+
+  /* ---------- fases ---------- */
+  ol.phases{list-style:none;margin:0;padding:0;counter-reset:ph}
+  ol.phases li{
+    counter-increment:ph;position:relative;padding:0 0 26px 52px;border-left:1px solid var(--rule);margin-left:16px
+  }
+  ol.phases li:last-child{border-left-color:transparent;padding-bottom:0}
+  ol.phases li::before{
+    content:counter(ph);position:absolute;left:-17px;top:-2px;width:34px;height:34px;border-radius:50%;
+    background:var(--card);border:1px solid var(--rule);color:var(--accent);
+    display:grid;place-items:center;font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600
+  }
+  ol.phases h4{margin:0 0 4px;font-family:"Bricolage Grotesque",sans-serif;font-size:19px;font-weight:600;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  ol.phases p{margin:0;color:var(--ink-2);font-size:16px}
+  .est{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);font-weight:400;letter-spacing:0}
+
+  /* ---------- diagrama ---------- */
+  figure{margin:0 0 24px}
+  .diagram{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:20px;overflow-x:auto;box-shadow:var(--shadow)
+  }
+  figcaption{font-size:13.5px;color:var(--ink-3);margin-top:10px}
+
+  /* ---------- tareas ---------- */
+  details{
+    background:var(--card);border:1px solid var(--rule);border-radius:8px;margin:0 0 10px;overflow:hidden
+  }
+  summary{
+    cursor:pointer;padding:13px 16px;font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:16px;
+    display:flex;gap:12px;align-items:center;list-style:none
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";margin-left:auto;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+  details[open] summary::after{content:"–"}
+  summary .tag{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);background:var(--accent-soft);
+    padding:2px 7px;border-radius:4px;font-weight:600
+  }
+  details .body{padding:0 16px 16px;font-size:15.5px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:14px}
+  details .body p{margin:0 0 8px;max-width:none}
+  details .body strong{color:var(--ink)}
+
+  /* ---------- callout ---------- */
+  .call{
+    border:1px solid var(--rule);border-left:3px solid var(--amber);background:var(--card);
+    border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 22px
+  }
+  .call p{margin:0;max-width:none;font-size:16px}
+  .call .k{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;color:var(--amber);font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;display:block;margin-bottom:5px}
+  .call.red{border-left-color:var(--accent)}
+  .call.red .k{color:var(--accent)}
+
+  ul.tight{margin:0 0 20px;padding-left:20px}
+  ul.tight li{margin-bottom:7px;max-width:66ch}
+
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--rule);color:var(--ink-3);font-size:14px}
+  @media (prefers-reduced-motion:no-preference){
+    details[open] .body{animation:fade .18s ease}
+    @keyframes fade{from{opacity:0}to{opacity:1}}
+  }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <div>
+      <p class="eyebrow">Kit negocio local · A3 <span>· decisiones cerradas el 21 de agosto de 2026</span></p>
+      <h1>Placa y página</h1>
+      <p class="dek">Una placa impresa en 3D con el nombre del bar en relieve, un QR que nunca caduca y una página que el dueño cambia para siempre. La pieza deja 15-19 € y entrega un cliente ya dentro del panel.</p>
+    </div>
+    <div class="plate" aria-hidden="true">
+      <svg viewBox="0 0 100 100" width="100%" height="100%" role="img">
+        <rect x="0" y="0" width="100" height="100" rx="6" fill="none"/>
+        <g fill="currentColor">
+          <!-- ojo QR arriba izq -->
+          <path d="M6 6h22v22H6zM10 10v14h14V10z"/><rect x="13" y="13" width="8" height="8"/>
+          <!-- ojo arriba der -->
+          <path d="M72 6h22v22H72zM76 10v14h14V10z"/><rect x="79" y="13" width="8" height="8"/>
+          <!-- ojo abajo izq -->
+          <path d="M6 72h22v22H6zM10 76v14h14V76z"/><rect x="13" y="79" width="8" height="8"/>
+          <!-- módulos sueltos -->
+          <rect x="34" y="6" width="6" height="6"/><rect x="46" y="6" width="6" height="6"/><rect x="58" y="12" width="6" height="6"/>
+          <rect x="34" y="18" width="6" height="6"/><rect x="52" y="24" width="6" height="6"/><rect x="64" y="24" width="6" height="6"/>
+          <rect x="6" y="34" width="6" height="6"/><rect x="18" y="34" width="6" height="6"/><rect x="34" y="34" width="6" height="6"/>
+          <rect x="46" y="40" width="6" height="6"/><rect x="58" y="34" width="6" height="6"/><rect x="76" y="34" width="6" height="6"/>
+          <rect x="88" y="40" width="6" height="6"/><rect x="12" y="46" width="6" height="6"/><rect x="28" y="46" width="6" height="6"/>
+          <rect x="40" y="52" width="6" height="6"/><rect x="58" y="46" width="6" height="6"/><rect x="70" y="52" width="6" height="6"/>
+          <rect x="82" y="52" width="6" height="6"/><rect x="34" y="64" width="6" height="6"/><rect x="46" y="70" width="6" height="6"/>
+          <rect x="58" y="64" width="6" height="6"/><rect x="76" y="70" width="6" height="6"/><rect x="88" y="64" width="6" height="6"/>
+          <rect x="34" y="82" width="6" height="6"/><rect x="52" y="88" width="6" height="6"/><rect x="64" y="82" width="6" height="6"/>
+          <rect x="76" y="88" width="6" height="6"/><rect x="88" y="82" width="6" height="6"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section id="tesis">
+    <h2 data-n="01">La apuesta</h2>
+    <p class="h-lead">Vender el objeto al precio de mercado y quedarse con el software.</p>
+    <p class="lede">En España ya hay siete marcas vendiendo soportes NFC+QR de acrílico entre 25 y 39 €, todas gritando «sin suscripción». Ninguna personaliza la forma de la pieza, ninguna ofrece una página que sirva a la vez para reseñas, WiFi, carta y pago, y ninguna mide nada más allá de un contador. Ahí está el hueco: <strong>misma pieza, mejor pieza, y un panel que sí vale una cuota</strong>.</p>
+
+    <div class="stats">
+      <div class="stat"><span class="num">370.000</span><span class="lbl">Locales en el núcleo accesible (España)</span></div>
+      <div class="stat g"><span class="num">15,7 €</span><span class="lbl">Margen por pieza en Etsy (18,8 € en tienda propia)</span></div>
+      <div class="stat a"><span class="num">18</span><span class="lbl">Clientes Pro para cubrir infra + RETA</span></div>
+      <div class="stat"><span class="num">6.160 €</span><span class="lbl">Resultado a 12 meses en el escenario base</span></div>
+    </div>
+    <p class="src">Núcleo = hostelería, peluquería/estética, dental, fisio y hoteles (INE, UVE, STANPA). Margen sobre 24,90 € + 4,90 € de envío.</p>
+  </section>
+
+  <hr>
+
+  <section id="demanda">
+    <h2 data-n="02">Por qué compra un bar</h2>
+    <p class="h-lead">La reseña dejó de ser vanidad: es el filtro de entrada.</p>
+    <div class="stats">
+      <div class="stat"><span class="num">31 %</span><span class="lbl">Solo usa negocios con 4,5★ o más — era el 17 % un año antes</span></div>
+      <div class="stat"><span class="num">83 %</span><span class="lbl">De quienes reciben una petición de reseña, la escriben</span></div>
+      <div class="stat a"><span class="num">54 %</span><span class="lbl">De las reseñas de Google reciben respuesta (49 % en restauración)</span></div>
+      <div class="stat g"><span class="num">73 %</span><span class="lbl">Escanean si el cartel explica para qué; solo 34 % si no lo explica</span></div>
+    </div>
+    <p class="src">BrightLocal Local Consumer Review Survey 2026 (n = 1.002) · benchmark de respuestas ReplyOnTheFly 2026 · estudios de escaneo en restauración.</p>
+    <p>Dos datos mandan sobre el diseño del producto. El <strong>50 % descarta un negocio cuyas respuestas parecen plantilla</strong>: por eso la IA redacta con el contexto real del sitio y devuelve dos variantes para que el dueño elija, no un texto automático. Y el <strong>74 % solo mira las reseñas de los últimos tres meses</strong>: el enemigo del bar no es la reseña mala, es el silencio.</p>
+  </section>
+
+  <hr>
+
+  <section id="competencia">
+    <h2 data-n="03">Contra quién</h2>
+    <p class="h-lead">El hardware está comoditizado; el servicio, vacío.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Marca (España)</th><th class="n">Precio</th><th>Material</th><th>Software incluido</th></tr></thead>
+        <tbody>
+          <tr><td>TapReview</td><td class="n">15 €</td><td>PVC adhesivo</td><td>—</td></tr>
+          <tr><td>just5stars</td><td class="n">24,90 €</td><td>PVC / acrílico</td><td>— «un único pago»</td></tr>
+          <tr><td>OpinionesPlus</td><td class="n">29,90 €</td><td>Metacrilato</td><td>—</td></tr>
+          <tr><td>Rotulatumismo</td><td class="n">34 €</td><td>Metacrilato A5</td><td>— (solo QR, sin NFC)</td></tr>
+          <tr><td>RevTapify</td><td class="n">34,99 €</td><td>Acrílico</td><td>Panel + IA «gratis en lanzamiento»</td></tr>
+          <tr><td>JUSTAP</td><td class="n">37,90 €</td><td>Acrílico</td><td>Panel de escaneos gratis</td></tr>
+          <tr><td>Tapstar</td><td class="n">38,90 €</td><td>PVC</td><td>Panel gratis · 45 valoraciones 4,8★ en Amazon.es</td></tr>
+          <tr class="total"><td>Nosotros <span class="chip new">propuesta</span></td><td class="n">29,90 €</td><td>PLA bicolor impreso, nombre en relieve, NFC</td><td>Página multi-destino gratis + Pro 9 €/mes</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Del lado del software la horquilla es brutal: ReviewReply cobra 9 €/mes solo por redactar respuestas, Cinquo arranca en 49,99 €, Birdeye y Podium piden 300-450 $ por sede. <strong>A 9 €/mes seríamos el suelo del mercado</strong>, con más funciones que el único que cuesta lo mismo.</p>
+    <div class="call red">
+      <p><span class="k">El riesgo no es el precio, es la categoría</span>Todos los competidores venden «sin cuotas». Por eso el plan Básico pasa a ser <strong>gratis para siempre</strong>: servir una página y una redirección cuesta ~0,002 €/mes, y cobrar 19 €/año por no congelarla solo genera fricción y soporte. Pro se vende por lo que nadie da —embudo, IA con contexto, analítica—, nunca por desbloquear lo básico.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <section id="economia">
+    <h2 data-n="04">Los números</h2>
+    <p class="h-lead">El filamento es ruido. Mandan la comisión y el envío.</p>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Venta de 24,90 € + 4,90 € de envío</th><th class="n">Etsy</th><th class="n">Tienda propia (Stripe)</th></tr></thead>
+        <tbody>
+          <tr><td>Cobro bruto</td><td class="n">29,80 €</td><td class="n">29,80 €</td></tr>
+          <tr><td>− Comisiones del canal</td><td class="n">3,87 €</td><td class="n">0,70 €</td></tr>
+          <tr><td>− IVA a ingresar</td><td class="n">5,17 €</td><td class="n">5,17 €</td></tr>
+          <tr><td>− Envío real (Packlink/Correos)</td><td class="n">4,00 €</td><td class="n">4,00 €</td></tr>
+          <tr><td>− Pieza (0,53 €) + embalaje</td><td class="n">1,10 €</td><td class="n">1,10 €</td></tr>
+          <tr class="total"><td>Margen bruto</td><td class="n">15,66 €</td><td class="n">18,83 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Escenario a 12 meses</th><th class="n">Pesimista</th><th class="n">Base</th><th class="n">Optimista</th></tr></thead>
+        <tbody>
+          <tr><td>Piezas al mes</td><td class="n">10</td><td class="n">30</td><td class="n">80</td></tr>
+          <tr><td>Activan página → pasan a Pro</td><td class="n">50 → 15 %</td><td class="n">60 → 20 %</td><td class="n">70 → 25 %</td></tr>
+          <tr><td>Churn mensual</td><td class="n">8 %</td><td class="n">5 %</td><td class="n">3 %</td></tr>
+          <tr><td>Suscriptores Pro al mes 12</td><td class="n">6</td><td class="n">33</td><td class="n">143</td></tr>
+          <tr><td>Ingresos brutos</td><td class="n">3.975 €</td><td class="n">12.846 €</td><td class="n">37.428 €</td></tr>
+          <tr class="total"><td>Resultado (antes de IRPF y CAPEX)</td><td class="n">+870 €</td><td class="n">+6.160 €</td><td class="n">+21.050 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="src">Costes fijos 108 €/mes: RETA con tarifa plana 88,64 € + Vercel Pro 18,40 € + dominio. CAPEX aparte ≈ 500 €. Sin valorar el tiempo propio.</p>
+
+    <p>El plan Pro deja <strong>6,3-6,7 € netos al mes</strong> tras el <i>merchant of record</i> y el IVA, lo que sitúa el LTV entre 79 € (churn 8 %) y 210 € (churn 3 %). Dicho de otro modo: <strong>una placa vendida vale lo mismo que dos meses y medio de suscripción</strong>, y encima trae al cliente ya registrado. El equilibrio llega con 18 clientes Pro o 7 piezas al mes.</p>
+
+    <div class="call">
+      <p><span class="k">El cuello de botella es humano</span>Cada pedido son 25-30 minutos de trabajo manual (15-20 en lotes). La impresora aguanta 18 piezas al día sin vigilancia —caben nueve placas por cama—, así que hasta ~300 piezas al mes la limitación es el postproceso, no la máquina.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <section id="arquitectura">
+    <h2 data-n="05">Cómo funciona</h2>
+    <p class="h-lead">Un QR que apunta a nuestro dominio corto y nunca se reimprime.</p>
+
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 760 260" width="760" height="260" role="img" aria-label="Diagrama: el escaneo llega a la función de redirección, que consulta la caché o Supabase, devuelve un 302 al destino y registra el escaneo en segundo plano.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Mono, monospace" font-size="12" fill="currentColor" color="var(--ink-2)">
+            <!-- placa -->
+            <rect x="8" y="92" width="104" height="76" rx="7" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+            <text x="60" y="122" text-anchor="middle" fill="var(--ink)" font-size="12.5">placa QR</text>
+            <text x="60" y="140" text-anchor="middle" fill="var(--ink-3)" font-size="11">en el mostrador</text>
+
+            <!-- flecha 1 -->
+            <line x1="116" y1="130" x2="182" y2="130" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ar)" color="var(--accent)"/>
+            <text x="149" y="120" text-anchor="middle" fill="var(--ink-3)" font-size="10.5">escaneo</text>
+
+            <!-- funcion -->
+            <rect x="188" y="80" width="182" height="100" rx="7" fill="var(--paper-2)" stroke="var(--rule)" stroke-width="1.5"/>
+            <text x="279" y="106" text-anchor="middle" fill="var(--ink)" font-size="12.5">q.dominio/AB3KZ9</text>
+            <text x="279" y="128" text-anchor="middle" fill="var(--ink-2)" font-size="11">api/r.js · región fra1</text>
+            <text x="279" y="148" text-anchor="middle" fill="var(--ink-3)" font-size="11">caché 300 s → 302</text>
+            <text x="279" y="166" text-anchor="middle" fill="var(--ink-3)" font-size="11">p50 60-120 ms</text>
+
+            <!-- supabase abajo -->
+            <line x1="279" y1="184" x2="279" y2="216" stroke="var(--rule)" stroke-width="1.5" marker-end="url(#ar)" color="var(--ink-3)"/>
+            <rect x="176" y="220" width="206" height="34" rx="7" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+            <text x="279" y="242" text-anchor="middle" fill="var(--ink-2)" font-size="11">Supabase · schema kit (RLS + RPC)</text>
+            <text x="392" y="207" fill="var(--ink-3)" font-size="10.5">destino + escaneo</text>
+
+            <!-- flecha 2 -->
+            <line x1="376" y1="130" x2="440" y2="130" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ar)" color="var(--accent)"/>
+            <text x="408" y="120" text-anchor="middle" fill="var(--ink-3)" font-size="10.5">302</text>
+
+            <!-- destinos -->
+            <rect x="446" y="16" width="300" height="44" rx="7" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+            <text x="466" y="43" fill="var(--ink)" font-size="12">página del negocio · /b/bar-pepe</text>
+
+            <rect x="446" y="72" width="300" height="60" rx="7" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="466" y="96" fill="var(--ink)" font-size="12">embudo de opiniones</text>
+            <text x="466" y="116" fill="var(--ink-2)" font-size="11">botón de Google idéntico con 1★ y con 5★</text>
+
+            <rect x="446" y="144" width="300" height="44" rx="7" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+            <text x="466" y="171" fill="var(--ink)" font-size="12">carta PDF · WiFi · enlace de pago</text>
+
+            <rect x="446" y="200" width="300" height="44" rx="7" fill="none" stroke="var(--rule)" stroke-width="1.5"/>
+            <text x="466" y="227" fill="var(--ink)" font-size="12">lo que el dueño decida mañana</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>El destino vive en la base de datos, no en la tinta: cambiarlo son dos clics en el panel y surte efecto en menos de cinco segundos.</figcaption>
+    </figure>
+
+    <p>El identificador son seis caracteres en mayúsculas de un alfabeto sin caracteres ambiguos. No es coquetería: <code>HTTPS://Q.KITLOCAL.APP/AB3KZ9</code> son 29 caracteres, que en <strong>modo alfanumérico caben en un QR de versión 2</strong> —25 módulos por lado—. Con módulos de 1,2 mm (el mínimo fiable para una boquilla de 0,4) eso da un QR de 30 mm en una placa de 50, legible a 30 cm. Un identificador más largo obligaría a una versión mayor, módulos más pequeños y una placa que no escanea.</p>
+
+    <p>El generador de mallas se ejecuta entero en el navegador y sin dependencias pesadas: la matriz del QR se fusiona en rectángulos, los triángulos se escriben a mano y el 3MF es un ZIP sin comprimir. Unos 260 KB, frente a los 750 KB que costaría hacerlo con three.js.</p>
+
+    <div class="call">
+      <p><span class="k">El detalle que decide si el bicolor funciona</span>Leyendo el código de OrcaSlicer —del que deriva ElegooSlicer, el slicer de nuestra impresora— resulta que su importador de 3MF <strong>ignora <code>basematerials</code> y <code>displaycolor</code></strong>, que es lo que dicta la especificación estándar. Los filamentos se asignan leyendo <code>m:colorgroup</code> de la extensión de materiales, y solo a nivel de objeto: el color por triángulo se descarta. De ahí dos reglas que van al validador: <strong>un objeto por color</strong> y colores declarados como <code>m:colorgroup</code>. Con la otra forma, el cliente tendría que pintar la pieza a mano en el slicer y el modelo gratuito perdería la mitad de su gracia.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <section id="legal">
+    <h2 data-n="06">Las tres líneas rojas</h2>
+    <p class="h-lead">Lo que decidimos antes de escribir una línea de código.</p>
+
+    <div class="call red">
+      <p><span class="k">Sin embudo selectivo — no se negocia</span>Google permite pedir reseñas y recomienda hacerlo con QR, pero prohíbe desincentivar las negativas o pedir selectivamente las positivas, y desde abril de 2026 también fijar cuotas de reseñas al personal. En España, el art. 27 de la Ley de Competencia Desleal alcanza a «distorsionar» reseñas, con sanciones de hasta 1 M€. <strong>Nuestra pantalla es idéntica con una estrella y con cinco</strong>: mismo botón de Google, misma prominencia, y el buzón privado como opción añadida para todos. Va cubierto con un test automático.</p>
+    </div>
+
+    <div class="call">
+      <p><span class="k">La IA no ve datos personales sin red</span>Anonimizar la reseña no basta por sí solo: el EDPB mantiene que lo seudonimizado sigue siendo dato personal, y un texto libre puede identificar a alguien sin nombrarlo. Aquí actuamos como encargados del tratamiento del negocio, así que hace falta un contrato del artículo 28 con quien procese el texto. Por eso la ruta de reseñas va a <strong>Mistral La Plateforme directo</strong> —empresa francesa con DPA propio—, y no por OpenRouter, cuyo DPA firmado es solo de plan Enterprise: la retención cero reduce el riesgo pero no sustituye a un contrato. OpenRouter sigue siendo el proveedor por defecto para todo lo que no lleve datos personales. El coste es idéntico: menos de 3 $/mes con cien clientes.</p>
+    </div>
+
+    <div class="call">
+      <p><span class="k">MakerWorld prohíbe enlazar fuera</span>Sus normas vetan enlaces externos y QR a webs ajenas, con revocación de puntos e ingresos. Cambia el plan de canal: allí se publica el modelo paramétrico <em>sin</em> enlaces y la captación es la marca grabada en la propia pieza; el enlace al configurador se queda para Printables y la landing.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <section id="fase1">
+    <h2 data-n="07">Fase 1, tarea a tarea</h2>
+    <p class="h-lead">Diez días de agente y dos semanas de calendario.</p>
+    <p>Cada tarea trae qué toca, cómo se prueba y cuándo está hecha, para poder repartirlas entre sesiones o modelos distintos. Las tareas T5-T8 (generador) son independientes de T1-T4 (backend) y pueden ir en paralelo.</p>
+
+    <details open>
+      <summary><span class="tag">T0-T2</span> Cimientos y host de QR <span class="est">1,5 d</span></summary>
+      <div class="body">
+        <p><strong>Qué.</strong> Estructura del proyecto, dominios <code>dominio</code> y <code>q.dominio</code> en Vercel, schema <code>kit</code> con RLS y RPC, cron de agregación diaria, y la función de redirección con caché, invalidación por tag y registro de escaneo en segundo plano.</p>
+        <p><strong>Hecho cuando.</strong> <code>curl -I https://q.dominio/AB3KZ9</code> devuelve un 302 al destino, un identificador inexistente da 404, aparece la fila en <code>scans</code> con país y dispositivo, la latencia p50 baja de 150 ms desde España y cambiar el destino se refleja en menos de cinco segundos. Los <i>advisors</i> de Supabase, limpios.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag">T3-T4</span> Panel, página pública y embudo <span class="est">2 d</span></summary>
+      <div class="body">
+        <p><strong>Qué.</strong> Acceso por enlace mágico, alta de negocio con ayuda paso a paso para copiar su enlace de reseñas de Google, gestión de destinos, descarga del QR, y la vista de escaneos. Página pública del negocio y embudo de opiniones con aviso privado al dueño por Telegram o email.</p>
+        <p><strong>Hecho cuando.</strong> La página carga en menos de un segundo con Lighthouse móvil ≥ 90, un segundo usuario no ve datos del primero, el <i>honeypot</i> y el límite de peticiones funcionan, y el test confirma que el botón de Google aparece igual con 1★ que con 5★.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag">T5-T7</span> QR, malla, STL y 3MF bicolor <span class="est">3 d</span></summary>
+      <div class="body">
+        <p><strong>Qué.</strong> Validador con las reglas físicas (módulo ≥ 1,2 mm, versión ≤ 3, relieve 0,4-1,0 mm, hueco NFC fuera de los módulos), construcción de la malla con texto extruido desde la fuente, exportación a STL binario y a 3MF con dos materiales.</p>
+        <p><strong>Hecho cuando.</strong> El 3MF abre en PrusaSlicer 2.9, Bambu Studio y OrcaSlicer con dos partes de colores distintos; la malla pasa el test de cerrada; «Déjanos tu opinión» se lee a 6 mm.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag">T8-T9</span> Configurador y landing bilingüe <span class="est">2 d</span></summary>
+      <div class="body">
+        <p><strong>Qué.</strong> Configurador con vista previa y descarga en menos de un segundo en un móvil de gama media; landing ES/EN con precio visible, demo de 20 segundos, textos legales y analítica sin cookies (y por tanto sin banner).</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="tag">T10-T12</span> Canales y calle <span class="est">1 d + campo</span></summary>
+      <div class="body">
+        <p><strong>Qué.</strong> Modelo paramétrico publicado en MakerWorld (sin enlaces) y Printables, dos listados en Etsy con el campo de cumplimiento europeo relleno y el inserto GPSR generado por lote, y diez visitas a negocios del barrio: tres piezas regaladas a cambio de foto y opinión, siete a la venta.</p>
+        <p><strong>Antes de publicar nada</strong>, la placa pasa el protocolo de escaneo: iPhone y Android, a 15, 30 y 60 cm, con luz normal y rasante, tres intentos por combinación. Umbral: 100 % de lecturas a 30 cm en bicolor.</p>
+      </div>
+    </details>
+  </section>
+
+  <hr>
+
+  <section id="fases">
+    <h2 data-n="08">Después de la Fase 1</h2>
+    <p class="h-lead">Cada fase termina en algo usable; ninguna empieza sin señal.</p>
+    <ol class="phases">
+      <li>
+        <h4>QR dinámico y primera placa <span class="chip ok">ahora</span></h4>
+        <p>Lo de arriba. Termina con una placa en un bar real que escanea, una página que su dueño ya ha cambiado y los canales abiertos.</p>
+      </li>
+      <li>
+        <h4>Catálogo y pedidos <span class="est">≈ 4 días</span></h4>
+        <p>Placa de WiFi, soporte de mesa y, si <code>viajeros</code> está listo, la placa de check-in para alojamientos. Checkout propio con Stripe e IVA, cola de pedidos y estado para el cliente.</p>
+      </li>
+      <li>
+        <h4>Pro <span class="est">≈ 5 días</span></h4>
+        <p>Suscripción por Stripe Managed Payments, editor de página, respuestas con IA validadas contra esquema, analítica por pieza y resumen semanal.</p>
+      </li>
+      <li>
+        <h4>Fulfilment <span class="est">≈ 3 días</span></h4>
+        <p>Lotes por cama completa, etiquetas por API, inserto GPSR automático con su código de lote, avisos a OpenClaw de pedido nuevo, pago fallido u opinión de una o dos estrellas.</p>
+      </li>
+      <li>
+        <h4>Agente de atención <span class="chip warn">gated: 5 clientes Pro</span></h4>
+        <p>Instancia aislada por cliente, un solo canal, herramientas de solo lectura y cualquier escritura pasando por nuestro backend. 49-99 €/mes: aquí está el ingreso de verdad.</p>
+      </li>
+    </ol>
+  </section>
+
+  <hr>
+
+  <section id="corte">
+    <h2 data-n="09">Cuándo se mata</h2>
+    <p class="h-lead">Los umbrales, escritos antes de construir.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>A los 14 días</th><th>Decisión</th></tr></thead>
+        <tbody>
+          <tr><td>≥ 200 descargas del modelo <b>o</b> ≥ 3 ventas <b>o</b> ≥ 3 negocios que activan su página</td><td><span class="chip ok">Fase 2</span></td></tr>
+          <tr><td>1-2 ventas, o entre 50 y 200 descargas</td><td><span class="chip warn">Iterar pieza, precio o mensaje — una sola vez</span></td></tr>
+          <tr><td>&lt; 50 descargas, 0 ventas y 0 activaciones</td><td><span class="chip new">Archivar</span> — el host de QR y el generador quedan como piezas reutilizables</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Presupuesto de la prueba: <strong>≈ 91 €</strong> — dos bobinas de filamento, cincuenta pegatinas NFC, sobres e insertos, la cuota de apertura de Etsy y el dominio.</p>
+  </section>
+
+  <hr>
+
+  <section id="decisiones">
+    <h2 data-n="10">Decidido</h2>
+    <p class="h-lead">Cerrado el 21 de agosto. Queda el nombre, y no bloquea.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Decisión</th><th>Qué se hace</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>Plan Básico</td><td><strong>Gratis para siempre.</strong> La página nunca se congela ni se cobra; Pro se vende por embudo, IA y analítica</td><td><span class="chip ok">cerrado</span></td></tr>
+          <tr><td>NFC</td><td><strong>Incluido a 29,90 €</strong>, con variante sin chip a 24,90 € como entrada en Etsy</td><td><span class="chip ok">cerrado</span></td></tr>
+          <tr><td>Pasarela</td><td><strong>Stripe para todo</strong>: Checkout con IVA para las piezas, Managed Payments para Pro (8,5 % frente al 11,6 % de Polar)</td><td><span class="chip ok">cerrado</span> — pedir elegibilidad de SMP en Fase 1</td></tr>
+          <tr><td>Proveedor de IA</td><td><strong>Mistral La Plateforme directo.</strong> Ni MiniMax ni OpenRouter para esta ruta: hace falta DPA en la UE y el de OpenRouter es solo Enterprise</td><td><span class="chip warn">confirmar DPA antes de Fase 3</span></td></tr>
+          <tr><td>Impresora</td><td><strong>Elegoo Centauri Carbon 2 Combo</strong> con CANVAS de cuatro filamentos: el bicolor sale de una pasada. Nueve placas por bandeja, capa de 0,16 mm, y siempre en tanda completa porque cada cambio de color purga casi un gramo</td><td><span class="chip ok">cerrado</span></td></tr>
+          <tr><td>Catálogo de Fase 1</td><td>Solo la placa de opiniones en código; WiFi como segundo listado hasta la Fase 2</td><td><span class="chip ok">cerrado</span></td></tr>
+          <tr><td>Dominio y marca</td><td>Se desarrolla contra el <code>*.vercel.app</code> del proyecto y el host corto se lee de una variable. Hay que comprarlo <strong>antes de T10</strong>: va grabado en la pieza</td><td><span class="chip new">pendiente, no bloquea</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>Plan completo con arquitectura, esquema SQL, contratos de API y fuentes: <code>kit-local/docs/plan-2026-08-20.md</code>. Investigación previa del portafolio: <code>microsaas/docs/portfolio-2026.md</code>. Todas las cifras llevan fuente en el documento; las estimaciones propias van marcadas como tales.</p>
+  </footer>
+</div>
