@@ -2,15 +2,15 @@ const { test } = require("node:test");
 const assert = require("node:assert");
 const M = require("../lib/money.js");
 
-test("the Spanish story costs 9,99 EUR, is digital and pays book VAT", () => {
+test("the Spanish story costs 11,99 EUR, is digital and pays book VAT", () => {
   const p = M.product("pdf");
-  assert.strictEqual(p.priceCents, 999);
+  assert.strictEqual(p.priceCents, 1199);
   assert.strictEqual(p.kind, "digital");
   assert.strictEqual(p.vatRate, 0.04);
 });
 
-test("the English story costs 11,99 EUR", () => {
-  assert.strictEqual(M.product("pdf_en").priceCents, 1199);
+test("the English story costs 13,99 EUR", () => {
+  assert.strictEqual(M.product("pdf_en").priceCents, 1399);
   assert.strictEqual(M.product("pdf_en").vatRate, 0.04);
 });
 
@@ -44,8 +44,8 @@ test("total equals price: nothing is shipped", () => {
 });
 
 test("VAT is extracted from the gross price, not added on top", () => {
-  // 999 gross at 4 % -> 999 - 999/1.04 = 38,4 -> 38 cents
-  assert.strictEqual(M.vatCents("pdf"), 38);
+  // 1199 gross at 4 % -> 1199 - 1199/1.04 = 46,1 -> 46 cents
+  assert.strictEqual(M.vatCents("pdf"), 46);
   // 499 gross at 21 % -> 86,6 -> 87 cents
   assert.strictEqual(M.vatCents("credits"), 87);
 });
@@ -69,7 +69,7 @@ test("the AI ceilings leave room under the story price", () => {
 });
 
 test("amounts are formatted in euros for both locales", () => {
-  assert.match(M.formatEur(999, "es"), /9,99/);
+  assert.match(M.formatEur(1199, "es"), /11,99/);
   assert.match(M.formatEur(1490, "en"), /14\.90/);
 });
 
