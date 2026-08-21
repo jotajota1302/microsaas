@@ -1,28 +1,28 @@
 {
   "functions": {
     "api/order.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/revise.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/approve.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/job.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/admin.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "api/cron.js": {
-      "maxDuration": 300
+      "maxDuration": 60
     }
   },
   "crons": [
     {
       "path": "/api/cron",
-      "schedule": "* * * * *"
+      "schedule": "0 6 * * *"
     }
   ],
   "rewrites": [

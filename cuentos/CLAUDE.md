@@ -58,6 +58,12 @@ Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizad
 
 Al completar una fase, actualiza este checklist. Lo que afecte a los tres proyectos va en `../CLAUDE.md`.
 
+## Vercel
+
+- Proyecto  (, equipo «Jose Juan Jimenez's projects»), enlazado a  con  como raíz. Cada push a  despliega.
+- **El equipo está en Hobby** (2026-08-21).  lleva por eso cron **diario** () y . El diseño necesita **Pro**: cron cada minuto (reanudar jobs, recordatorios) y 300 s en // (el tramo  son ~14 imágenes + PDF). Al pasar a Pro: cron  y . Hobby además prohíbe el uso comercial: no se vende desde Hobby.
+- Variables de entorno necesarias en Vercel: , , , , , , , , , , ,  (cuando exista), .
+
 ## Convenciones
 
 - Código y comentarios en inglés; textos del producto en español e inglés.
