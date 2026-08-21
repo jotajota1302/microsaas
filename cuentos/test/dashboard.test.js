@@ -94,6 +94,8 @@ test("overview splits today from the week", () => {
   assert.strictEqual(o.week.orders, 2, "400 hours ago is outside the week");
   assert.ok(Math.abs(o.today.economics.costEur - 0.53) < 1e-9);
   assert.ok(Math.abs(o.week.economics.costEur - 0.54) < 1e-9);
-  assert.strictEqual(o.price.pdfEur, 12.9);
+  // read from lib/money.js, never typed twice: the panel must show what the
+  // shop actually charges, not what a test remembered
+  assert.strictEqual(o.price.pdfEur, require("../lib/money.js").product("pdf").priceCents / 100);
   assert.strictEqual(o.caps.scriptsPerDay, 200);
 });

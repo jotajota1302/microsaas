@@ -31,7 +31,7 @@ window.CUENTOS_I18N = {
     // the three-step rail: what you have now, and what comes next
     rail_1_title: "Lee el guion", rail_1_note: "Gratis · sin dibujos todavía",
     rail_2_title: "Mira la muestra", rail_2_note: "Gratis · dos páginas dibujadas",
-    rail_3_title: "Recibe el libro", rail_3_note: "12,90 € · las doce ilustradas",
+    rail_3_title: "Recibe el libro", rail_3_note: "9,99 € · las doce ilustradas",
     step_now: "Estás aquí", step_done: "Hecho", step_next: "Siguiente",
     script_intro: "Este es el guion: el texto de las doce páginas, todavía sin dibujar. Léelo con calma. Puedes pedir cambios dos veces sin coste, y cuando te guste, dibujamos dos páginas para que veas el estilo — también gratis.",
     script_nodraw_title: "Aún no hemos dibujado nada",
@@ -100,7 +100,7 @@ window.CUENTOS_I18N = {
     not_found: "We cannot find that story.", loading: "Loading your story…",
     rail_1_title: "Read the script", rail_1_note: "Free · no drawings yet",
     rail_2_title: "See the sample", rail_2_note: "Free · two pages drawn",
-    rail_3_title: "Get the book", rail_3_note: "€14.90 · all twelve illustrated",
+    rail_3_title: "Get the book", rail_3_note: "€11.99 · all twelve illustrated",
     step_now: "You are here", step_done: "Done", step_next: "Next",
     script_intro: "This is the script: the text of all twelve pages, not drawn yet. Read it at your own pace. You can ask for changes twice at no cost, and when you like it we draw two pages so you can see the style — free as well.",
     script_nodraw_title: "We have not drawn anything yet",

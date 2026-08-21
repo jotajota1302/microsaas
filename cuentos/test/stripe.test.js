@@ -27,12 +27,12 @@ test("the amount comes from the server's product table, never from the caller", 
       return { ok: true, json: async () => ({ id: "cs_1", url: "https://checkout" }) };
     };
     await S.createCheckout({ story: STORY, order: { ...ORDER, priceCents: 1, price_cents: 1 }, baseUrl: "https://x.dev" }, { fetch: fetchFn });
-    assert.strictEqual(body.get("line_items[0][price_data][unit_amount]"), "1290");
+    assert.strictEqual(body.get("line_items[0][price_data][unit_amount]"), "999");
     assert.strictEqual(body.get("line_items[0][price_data][currency]"), "eur");
   });
 });
 
-test("the english product is the 14,90 one", async () => {
+test("the english product is the dearer one", async () => {
   await withKeys(async () => {
     let body = null;
     const fetchFn = async (_url, opts) => {
@@ -40,7 +40,7 @@ test("the english product is the 14,90 one", async () => {
       return { ok: true, json: async () => ({ id: "cs_1", url: "https://checkout" }) };
     };
     await S.createCheckout({ story: STORY, order: { ...ORDER, locale: "en", product: "pdf_en" }, baseUrl: "https://x.dev" }, { fetch: fetchFn });
-    assert.strictEqual(body.get("line_items[0][price_data][unit_amount]"), "1490");
+    assert.strictEqual(body.get("line_items[0][price_data][unit_amount]"), "1199");
     assert.strictEqual(body.get("locale"), "en");
   });
 });

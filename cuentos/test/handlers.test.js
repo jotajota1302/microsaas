@@ -96,16 +96,16 @@ test("order: happy path creates the order and the script job, runs it, returns t
   assert.strictEqual(r.statusCode, 201);
   assert.strictEqual(r.body.token, db.story.token);
   const created = db.calls.find((c) => c[0] === "createOrder")[1];
-  assert.strictEqual(created.price_cents, 1290);
+  assert.strictEqual(created.price_cents, 999);
   assert.strictEqual(created.status, "script");
   assert.strictEqual(created.ip_hash, "iphash");
   assert.strictEqual(db.calls.find((c) => c[0] === "createJob")[1].kind, "script");
 });
 
-test("order: english locale picks the 14,90 product", async () => {
+test("order: english locale picks the English product", async () => {
   const db = fakeDb();
   await H.orderHandler({ db, moderation: okMod, runJob: runDone })(req({ body: { ...GOOD, locale: "en" } }), res());
-  assert.strictEqual(db.calls.find((c) => c[0] === "createOrder")[1].price_cents, 1490);
+  assert.strictEqual(db.calls.find((c) => c[0] === "createOrder")[1].price_cents, 1199);
 });
 
 test("order: a blocked input is refused before anything is created, and only a hash is kept", async () => {

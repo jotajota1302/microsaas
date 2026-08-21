@@ -87,8 +87,19 @@ input[type=text], input[type=email], select, textarea {
 }
 textarea { min-height: 4.5rem; resize: vertical; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .9rem 1rem; }
-fieldset { border: 1px solid var(--hair); border-radius: 14px; padding: 1rem 1.2rem 1.2rem; margin: 0; background: var(--surface); }
-legend { font-family: Fraunces, Georgia, serif; font-weight: 600; padding: 0 .4rem; }
+/* A <legend> sits ON the border by default: half on the card, half on the page
+   behind it, which reads as a mistake rather than as a heading. It is a band
+   across the top of the card instead — the same width as the card, its own
+   ground, and the content clearly underneath it. */
+fieldset { border: 1px solid var(--hair); border-radius: 14px; padding: 0 1.2rem 1.3rem; margin: 0; background: var(--surface); }
+legend {
+  display: block; float: left; width: calc(100% + 2.4rem); margin: 0 -1.2rem 1.2rem;
+  padding: .75rem 1.2rem; background: var(--sunken); border-bottom: 1px solid var(--hair);
+  border-radius: 13px 13px 0 0; box-sizing: border-box;
+  font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.05rem;
+}
+/* float takes it out of the flex flow; the gap below comes from its margin */
+fieldset.stack > legend + * { margin-top: 0; }
 .check { flex-direction: row; align-items: center; gap: .6rem; font-weight: 400; }
 .check input { width: 1.1rem; height: 1.1rem; }
 .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
