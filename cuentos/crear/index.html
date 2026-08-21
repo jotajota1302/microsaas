@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crear el cuento — Cuentos</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/options.js" defer></script>
+<script src="/assets/js/i18n.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/">cuentos<small>un cuento sobre su vida</small></a>
+    <a class="lang" id="langlink" href="?lang=en">English</a>
+  </header>
+
+  <main class="stack-lg">
+    <div class="stack">
+      <h1 data-i18n="create_title"></h1>
+      <p class="muted" data-i18n="create_lede"></p>
+    </div>
+
+    <form id="f" class="stack-lg" novalidate>
+      <fieldset class="stack">
+        <legend data-i18n="child"></legend>
+        <div class="grid">
+          <label><span data-i18n="name"></span><input type="text" name="name" maxlength="30" required autocomplete="off"><span class="hint" data-i18n="name_hint"></span></label>
+          <label><span data-i18n="gender"></span><select name="gender" data-options="genders" required></select></label>
+          <label><span data-i18n="age"></span><select name="ageBand" data-options="ageBands" required></select></label>
+          <label><span data-i18n="hair"></span><select name="hairColor" data-options="hairColors" required></select></label>
+          <label><span data-i18n="hair_type"></span><select name="hairType" data-options="hairTypes" required></select></label>
+          <label><span data-i18n="skin"></span><select name="skin" data-options="skinTones" required></select></label>
+          <label><span data-i18n="pet"></span><select name="pet" data-options="pets"></select></label>
+          <label><span data-i18n="hobby"></span><select name="hobby" data-options="hobbies" required></select></label>
+        </div>
+        <label class="check"><input type="checkbox" name="glasses"><span data-i18n="glasses"></span></label>
+      </fieldset>
+
+      <fieldset class="stack">
+        <legend data-i18n="world"></legend>
+        <div class="grid">
+          <label><span data-i18n="theme"></span><select name="theme" data-options="themes" required></select></label>
+          <label><span data-i18n="moment"></span><select name="moment" data-options="moments" required></select></label>
+          <label><span data-i18n="tone"></span><select name="tone" data-options="tones" required></select></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="stack">
+        <legend data-i18n="people"></legend>
+        <p class="muted" style="font-size:.9rem" data-i18n="people_hint"></p>
+        <div id="people" class="stack"></div>
+        <div><button type="button" class="btn secondary" id="addPerson" data-i18n="add_person"></button></div>
+      </fieldset>
+
+      <fieldset class="stack">
+        <legend data-i18n="dedication"></legend>
+        <label><span class="visually-hidden" data-i18n="dedication"></span><textarea name="dedication" maxlength="140"></textarea><span class="hint" data-i18n="dedication_hint"></span></label>
+      </fieldset>
+
+      <fieldset class="stack">
+        <legend data-i18n="email"></legend>
+        <label><span class="visually-hidden" data-i18n="email"></span><input type="email" name="email" required autocomplete="email"><span class="hint" data-i18n="email_hint"></span></label>
+        <label class="check"><input type="checkbox" name="consent" required><span data-i18n="consent"></span></label>
+      </fieldset>
+
+      <div id="msg" class="note" hidden></div>
+      <div class="row">
+        <button type="submit" class="btn big" id="submit"><span data-i18n="submit"></span></button>
+      </div>
+    </form>
+
+    <form id="wait" class="card stack" hidden>
+      <p data-i18n="sold_out"></p>
+      <div class="row"><input type="email" name="email" required style="max-width:20rem"><button class="btn">OK</button></div>
+    </form>
+  </main>
+
+  <footer>
+    <a href="/legal/">Aviso legal</a><a href="/legal/privacidad/">Privacidad</a><a href="/legal/condiciones/">Condiciones</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const ready = () => window.CUENTOS_OPTIONS && window.CUENTOS_I18N;
+  if (!ready()) return document.addEventListener("DOMContentLoaded", init); else init();
+
+  function init() {
+    const lang = window.cuentosLang();
+    const T = window.CUENTOS_I18N[lang];
+    const O = window.CUENTOS_OPTIONS;
+    document.documentElement.lang = lang;
+    document.getElementById("langlink").textContent = lang === "es" ? "English" : "Español";
+    document.getElementById("langlink").href = lang === "es" ? "?lang=en" : "?lang=es";
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = T[el.dataset.i18n] || ""; });
+
+    const fill = (select, key, placeholder) => {
+      select.innerHTML = "";
+      const ph = document.createElement("option"); ph.value = ""; ph.textContent = placeholder || "—"; ph.disabled = true; ph.selected = true;
+      select.appendChild(ph);
+      for (const o of O[key]) { const opt = document.createElement("option"); opt.value = o.id; opt.textContent = o[lang]; select.appendChild(opt); }
+    };
+    document.querySelectorAll("select[data-options]").forEach((s) => fill(s, s.dataset.options));
+    document.querySelector("select[name=pet]").value = "ninguna";
+
+    // people
+    const people = document.getElementById("people");
+    const addBtn = document.getElementById("addPerson");
+    function addPerson() {
+      if (people.children.length >= O.maxPeople) return;
+      const row = document.createElement("div");
+      row.className = "grid";
+      row.innerHTML = `
+        <label><span>${T.relation}</span><select data-p="relation" required></select></label>
+        <label><span>${T.person_name}</span><input type="text" data-p="name" maxlength="30" required></label>
+        <label><span>${T.person_age}</span><select data-p="ageBand"></select></label>
+        <div style="align-self:end"><button type="button" class="btn ghost" data-remove>${T.remove}</button></div>`;
+      fill(row.querySelector("[data-p=relation]"), "relations");
+      const age = row.querySelector("[data-p=ageBand]"); fill(age, "ageBands", "—"); age.querySelector("option").disabled = false; age.value = "";
+      row.querySelector("[data-remove]").onclick = () => { row.remove(); addBtn.hidden = false; };
+      people.appendChild(row);
+      addBtn.hidden = people.children.length >= O.maxPeople;
+    }
+    addBtn.onclick = addPerson;
+
+    const form = document.getElementById("f");
+    const msg = document.getElementById("msg");
+    const submit = document.getElementById("submit");
+    const show = (text, kind) => { msg.hidden = false; msg.className = "note " + (kind || ""); msg.textContent = text; };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+      const fd = new FormData(form);
+      const body = {
+        email: fd.get("email"), locale: lang,
+        personalization: {
+          name: fd.get("name"), gender: fd.get("gender"), ageBand: fd.get("ageBand"), hairColor: fd.get("hairColor"), hairType: fd.get("hairType"),
+          skin: fd.get("skin"), glasses: fd.get("glasses") === "on", pet: fd.get("pet") || "ninguna", hobby: fd.get("hobby"),
+          theme: fd.get("theme"), moment: fd.get("moment"), tone: fd.get("tone"), dedication: fd.get("dedication"),
+          people: [...people.children].map((row) => ({
+            relation: row.querySelector("[data-p=relation]").value,
+            name: row.querySelector("[data-p=name]").value,
+            ageBand: row.querySelector("[data-p=ageBand]").value || null,
+          })),
+        },
+      };
+      submit.disabled = true; submit.innerHTML = `<span class="spinner"></span> ${T.writing}`;
+      try {
+        const res = await fetch("/api/order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 201 && data.token) { location.href = `/c/${data.token}`; return; }
+        if (res.status === 202) { show(T.sent_email, "sea"); return; }
+        if (res.status === 503) { form.hidden = true; document.getElementById("wait").hidden = false; return; }
+        if (res.status === 429) { show(T[data.error] || T.error, "alarm"); return; }
+        if (res.status === 422) { show(T.blocked, "alarm"); return; }
+        show(T.error, "alarm");
+      } catch { show(T.error, "alarm"); }
+      finally { submit.disabled = false; submit.innerHTML = `<span>${T.submit}</span>`; }
+    });
+
+    document.getElementById("wait").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = new FormData(e.target).get("email");
+      await fetch("/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, locale: lang, reason: "cap" }) });
+      e.target.innerHTML = `<p>${T.waitlist_ok}</p>`;
+    });
+  }
+})();
+</script>
+</body>
+</html>

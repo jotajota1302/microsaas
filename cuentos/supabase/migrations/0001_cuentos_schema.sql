@@ -42,6 +42,7 @@ create table cuentos.stories (
   coloring_paths  jsonb not null default '[]'::jsonb,
   pdf_path        text,
   fallbacks       int  not null default 0,
+  reminder_sent_at timestamptz,
   expires_at      timestamptz not null,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()

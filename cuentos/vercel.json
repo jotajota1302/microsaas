@@ -1,8 +1,34 @@
 {
   "functions": {
-    "api/job.js": { "maxDuration": 300 }
+    "api/order.js": {
+      "maxDuration": 300
+    },
+    "api/revise.js": {
+      "maxDuration": 300
+    },
+    "api/approve.js": {
+      "maxDuration": 300
+    },
+    "api/job.js": {
+      "maxDuration": 300
+    },
+    "api/admin.js": {
+      "maxDuration": 300
+    },
+    "api/cron.js": {
+      "maxDuration": 300
+    }
   },
   "crons": [
-    { "path": "/api/cron", "schedule": "* * * * *" }
+    {
+      "path": "/api/cron",
+      "schedule": "* * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/c/:token",
+      "destination": "/c/index.html"
+    }
   ]
 }

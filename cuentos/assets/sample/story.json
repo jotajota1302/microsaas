@@ -1,0 +1,90 @@
+{
+  "title": "El faro y la estrella de mar",
+  "dedication_hint": "Para quienes miran el mar con los ojos llenos de preguntas.",
+  "character_sheet": {
+    "appearance": "a 7-year-old child with curly brown hair, light skin and round glasses",
+    "outfit": "a blue striped shirt, grey shorts, and red sandals",
+    "companion": "a fluffy grey cat"
+  },
+  "pages": [
+    {
+      "n": 1,
+      "beat": "setup",
+      "text": "Cada tarde, {{NOMBRE}} se sentaba en la arena, justo donde las olas mojan los pies. Allí, con un cuaderno en el regazo, dibujaba lo que veía: gaviotas, barcas, conchas. El gato gris, fiel como una sombra, se tumbaba a su lado. «{{NOMBRE}}», decía la abuela desde la puerta, «cuando dibujas, el mundo se vuelve más bonito». Y {{NOMBRE}} sonreía, porque era verdad.",
+      "image_hint": "A child with round glasses sits on the sand, drawing in a notebook; a grey cat lies nearby."
+    },
+    {
+      "n": 2,
+      "beat": "problem",
+      "text": "Una mañana, una estrella de mar apareció en la orilla. No se movía. {{NOMBRE}} la cogió con cuidado y la llevó al agua. Pero la estrella temblaba y señalaba el faro con uno de sus brazos. «Algo le pasa», murmuró {{NOMBRE}}. El gato maulló, inquieto. La estrella no quería ir al mar: quería que {{NOMBRE}} la ayudara a encontrar algo importante, algo que había perdido en la noche.",
+      "image_hint": "A starfish on the sand points a tiny arm toward a distant lighthouse; a child holds it gently."
+    },
+    {
+      "n": 3,
+      "beat": "attempt",
+      "text": "«¿Buscas una perla?», preguntó {{NOMBRE}}. Y fue a la tienda de la playa, donde el viejo vendía caracolas. No encontró ninguna perla. La estrella negaba con su cuerpo. Entonces {{NOMBRE}} pensó que tal vez era un tesoro, y corrió al puerto. Preguntó a los pescadores, que alzaron los hombros. El gato, sentado en el muelle, miraba el faro con fijeza. La estrella suspiró.",
+      "image_hint": "A child asks a fisherman at the dock; the grey cat stares at the lighthouse; the starfish looks sad."
+    },
+    {
+      "n": 4,
+      "beat": "attempt",
+      "text": "«Tal vez es un mensaje dentro de una botella», dijo {{NOMBRE}}, y recorrió la playa de punta a punta. Recogió botellas rotas, tapones de corcho, una red vieja. La estrella, sobre una roca, no se alegraba. El gato olfateaba el viento. «No es eso», comprendió {{NOMBRE}}. Algo en la mirada de la estrella decía que lo perdido no era una cosa, sino algo más grande, más brillante.",
+      "image_hint": "A child examines a broken bottle on the beach; the starfish waits on a rock; the cat sniffs the air."
+    },
+    {
+      "n": 5,
+      "beat": "attempt",
+      "text": "De vuelta en casa, {{NOMBRE}} abrió el cuaderno. Dibujó a la estrella, al faro, al mar de noche. El gato saltó sobre la mesa y puso una pata sobre el dibujo del faro. «¿El faro?», preguntó {{NOMBRE}}. La estrella, que descansaba en un plato con agua, parpadeó. Tal vez lo perdido estaba allí. Pero ¿qué podía haber perdido una estrella de mar en un faro de piedra?",
+      "image_hint": "A child draws at a wooden table; the grey cat touches the lighthouse sketch; the starfish is in a bowl."
+    },
+    {
+      "n": 6,
+      "beat": "attempt",
+      "text": "Al caer la tarde, {{NOMBRE}} subió con la estrella hasta el faro. El guarda, un hombre de barba blanca, las recibió. «¿Has perdido algo?», preguntó. La estrella tembló. El guarda mostró la linterna, el cuarto de las máquinas, las escaleras de caracol. Nada. La estrella parecía más triste que nunca. El gato, desde lo alto, maulló mirando al horizonte, donde el sol se hundía.",
+      "image_hint": "A child climbs the spiral stairs of a lighthouse, holding a starfish; the grey cat waits at the top."
+    },
+    {
+      "n": 7,
+      "beat": "attempt",
+      "text": "«Tal vez lo que busca no está aquí dentro, sino fuera», dijo {{NOMBRE}}. Se asomó a la ventana del faro. El mar era una mancha oscura. Las estrellas empezaban a salir. La estrella de mar alzó un brazo hacia el cielo. «¿Quieres ver las estrellas?», preguntó {{NOMBRE}}. La estrella asintió. Pero desde allí abajo, el cielo se veía pequeño, empañado por la luz del faro.",
+      "image_hint": "A child holds a starfish at a lighthouse window; outside, the night sky begins to glow; the cat sits nearby."
+    },
+    {
+      "n": 8,
+      "beat": "attempt",
+      "text": "Bajaron a la playa. {{NOMBRE}} tumbó a la estrella sobre una piedra plana, donde el cielo se reflejaba en los charcos. La estrella miraba, pero no era eso. El gato se acercó y frotó su cabeza contra la mano de {{NOMBRE}}. «No encuentro lo que busca», suspiró {{NOMBRE}}. Y entonces, sin querer, miró su cuaderno. Allí estaban sus dibujos del día. Y algo encajó.",
+      "image_hint": "A child sits on the beach with a starfish on a flat stone, looking at a sketchbook; the grey cat nuzzles their hand."
+    },
+    {
+      "n": 9,
+      "beat": "attempt",
+      "text": "«La estrella quiere que alguien la vea», murmuró {{NOMBRE}}. «No una persona, sino otra estrella. Una del cielo». Recordó que las estrellas de mar, en la noche, se iluminan cuando las estrellas del cielo brillan. Pero esa noche había nubes. {{NOMBRE}} pensó en dibujar una estrella en el cielo, pero un dibujo no es real. El gato, como si entendiera, señaló con la cola el faro.",
+      "image_hint": "A child looks up at cloudy night sky, holding a starfish; the grey cat points its tail toward the lighthouse."
+    },
+    {
+      "n": 10,
+      "beat": "attempt",
+      "text": "«El faro enciende su luz para guiar a los barcos», dijo {{NOMBRE}}. «Pero las estrellas de mar no necesitan esa luz. Necesitan la luz de las estrellas de verdad». Entonces entendió: la estrella había perdido su reflejo en el cielo. Las nubes tapaban a su hermana celestial. Y la estrella, sola en la arena, no podía brillar. {{NOMBRE}} abrazó a la estrella. «Te ayudaré», prometió.",
+      "image_hint": "A child hugs a starfish on the beach; the lighthouse beam sweeps the sky; the grey cat watches."
+    },
+    {
+      "n": 11,
+      "beat": "attempt",
+      "text": "{{NOMBRE}} corrió a casa y cogió su cuaderno de dibujo, el que siempre llevaba. Volvió a la playa, donde la estrella esperaba. El gato la había seguido. «No puedo mover las nubes, pero puedo dibujar la estrella que echas de menos», dijo. Y allí, a la luz de la luna, dibujó una estrella grande, con cinco puntas, justo encima del faro. La estrella de mar miró el dibujo y tembló de emoción.",
+      "image_hint": "A child draws a large star in a notebook on the beach; the starfish watches; the grey cat sits beside them."
+    },
+    {
+      "n": 12,
+      "beat": "resolution",
+      "text": "De repente, las nubes se abrieron. La estrella del cielo apareció, justo donde {{NOMBRE}} la había dibujado. Su luz cayó sobre la estrella de mar, que empezó a brillar con un resplandor suave y dorado. La estrella, feliz, se deslizó hacia el mar, llevando consigo el reflejo de su hermana del cielo. {{NOMBRE}} sonrió. El gato ronroneó. Y en el cuaderno, el dibujo seguía allí, recordando a {{NOMBRE}} que, a veces, lo que hace especial es saber mirar.",
+      "image_hint": "A starfish glows golden in the sea; a child and a grey cat watch from the beach; a bright star shines above."
+    }
+  ],
+  "coloring_hints": [
+    "A child with round glasses draws on the sand; a grey cat sleeps beside a notebook.",
+    "A starfish on a flat rock looks up at the sky; the lighthouse stands in the background.",
+    "A child holds a starfish at the top of a lighthouse; the cat sits on the railing.",
+    "A starfish glows in the water under a bright star; a child and cat watch from the beach."
+  ],
+  "moral": "Lo que se pierde no siempre se encuentra buscando; a veces, basta con mirar de otra manera."
+}

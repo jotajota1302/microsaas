@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cola de revisión — cuentos</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="/assets/css/app.css">
+<style>
+  .item { border: 1px solid var(--hair); border-radius: 14px; background: #fff; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .8rem; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .5rem; }
+  .thumbs figure { margin: 0; }
+  .thumbs img { width: 100%; border-radius: 8px; border: 1px solid var(--hair); }
+  .thumbs figcaption { font-size: .7rem; color: var(--muted); }
+  pre { white-space: pre-wrap; font-size: .75rem; background: var(--sunken); padding: .6rem; border-radius: 8px; max-height: 12rem; overflow: auto; }
+  code { background: var(--sunken); padding: .05rem .3rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap stack-lg">
+  <header class="top"><a class="brand" href="/">cuentos<small>cola de revisión</small></a></header>
+  <form id="auth" class="row">
+    <input type="password" id="tok" placeholder="ADMIN_TOKEN" style="max-width:22rem">
+    <button class="btn">Entrar</button>
+    <button type="button" class="btn secondary" id="reload">Recargar</button>
+  </form>
+  <form id="paid" class="card stack">
+    <h3>Marcar pagado (Etsy o manual)</h3>
+    <div class="row">
+      <input type="text" id="paidToken" placeholder="token del cuento (22 caracteres)" style="max-width:22rem">
+      <input type="text" id="paidRef" placeholder="referencia del pedido" style="max-width:16rem">
+      <select id="paidProvider"><option value="etsy">etsy</option><option value="manual">manual</option><option value="stripe">stripe</option></select>
+      <button class="btn">Pagado → ilustrar el resto</button>
+    </div>
+    <p class="muted" style="font-size:.85rem" id="paidMsg"></p>
+  </form>
+  <div id="list" class="stack"></div>
+</div>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const tok = () => localStorage.getItem("cuentos_admin") || "";
+  const headers = () => ({ Authorization: "Bearer " + tok(), "Content-Type": "application/json" });
+  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  $("auth").onsubmit = (e) => { e.preventDefault(); localStorage.setItem("cuentos_admin", $("tok").value); load(); };
+  $("reload").onclick = load;
+
+  async function act(body) {
+    const res = await fetch("/api/admin", { method: "POST", headers: headers(), body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    alert(res.ok ? "OK: " + JSON.stringify(data) : "Error " + res.status + ": " + JSON.stringify(data));
+    load();
+  }
+
+  $("paid").onsubmit = (e) => {
+    e.preventDefault();
+    act({ action: "mark_paid", token: $("paidToken").value.trim(), reference: $("paidRef").value.trim(), provider: $("paidProvider").value });
+  };
+
+  async function load() {
+    const list = $("list");
+    list.innerHTML = "<p class='muted'>Cargando…</p>";
+    const res = await fetch("/api/admin", { headers: headers() });
+    if (!res.ok) { list.innerHTML = `<p class="note alarm">HTTP ${res.status}</p>`; return; }
+    const { items } = await res.json();
+    if (!items.length) { list.innerHTML = "<p class='muted'>Nada que revisar.</p>"; return; }
+    list.innerHTML = items.map(({ job, order, story }) => `
+      <div class="item">
+        <div class="row">
+          <b>${esc(job.kind)}</b> · <code>${esc(job.state)}</code> · ${(job.costCents || 0)} cts · ${esc(order && order.email)} · ${esc(order && order.status)}
+          ${story ? ` · <a href="/c/${story.token}" target="_blank">ver visor</a>` : ""}
+        </div>
+        ${job.error ? `<p class="note ${/awaiting/.test(job.error) ? "sea" : "alarm"}" style="font-size:.85rem">${esc(job.error)}</p>` : ""}
+        ${story ? `<p class="story-text"><b>${esc(story.title)}</b> — ${esc(story.dedication)}</p>` : ""}
+        ${story && story.sheet ? `<img src="${story.sheet}" style="max-width:24rem;border-radius:8px;border:1px solid var(--hair)">` : ""}
+        ${story ? `<div class="thumbs">${story.pages.map((p) => p.image ? `<figure><img src="${p.image}"><figcaption>${p.n}</figcaption></figure>` : "").join("")}${(story.coloring || []).map((u, i) => `<figure><img src="${u}"><figcaption>colorear ${i + 1}</figcaption></figure>`).join("")}</div>` : ""}
+        ${story ? `<details><summary>Texto</summary><pre>${story.pages.map((p) => p.n + ". " + esc(p.text)).join("\n\n")}</pre></details>` : ""}
+        <details><summary>Pasos</summary><pre>${esc(JSON.stringify(job.steps, null, 1))}</pre></details>
+        <div class="row">
+          <button class="btn" data-a="approve" data-j="${job.id}">Aprobar y entregar</button>
+          <button class="btn secondary" data-a="retry" data-j="${job.id}">Reintentar</button>
+          ${story && story.pdf ? `<a class="btn secondary" href="${story.pdf}" target="_blank">PDF</a>` : ""}
+          ${story ? `<button class="btn ghost" data-a="retouch" data-t="${story.token}">Retocar páginas…</button>` : ""}
+        </div>
+      </div>`).join("");
+    list.querySelectorAll("button[data-a]").forEach((b) => b.onclick = () => {
+      const a = b.dataset.a;
+      if (a === "retouch") {
+        const pages = prompt("Páginas a regenerar (números 1-12 separados por comas, máx. 3):");
+        if (!pages) return;
+        return act({ action: "retouch", token: b.dataset.t, pages: pages.split(",").map((n) => Number(n.trim()) - 1) });
+      }
+      if (a === "approve" && !confirm("¿Aprobar y enviar el email de entrega?")) return;
+      act({ action: a, jobId: b.dataset.j });
+    });
+  }
+  if (tok()) load();
+})();
+</script>
+</body>
+</html>

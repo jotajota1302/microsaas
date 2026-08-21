@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu cuento — Cuentos</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/i18n.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="brand" href="/">cuentos</a>
+    <div class="stages" id="stages" aria-label="Estado"></div>
+    <span class="exp" id="exp"></span>
+  </div>
+
+  <main id="main" class="stack-lg" style="padding-top:1.5rem">
+    <p class="muted" id="status"><span class="spinner"></span> …</p>
+  </main>
+
+  <footer>
+    <a href="/legal/">Aviso legal</a><a href="/legal/privacidad/">Privacidad</a><a href="/legal/condiciones/">Condiciones</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  if (!window.CUENTOS_I18N) return document.addEventListener("DOMContentLoaded", init); else init();
+
+  function init() {
+    const token = location.pathname.split("/").filter(Boolean).pop();
+    const main = document.getElementById("main");
+    const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let T = window.CUENTOS_I18N[window.cuentosLang()];
+    let view = null;
+
+    async function load() {
+      const res = await fetch(`/api/story?token=${encodeURIComponent(token)}`);
+      if (res.status === 410) return renderMessage(T.expired_title, T.expired_body);
+      if (!res.ok) return renderMessage(T.not_found, "");
+      view = await res.json();
+      T = window.CUENTOS_I18N[view.locale] || T;
+      document.documentElement.lang = view.locale;
+      document.title = view.title;
+      render();
+    }
+
+    function renderMessage(title, body) {
+      main.innerHTML = `<div class="card stack"><h1>${esc(title)}</h1><p class="muted">${esc(body)}</p><p><a class="btn" href="/crear/">${T.submit}</a></p></div>`;
+    }
+
+    function stagesHtml(stage) {
+      const order = ["script", "sample", "full"];
+      return order.map((s) => `<span class="${s === stage ? "on" : ""}">${T["stage_" + s]}</span>`).join("");
+    }
+
+    function pagesHtml() {
+      return view.pages.map((p) => `
+        <article class="pg">
+          <div class="art ${p.image ? "" : "later"}">
+            ${p.image ? `<img src="${p.image}" alt="" loading="lazy">` : `<div class="veil"><span>${T.later}</span></div>`}
+          </div>
+          <div class="txt story-text"><p>${esc(p.text)}</p><span class="n">${p.n}</span></div>
+        </article>`).join("");
+    }
+
+    function render() {
+      document.getElementById("stages").innerHTML = stagesHtml(view.stage);
+      document.getElementById("exp").textContent = `${T.expires} ${new Date(view.expiresAt).toLocaleDateString(view.locale === "en" ? "en-GB" : "es-ES", { day: "numeric", month: "long" })}`;
+
+      const intro = view.stage === "script" ? T.script_intro : view.stage === "sample" ? T.sample_intro : T.full_intro;
+      let actions = "";
+      if (view.stage === "script") {
+        actions = `
+          <div class="card stack" id="actions">
+            <div class="row">
+              <button class="btn big" id="like">${T.like}</button>
+              <button class="btn secondary" id="changeBtn" ${view.revisionsLeft ? "" : "disabled"}>${T.change} · ${view.revisionsLeft} ${T.changes_left}</button>
+            </div>
+            ${view.revisionsLeft ? "" : `<p class="muted" style="font-size:.9rem">${T.no_changes_left}</p>`}
+            <form id="changeForm" class="stack" hidden>
+              <textarea name="instruction" maxlength="200" minlength="3" required placeholder="${esc(T.change_placeholder)}"></textarea>
+              <div class="row"><button class="btn">${T.change_send}</button></div>
+            </form>
+            <div id="amsg" class="note" hidden></div>
+          </div>`;
+      } else if (view.stage === "sample") {
+        actions = `
+          <div class="card stack" id="actions">
+            <h2>${T.complete} — ${esc(view.price)}</h2>
+            <p class="muted">${T.complete_body}</p>
+            ${view.etsyUrl
+              ? `<div class="row"><a class="btn big" href="${view.etsyUrl}" target="_blank" rel="noopener">${T.buy_etsy}</a></div><p class="muted" style="font-size:.9rem">${T.etsy_code} <code>${view.token}</code></p>`
+              : `<p class="note">${T.etsy_soon}</p>`}
+          </div>`;
+      } else {
+        actions = `
+          <div class="card stack" id="actions">
+            <div class="row">
+              <a class="btn big" href="${view.pdf}" download>${T.download}</a>
+              <button class="btn secondary" id="printBtn">${T.print_interest}</button>
+            </div>
+            <p class="muted" style="font-size:.9rem">${T.retouch_hint}</p>
+            <div id="amsg" class="note" hidden></div>
+          </div>`;
+      }
+
+      const sheet = view.sheet ? `<figure class="sheet"><img src="${view.sheet}" alt=""><figcaption>${T.so_is} ${esc(view.childName)}</figcaption></figure>` : "";
+      const coloring = view.coloring && view.coloring.length
+        ? `<section class="stack"><h2>${T.coloring}</h2><div class="grid">${view.coloring.map((u) => `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="" style="width:100%;border:1px solid var(--hair);border-radius:10px;background:#fff"></a>`).join("")}</div></section>`
+        : "";
+
+      main.innerHTML = `
+        <div class="stack">
+          <h1>${esc(view.title)}</h1>
+          <p class="muted story-text"><em>${esc(view.dedication)}</em></p>
+          <p class="note sea">${intro}</p>
+        </div>
+        ${actions}
+        ${sheet}
+        <div class="book">${pagesHtml()}</div>
+        <p class="muted story-text"><b>${T.moral}:</b> ${esc(view.moral)}</p>
+        ${coloring}`;
+
+      bind();
+    }
+
+    function busy(btn, text) { btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${text}`; }
+    const amsg = () => document.getElementById("amsg");
+    const say = (text, kind) => { const m = amsg(); if (!m) return; m.hidden = false; m.className = "note " + (kind || ""); m.textContent = text; };
+
+    function bind() {
+      const like = document.getElementById("like");
+      if (like) like.onclick = async () => {
+        busy(like, T.illustrating);
+        const res = await fetch("/api/approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+        if (res.ok) return load();
+        const data = await res.json().catch(() => ({}));
+        say(res.status === 503 ? T.sold_out : T.error, "alarm");
+        like.disabled = false; like.textContent = T.like;
+      };
+      const changeBtn = document.getElementById("changeBtn");
+      const changeForm = document.getElementById("changeForm");
+      if (changeBtn && changeForm) {
+        changeBtn.onclick = () => { changeForm.hidden = !changeForm.hidden; changeForm.querySelector("textarea").focus(); };
+        changeForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const instruction = new FormData(changeForm).get("instruction");
+          const b = changeForm.querySelector("button"); busy(b, T.writing);
+          const res = await fetch("/api/revise", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, instruction }) });
+          if (res.ok) return load();
+          say(res.status === 422 ? T.blocked : T.error, "alarm");
+          b.disabled = false; b.textContent = T.change_send;
+        };
+      }
+      const printBtn = document.getElementById("printBtn");
+      if (printBtn) printBtn.onclick = async () => {
+        busy(printBtn, "…");
+        await fetch("/api/print-interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+        printBtn.textContent = "✓";
+        say(T.print_thanks, "sea");
+      };
+    }
+
+    load().catch(() => renderMessage(T.error, ""));
+  }
+})();
+</script>
+</body>
+</html>

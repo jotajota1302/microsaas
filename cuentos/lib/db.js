@@ -92,6 +92,21 @@ function createDb(client) {
     async markPaid(storyId) {
       return unwrap(await t("stories").update({ expires_at: daysFromNow(FULL_TTL_DAYS) }).eq("id", storyId).select().single());
     },
+    async storiesExpiringSoon(limit = 50) {
+      const inTwoDays = new Date(Date.now() + 2 * 86400000).toISOString();
+      return unwrap(
+        await t("stories").select("*")
+          .is("reminder_sent_at", null)
+          .neq("stage", "full")
+          .lt("expires_at", inTwoDays)
+          .gt("expires_at", new Date().toISOString())
+          .limit(limit)
+      );
+    },
+    /** Forgets the content but keeps the row: the token must not be reusable. */
+    async purgeStory(id) {
+      return unwrap(await t("stories").update({ story: {}, page_paths: {}, coloring_paths: [], sheet_path: null, pdf_path: null, instructions: [] }).eq("id", id).select().single());
+    },
     async expiredStories(limit = 50) {
       return unwrap(await t("stories").select("*").lt("expires_at", new Date().toISOString()).limit(limit));
     },

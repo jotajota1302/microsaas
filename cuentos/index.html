@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuentos — un cuento sobre la vida de tu hijo, ilustrado</title>
+<meta name="description" content="Un cuento personalizado donde tu hijo es el protagonista junto a su familia, sus amigos y lo que está viviendo. Lees el guion gratis, pides cambios y pagas solo si te gusta. PDF ilustrado en acuarela, 12,90 €.">
+<link rel="alternate" hreflang="es" href="/">
+<link rel="alternate" hreflang="en" href="/en/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/">cuentos<small>un cuento sobre su vida</small></a>
+    <a class="lang" href="/en/">English</a>
+  </header>
+
+  <main class="stack-lg">
+    <section class="hero">
+      <div class="stack">
+        <p class="eyebrow">Cuentos personalizados · ilustrados en acuarela</p>
+        <h1>Un cuento sobre tu hijo y su mundo</h1>
+        <p class="lede">Su familia, sus amigos, su mascota y <b>lo que está viviendo ahora</b>: el hermanito que viene, el primer día de cole, el miedo a la oscuridad. Escrito e ilustrado para él.</p>
+        <p class="lede"><b>Lees el guion gratis.</b> Pides cambios si quieres. Y solo pagas cuando te guste.</p>
+        <div class="row">
+          <a class="btn big" href="/crear/">Crear el cuento — gratis</a>
+          <span class="price">12,90 € <small>el cuento completo en PDF</small></span>
+        </div>
+      </div>
+      <figure class="sheet" style="margin:0">
+        <img src="/assets/sample/p02.jpg" alt="Ilustración de muestra: una niña con gafas y vestido amarillo en un bosque de noche, con un farolillo" width="1376" height="768">
+        <figcaption>Así dibujamos. Doce páginas así, con el mismo niño de principio a fin.</figcaption>
+      </figure>
+    </section>
+
+    <section class="stack">
+      <h2>Cómo funciona</h2>
+      <div class="steps">
+        <div class="step"><h3>Cuéntanos cómo es</h3><p>Su nombre, cómo es, qué le gusta, quién le acompaña y qué está viviendo. Dos minutos.</p></div>
+        <div class="step"><h3>Lee el guion gratis</h3><p>En menos de un minuto tienes las doce páginas escritas. Pide hasta dos cambios sin coste.</p></div>
+        <div class="step"><h3>Mira cómo queda</h3><p>Cuando el guion te guste, dibujamos a tu protagonista y dos páginas. Gratis también.</p></div>
+        <div class="step"><h3>Complétalo si te convence</h3><p>12,90 €: las doce páginas ilustradas, cuatro para colorear y el PDF para siempre. Revisado a mano antes de entregarlo.</p></div>
+      </div>
+    </section>
+
+    <section class="stack" id="muestra">
+      <h2>Mira una muestra con su nombre</h2>
+      <p class="muted">Un cuento de ejemplo, ya escrito. Escribe el nombre y léelo como lo leería él.</p>
+      <div class="row">
+        <input type="text" id="sampleName" placeholder="Nombre" maxlength="20" style="max-width:14rem" value="Ana">
+      </div>
+      <div class="book" id="sample"></div>
+      <div class="row"><a class="btn big" href="/crear/">Crear el suyo — gratis</a></div>
+    </section>
+
+    <section class="stack">
+      <h2>Lo que nos diferencia</h2>
+      <div class="steps" style="counter-reset:none">
+        <div class="card stack"><h3>Es sobre su vida</h3><p class="muted">Su hermana, su abuela o su mejor amigo entran en el cuento con un papel de verdad. Y la historia gira en torno a lo que le pasa este mes.</p></div>
+        <div class="card stack"><h3>El mismo niño en todas las páginas</h3><p class="muted">Una hoja de personaje fija su cara, su pelo y su ropa. Nada de un niño distinto en cada página.</p></div>
+        <div class="card stack"><h3>Sin fotos, sin sorpresas</h3><p class="muted">No pedimos fotos. El nombre nunca sale de nuestro servidor. Los datos se borran a los 7 días si no completas el cuento, y a los 30 si lo completas.</p></div>
+      </div>
+      <p class="note">Texto e ilustraciones se generan con inteligencia artificial a partir de lo que nos cuentas, y se revisan a mano antes de entregarlos.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/legal/">Aviso legal</a><a href="/legal/privacidad/">Privacidad</a><a href="/legal/condiciones/">Condiciones</a><span>© 2026</span>
+  </footer>
+</div>
+
+<script>
+(async function () {
+  const box = document.getElementById("sample");
+  const input = document.getElementById("sampleName");
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let story;
+  try { story = await (await fetch("/assets/sample/story.json")).json(); } catch { return; }
+  const imgs = { 0: "/assets/sample/p01.jpg", 1: "/assets/sample/p02.jpg", 11: "/assets/sample/p12.jpg" };
+  function render() {
+    const name = (input.value || "Ana").trim().slice(0, 20);
+    const sub = (t) => t.replace(/\{\{NOMBRE\}\}/g, esc(name)).replace(/\{\{[A-Z0-9_]+\}\}/g, "");
+    const pages = [0, 1, 11].map((i) => story.pages[i]);
+    box.innerHTML = `<h3 class="story-text">${sub(esc(story.title))}</h3>` + pages.map((p, k) => `
+      <article class="pg">
+        <div class="art wide"><img src="${imgs[[0, 1, 11][k]]}" alt="" loading="lazy"></div>
+        <div class="txt story-text"><p>${sub(esc(p.text))}</p><span class="n">${p.n}</span></div>
+      </article>`).join("") + `<p class="muted" style="font-size:.9rem">… y nueve páginas más, cuatro para colorear y la ficha del personaje.</p>`;
+  }
+  input.addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>
