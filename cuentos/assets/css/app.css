@@ -130,3 +130,15 @@ legend { font-family: Fraunces, Georgia, serif; font-weight: 600; padding: 0 .4r
 footer { border-top: 1px solid var(--hair); margin-top: 3rem; padding-top: 1.2rem; font-size: .82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; }
 footer a { color: var(--muted); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* free colouring gallery */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 1rem; }
+.tile { display: flex; flex-direction: column; gap: .5rem; text-decoration: none; color: var(--ink); }
+.tile img {
+  width: 100%; height: auto; display: block; background: #fff;
+  border: 1px solid var(--hair); border-radius: 12px; aspect-ratio: 210 / 297; object-fit: contain;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.tile:hover img, .tile:focus-visible img { box-shadow: var(--shadow); transform: translateY(-2px); }
+.tile span { font-size: .92rem; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .tile img { transition: none; } }

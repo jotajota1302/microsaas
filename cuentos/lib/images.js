@@ -136,10 +136,12 @@ async function minimaxOnce({ prompt, refs, size, fetchFn }) {
  * it is a verdict, and it propagates so the caller can fall back to the
  * catalogue and flag the order.
  */
-async function generateImage({ prompt, refs = [], size = "1:1", provider, models }, deps = {}) {
+async function generateImage({ prompt, refs = [], size = "1:1", provider, models, style = true }, deps = {}) {
   const fetchFn = deps.fetch || fetch;
   const which = provider || env.IMAGE_PROVIDER || "openrouter";
-  const styled = withStyle(prompt);
+  // Line art asks for the opposite of the collection style (no colour, no
+  // paper texture): appending the suffix there fights the prompt.
+  const styled = style ? withStyle(prompt) : prompt;
 
   if (which === "minimax") {
     return attempt(() => minimaxOnce({ prompt: styled, refs, size, fetchFn }), deps);

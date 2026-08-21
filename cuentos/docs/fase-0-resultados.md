@@ -131,3 +131,21 @@ Comando: `node scripts/spike-text.js` — 5 personalizaciones distintas (mar/gat
 | `GEMINI_API_KEY` | Medir Nano Banana 2 como alternativa | ~2,5 $ de consumo |
 | Cuenta gratuita en Gelato + `GELATO_API_KEY` | Precio y plazo reales del 20×20 de 32 páginas a España | 0 € (la muestra impresa, ~20 €) |
 | Solicitud de Stripe Managed Payments | Cobro digital como MoR | 0 € |
+
+
+## 0.5 — Galería de colorear (2026-08-21)
+
+Medido generando las 20 páginas gratuitas con `google/gemini-3.1-flash-lite-image`:
+
+| Métrica | Valor |
+|---|---|
+| Coste por página | 0,034 $ (el modelo grande cuesta 0,067 $ y no se nota la diferencia en línea negra) |
+| Tiempo por página | 3,7 - 5,1 s |
+| Fallos de generación | 0 de 22 intentos |
+| Coste total de la galería | 0,71 $ (20 páginas + 2 repetidas) |
+| Peso en el repo | 4,1 MB de imágenes + 3,1 MB de PDF |
+
+Dos hallazgos:
+
+1. **`generateImage` añadía el sufijo de acuarela a los prompts de line-art**, que piden justo lo contrario ("no colour, no shading"). Corregido con la opción `style: false`, que usan ahora tanto la galería como `lib/lineart.js` (las páginas de colorear del libro estaban saliendo peor de lo necesario por esto).
+2. **El umbral delata las zonas sombreadas**: un fondo con degradado (la luna llena de Halloween) queda como un cerco gris sucio. La solución no es tocar sharp sino pedirlo en el prompt: "no shaded areas". Composiciones que "llenen la página" también salen mejor que las descriptivas.

@@ -204,7 +204,10 @@ function waitlistHandler(deps) {
     const body = await readJson(req).catch(() => null);
     const email = String((body && body.email) || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return send(res, 400, { error: "invalid_email" });
-    await deps.db.addWaitlist(email, body.locale === "en" ? "en" : "es", body.reason === "print" ? "print" : "cap");
+    // 'cap' the daily limit, 'print' the printed-book button, 'gallery' the free
+    // colouring pages. Anything else is treated as the daily limit.
+    const reason = ["print", "gallery"].includes(body.reason) ? body.reason : "cap";
+    await deps.db.addWaitlist(email, body.locale === "en" ? "en" : "es", reason);
     return send(res, 201, { ok: true });
   };
 }

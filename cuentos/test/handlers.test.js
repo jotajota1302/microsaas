@@ -383,3 +383,22 @@ test("secretsMatch is exact and tolerates different lengths without throwing", (
   assert.strictEqual(secretsMatch("", "abc"), false);
   assert.strictEqual(secretsMatch("a-very-long-token-indeed", "abc"), false);
 });
+
+test("waitlist accepts the gallery reason and rejects a bad email", async () => {
+  const db = fakeDb();
+  const r1 = res();
+  await H.waitlistHandler({ db })(req({ body: { email: " Lector@Ejemplo.ES ", locale: "en", reason: "gallery" } }), r1);
+  assert.strictEqual(r1.statusCode, 201);
+  assert.deepStrictEqual(db.calls.at(-1), ["waitlist", "lector@ejemplo.es", "en", "gallery"]);
+
+  const r2 = res();
+  await H.waitlistHandler({ db })(req({ body: { email: "nope", reason: "gallery" } }), r2);
+  assert.strictEqual(r2.statusCode, 400);
+});
+
+test("waitlist falls back to the daily-cap reason when it is not one we know", async () => {
+  const db = fakeDb();
+  const r = res();
+  await H.waitlistHandler({ db })(req({ body: { email: "a@b.co", reason: "whatever" } }), r);
+  assert.deepStrictEqual(db.calls.at(-1), ["waitlist", "a@b.co", "es", "cap"]);
+});

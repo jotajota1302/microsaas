@@ -95,9 +95,11 @@ create table cuentos.waitlist (
   id          uuid primary key default gen_random_uuid(),
   email       text not null,
   locale      text not null default 'es',
-  reason      text not null default 'cap',  -- 'cap' (daily limit) | 'print'
+  reason      text not null default 'cap',  -- 'cap' (daily limit) | 'print' | 'gallery'
   created_at  timestamptz not null default now()
 );
+
+create unique index waitlist_email_reason on cuentos.waitlist (email, reason);
 
 -- Inputs refused by moderation: only a hash and the reason, never the text.
 create table cuentos.blocked_inputs (

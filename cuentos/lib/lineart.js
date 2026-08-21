@@ -18,15 +18,24 @@ const MARGIN = Math.round(10 / 25.4 * 300); // 10 mm
 async function toLineArt(pageBuffer, hint, deps = {}) {
   const generate = deps.generateImage || images.generateImage;
   const out = await generate(
-    { prompt: `${C.LINEART_STYLE} The scene: ${hint || "the same scene as the reference"}.`, refs: [pageBuffer], size: "3:4" },
+    { prompt: `${C.LINEART_STYLE} The scene: ${hint || "the same scene as the reference"}.`, refs: [pageBuffer], size: "3:4", style: false },
     deps
   );
 
-  // sharp applies operations in a fixed order inside one pipeline (resize
-  // before extend, and a second resize replaces the first), so this is done
-  // in three explicit passes. The threshold comes LAST: any resampling after
-  // it would reintroduce grey.
-  const fitted = await sharp(out.buffer)
+  return { buffer: await cleanToA4(out.buffer), costUsd: out.costUsd || 0, model: out.model };
+}
+
+/**
+ * Drawing -> printable A4 colouring page: pure black and white, centred,
+ * 10 mm margin, 300 dpi. Shared with the free gallery.
+ *
+ * sharp applies operations in a fixed order inside one pipeline (resize
+ * before extend, and a second resize replaces the first), so this is done
+ * in three explicit passes. The threshold comes LAST: any resampling after
+ * it would reintroduce grey.
+ */
+async function cleanToA4(input) {
+  const fitted = await sharp(input)
     .flatten({ background: "#fff" })
     .greyscale()
     .normalise()
@@ -49,9 +58,7 @@ async function toLineArt(pageBuffer, hint, deps = {}) {
     .png()
     .toBuffer();
 
-  const buffer = await sharp(framed).threshold(200).png().toBuffer();
-
-  return { buffer, costUsd: out.costUsd || 0, model: out.model };
+  return sharp(framed).threshold(200).png().toBuffer();
 }
 
-module.exports = { toLineArt, A4, MARGIN };
+module.exports = { toLineArt, cleanToA4, A4, MARGIN };

@@ -161,7 +161,9 @@ function createDb(client) {
       return unwrap(await t("billing").upsert(row, { onConflict: "provider_id", ignoreDuplicates: true }).select().maybeSingle());
     },
     async addWaitlist(email, locale = "es", reason = "cap") {
-      return unwrap(await t("waitlist").insert({ email, locale, reason }).select().single());
+      // Signing up twice is not an error, it is someone clicking again: the
+      // unique index on (email, reason) makes the second one a no-op.
+      return unwrap(await t("waitlist").upsert({ email, locale, reason }, { onConflict: "email,reason", ignoreDuplicates: true }));
     },
     async addPrintInterest(orderId, email) {
       return unwrap(await t("print_interest").insert({ order_id: orderId, email }).select().single());

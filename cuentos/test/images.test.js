@@ -139,3 +139,15 @@ test("verifyPage sends both images to the judge", async () => {
   const images = seen.messages[0].content.filter((p) => p.type === "image_url");
   assert.strictEqual(images.length, 2);
 });
+
+test("style:false leaves the prompt alone, so line art is not asked for watercolour", async () => {
+  let seen;
+  const fetchFn = async (_url, opts) => {
+    seen = JSON.parse(opts.body);
+    return { ok: true, text: async () => JSON.stringify({ choices: [{ message: { images: [{ image_url: { url: "data:image/png;base64,AA==" } }] } }] }) };
+  };
+  await generateImage({ prompt: "black outlines only, no colour", style: false }, { fetch: fetchFn });
+  const parts = seen.messages[0].content;
+  assert.strictEqual(parts[0].text, "black outlines only, no colour");
+  assert.ok(!parts[0].text.includes("watercolour"), "watercolour suffix leaked into a line-art prompt");
+});
