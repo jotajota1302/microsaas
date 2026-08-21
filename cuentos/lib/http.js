@@ -21,9 +21,25 @@ function query(req) {
   return Object.fromEntries(url.searchParams.entries());
 }
 
+/**
+ * The client address as the platform saw it. Vercel sets x-real-ip and the
+ * x-forwarded-for chain itself; the LAST hop of the chain is the one the edge
+ * appended, the first can be anything the client sent. Never trust the first.
+ */
 function clientIp(req) {
-  const fwd = (req.headers && req.headers["x-forwarded-for"]) || "";
-  return String(fwd).split(",")[0].trim() || (req.socket && req.socket.remoteAddress) || "";
+  const h = req.headers || {};
+  const real = String(h["x-real-ip"] || "").trim();
+  if (real) return real;
+  const chain = String(h["x-forwarded-for"] || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (chain.length) return chain[chain.length - 1];
+  return (req.socket && req.socket.remoteAddress) || "";
+}
+
+/** Fail closed: an endpoint guarded by a secret refuses everything until the secret exists. */
+function requireSecret(req, res, secret) {
+  if (!secret) { send(res, 503, { error: "not_configured" }); return false; }
+  if (bearer(req) !== secret) { send(res, 401, { error: "unauthorized" }); return false; }
+  return true;
 }
 
 function requireMethod(req, res, method) {
@@ -37,4 +53,4 @@ function bearer(req) {
   return String(h).replace(/^Bearer\s+/i, "").trim();
 }
 
-module.exports = { send, readJson, query, clientIp, requireMethod, bearer };
+module.exports = { send, readJson, query, clientIp, requireMethod, requireSecret, bearer };

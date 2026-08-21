@@ -12,7 +12,7 @@ const C = require("./collection.js");
 const money = require("./money.js");
 const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
-const { send, readJson, query, clientIp, requireMethod, bearer } = require("./http.js");
+const { send, readJson, query, clientIp, requireMethod, requireSecret, bearer } = require("./http.js");
 
 const CAPS = () => ({
   scriptsPerDay: Number(process.env.MAX_SCRIPTS_PER_DAY || 200),
@@ -228,8 +228,7 @@ function printInterestHandler(deps) {
 
 function cronHandler(deps) {
   return async (req, res) => {
-    const secret = process.env.CRON_SECRET;
-    if (secret && bearer(req) !== secret) return send(res, 401, { error: "unauthorized" });
+    if (!requireSecret(req, res, process.env.CRON_SECRET)) return;
 
     const report = { resumed: 0, reminded: 0, purged: 0 };
 
@@ -269,8 +268,7 @@ function cronHandler(deps) {
 
 function jobHandler(deps) {
   return async (req, res) => {
-    const secret = process.env.CRON_SECRET || process.env.ADMIN_TOKEN;
-    if (secret && bearer(req) !== secret) return send(res, 401, { error: "unauthorized" });
+    if (!requireSecret(req, res, process.env.CRON_SECRET)) return;
     const body = await readJson(req).catch(() => ({}));
     const id = body.id || query(req).id;
     if (!id) return send(res, 400, { error: "bad_request" });
@@ -282,8 +280,7 @@ function jobHandler(deps) {
 
 function adminHandler(deps) {
   return async (req, res) => {
-    const token = process.env.ADMIN_TOKEN;
-    if (!token || bearer(req) !== token) return send(res, 401, { error: "unauthorized" });
+    if (!requireSecret(req, res, process.env.ADMIN_TOKEN)) return;
 
     if (req.method === "GET") {
       const jobs = await deps.db.jobsNeedingReview(50);

@@ -265,7 +265,9 @@ test("cron: purges expired stories (files + personal data), sends reminders, res
   });
   const ran = [];
   const r = res();
-  await H.cronHandler({ db, runJob: async (id) => ran.push(id), sendEmail: async (m) => sent.push(m.kind) })(req({ method: "GET" }), r);
+  process.env.CRON_SECRET = "s3cret";
+  await H.cronHandler({ db, runJob: async (id) => ran.push(id), sendEmail: async (m) => sent.push(m.kind) })(req({ method: "GET", headers: { authorization: "Bearer s3cret" } }), r);
+  delete process.env.CRON_SECRET;
   assert.deepStrictEqual(r.body, { resumed: 1, reminded: 1, purged: 1 });
   assert.deepStrictEqual(ran, ["j5"]);
   const removed = db.calls.find((c) => c[0] === "remove")[2];
@@ -275,9 +277,16 @@ test("cron: purges expired stories (files + personal data), sends reminders, res
   assert.deepStrictEqual(sent.sort(), ["expired", "expiring"]);
 });
 
-test("cron and job endpoints refuse a wrong secret when one is configured", async () => {
-  process.env.CRON_SECRET = "s3cret";
+test("cron and job endpoints fail CLOSED: 503 without a secret configured, 401 with a wrong one", async () => {
+  delete process.env.CRON_SECRET;
   let r = res();
+  await H.cronHandler({ db: fakeDb(), runJob: runDone })(req({ method: "GET" }), r);
+  assert.strictEqual(r.statusCode, 503);
+  r = res();
+  await H.jobHandler({ runJob: runDone })(req({ body: { id: "j1" } }), r);
+  assert.strictEqual(r.statusCode, 503);
+  process.env.CRON_SECRET = "s3cret";
+  r = res();
   await H.cronHandler({ db: fakeDb(), runJob: runDone })(req({ method: "GET", headers: { authorization: "Bearer nope" } }), r);
   assert.strictEqual(r.statusCode, 401);
   r = res();
@@ -351,4 +360,18 @@ test("emails: book_ready repeats the withdrawal waiver", () => {
 
 test("emails: an unknown kind throws instead of sending something empty", () => {
   assert.throws(() => render({ kind: "party", locale: "es" }), /unknown email kind/);
+});
+
+test("admin fails closed without ADMIN_TOKEN configured", async () => {
+  delete process.env.ADMIN_TOKEN;
+  const r = res();
+  await H.adminHandler({ db: fakeDb(), runJob: runDone })(req({ method: "GET", headers: { authorization: "Bearer anything" } }), r);
+  assert.strictEqual(r.statusCode, 503);
+});
+
+test("clientIp prefers the platform's x-real-ip and never the first forwarded hop", () => {
+  const { clientIp } = require("../lib/http.js");
+  assert.strictEqual(clientIp({ headers: { "x-real-ip": "5.5.5.5", "x-forwarded-for": "1.1.1.1, 5.5.5.5" } }), "5.5.5.5");
+  assert.strictEqual(clientIp({ headers: { "x-forwarded-for": "1.1.1.1, 2.2.2.2, 5.5.5.5" } }), "5.5.5.5");
+  assert.strictEqual(clientIp({ headers: {}, socket: { remoteAddress: "7.7.7.7" } }), "7.7.7.7");
 });
