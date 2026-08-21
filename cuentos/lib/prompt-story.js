@@ -31,8 +31,8 @@ function describeChild(input) {
   const skin = label(C.SKIN_TONES, input.skin, "visual");
   const who = label(C.GENDERS, input.gender || "neutro", "visual");
   const glasses = input.glasses ? " and round glasses" : "";
-  const age = input.ageBand === "3-5" ? "5-year-old" : "7-year-old";
-  return `a ${age} ${who} with ${hairType} ${hairColor} hair, ${skin}${glasses}`;
+  const age = C.ageBand(input.ageBand).visual;
+  return `${age} ${who} with ${hairType} ${hairColor} hair, ${skin}${glasses}`;
 }
 
 /** Spanish forces a choice; make it explicit so the model does not guess. */
@@ -55,14 +55,15 @@ function peopleOf(input) {
   });
 }
 
-const SYSTEM = `Eres un autor de álbumes ilustrados infantiles en español. Generas EXCLUSIVAMENTE datos (un objeto JSON), nunca comentarios ni explicaciones.
+const systemFor = (band) => `Eres un autor de álbumes ilustrados infantiles en español. Generas EXCLUSIVAMENTE datos (un objeto JSON), nunca comentarios ni explicaciones.
 
 # Qué escribes
-Un cuento de 12 páginas para leer en voz alta a un niño de 3 a 8 años. Cada página es una escena ilustrada con su texto. El cuento habla de la vida real del niño: su familia, sus amigos, su mascota y lo que está viviendo ahora.
+Un cuento de 12 páginas para leer en voz alta a un niño de ${band.es}. Cada página es una escena ilustrada con su texto. El cuento habla de la vida real del niño: su familia, sus amigos, su mascota y lo que está viviendo ahora.
 
 # Reglas del texto (las comprueba un validador; si fallan, el cuento se descarta)
 1. EXACTAMENTE 12 páginas, numeradas 1 a 12 en orden.
-2. Cada página tiene entre 70 y 85 palabras: apunta a 75. Los modelos tienden a quedarse cortos, así que si dudas, alarga con un detalle sensorial (un olor, un sonido, una textura), nunca con relleno. Una página de menos de 60 palabras o de más de 90 invalida el cuento entero. Cuenta las palabras antes de responder.
+2. Cada página tiene entre ${band.target[0]} y ${band.target[1]} palabras: apunta a ${Math.round((band.target[0] + band.target[1]) / 2)}. Los modelos tienden a quedarse cortos, así que si dudas, alarga con un detalle sensorial (un olor, un sonido, una textura), nunca con relleno. Una página de menos de ${band.words[0]} palabras o de más de ${band.words[1]} invalida el cuento entero. Cuenta las palabras antes de responder.
+2b. Escribes para ${band.es}: ${band.reading_hint}.
 3. El protagonista se llama SIEMPRE «{{NOMBRE}}», escrito así, con las dobles llaves. Debe aparecer en al menos 6 de las 12 páginas. Las demás personas de su vida que te indique tienen también su marcador («{{PERSONA1}}», «{{PERSONA2}}»): úsalos SIEMPRE tal cual, y cada una debe aparecer en al menos 2 páginas con un papel real en la historia (ayuda, estorba, acompaña, enseña), nunca como adorno.
 4. PROHIBIDO inventar nombres propios de personas, lugares, animales o cosas. Los demás personajes se nombran por lo que son: «la mujer que remendaba redes», «el viejo del faro», «su gato». Y siempre en minúscula: «la cierva», «el búho», «la tortuga» — NUNCA «la Cierva» ni «el Búho» como si fueran nombres. Un nombre propio inventado invalida el cuento entero.
 5. Estructura obligatoria, marcada en el campo "beat" de cada página:
@@ -126,6 +127,7 @@ function buildMessages(input, previousErrors) {
   const tone = C.TONES.find((t) => t.id === (input.tone || "divertido"));
   if (!tone) throw new Error(`[cuentos] unknown option "${input.tone}"`);
   const people = peopleOf(input);
+  const band = C.ageBand(input.ageBand);
 
   const peopleLines = people.length
     // The age comes from the companion list, so it reads as words rather than
@@ -138,7 +140,7 @@ function buildMessages(input, previousErrors) {
 
   const brief = `# Este cuento
 Tema (el mundo donde ocurre): ${theme.es} — ${theme.seed_idea}
-Edad del lector: ${input.ageBand} años
+Edad del lector: ${band.es} — ${band.target[0]}-${band.target[1]} palabras por página
 El protagonista (descríbelo así en character_sheet, en inglés): ${describeChild(input)}
 ${genderRule(input)}
 Lo que más le gusta: ${hobby} — y eso debe ser LA CLAVE de cómo resuelve el problema en la página 12.
@@ -158,7 +160,7 @@ ${notesLine(input)}
 Escribe el cuento ahora.`;
 
   const messages = [
-    { role: "system", content: SYSTEM },
+    { role: "system", content: systemFor(band) },
     { role: "user", content: brief },
   ];
 
@@ -224,12 +226,14 @@ const REPAIR_SCHEMA = {
   },
 };
 
-function buildRepairMessages(story, byPage) {
+function buildRepairMessages(story, byPage, band = C.ageBand(C.DEFAULT_AGE_BAND)) {
+  const [lo, hi] = band.target;
+  const aimAt = Math.round((lo + hi) / 2);
   const asks = [...byPage.entries()].sort((a, b) => a[0] - b[0]).map(([n, errs]) => {
     const page = story.pages.find((p) => p.n === n) || {};
     const count = String(page.text || "").trim().split(/\s+/).filter(Boolean).length;
-    const aim = count > 85 ? `Ahora tiene ${count} palabras: sobran ${count - 78}, recórtalo hasta unas 78.`
-      : count < 70 ? `Ahora tiene ${count} palabras: faltan ${78 - count}, alárgalo hasta unas 78.`
+    const aim = count > hi ? `Ahora tiene ${count} palabras: sobran ${count - aimAt}, recórtalo hasta unas ${aimAt}.`
+      : count < lo ? `Ahora tiene ${count} palabras: faltan ${aimAt - count}, alárgalo hasta unas ${aimAt}.`
       : `Ahora tiene ${count} palabras, que está bien: no cambies la longitud.`;
     return `## Página ${n}
 Qué falla: ${errs.join("; ")}
@@ -245,7 +249,8 @@ image_hint actual: ${page.image_hint || ""}`;
         "Corriges páginas sueltas de un álbum ilustrado infantil en español. Devuelves EXCLUSIVAMENTE un objeto JSON " +
         '{"pages":[{"n":N,"text":"…","image_hint":"…"}]} con SOLO las páginas que te pidan, sin markdown ni explicaciones.\n\n' +
         "Reglas que debes cumplir en cada página que devuelvas:\n" +
-        "- El texto tiene entre 70 y 85 palabras. Cuéntalas antes de responder.\n" +
+        `- El texto tiene entre ${lo} y ${hi} palabras. Cuéntalas antes de responder.\n` +
+        `- Escribes para ${band.es}: ${band.reading_hint}.\n` +
         "  · Si se queda corto, alarga con un detalle sensorial (un olor, un sonido, una textura), nunca con relleno.\n" +
         "  · Si se pasa, recorta: quita adjetivos y frases accesorias, junta frases. Nunca quites una acción de la historia.\n" +
         "- Conserva lo que ya pasa en la página: los mismos personajes, el mismo sitio, la misma acción. No cambies la historia, solo arregla lo que falla.\n" +
@@ -276,6 +281,7 @@ async function generateStory(input, deps = {}) {
   const maxAttempts = deps.maxAttempts || MAX_ATTEMPTS;
   const log = deps.log || ((m) => console.log(`[cuentos] ${m}`));
   const people = peopleOf(input).length;
+  const band = C.ageBand(input.ageBand);
 
   let errors = [];
   let costUsd = 0;
@@ -287,13 +293,13 @@ async function generateStory(input, deps = {}) {
     // rewritten; anything broader is generated again from scratch.
     const byPage = story ? pageErrors(errors) : null;
     const result = byPage
-      ? await complete({ messages: buildRepairMessages(story, byPage), schema: REPAIR_SCHEMA })
+      ? await complete({ messages: buildRepairMessages(story, byPage, band), schema: REPAIR_SCHEMA })
       : await complete({ messages: buildMessages(input, attempt > 1 ? errors : null), schema: SCHEMA });
     costUsd += result.costUsd || 0;
 
     const candidate = byPage ? mergePages(story, result.data && result.data.pages) : result.data;
 
-    const verdict = validateStory(candidate, { people });
+    const verdict = validateStory(candidate, { people, words: band.words });
     if (verdict.ok) {
       return { story: candidate, attempts: attempt, costUsd, errors: [] };
     }
@@ -311,4 +317,4 @@ async function generateStory(input, deps = {}) {
   throw err;
 }
 
-module.exports = { buildMessages, buildRepairMessages, pageErrors, mergePages, generateStory, describeChild, peopleOf, SYSTEM, MAX_ATTEMPTS };
+module.exports = { buildMessages, buildRepairMessages, pageErrors, mergePages, generateStory, describeChild, peopleOf, systemFor, MAX_ATTEMPTS };

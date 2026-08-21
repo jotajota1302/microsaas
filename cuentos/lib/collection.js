@@ -20,23 +20,29 @@ const LINEART_STYLE =
   "no text. Keep the same composition and the same character.";
 
 const THEMES = [
-  { id: "mar", es: "El mar", en: "The sea", seed_idea: "a coastal village, a lighthouse, a friendly sea creature that has lost something" },
-  { id: "bosque", es: "El bosque", en: "The forest", seed_idea: "an old forest where the trees remember names, a shy animal that needs guiding home" },
-  { id: "espacio", es: "El espacio", en: "Space", seed_idea: "a small homemade rocket, a planet made of soft clouds, a lonely little moon" },
-  { id: "dinosaurios", es: "Dinosaurios", en: "Dinosaurs", seed_idea: "a valley of gentle dinosaurs, a hatchling separated from its herd" },
-  { id: "castillos", es: "Princesas y caballeros", en: "Princesses and knights", seed_idea: "a castle where nobody remembers how to be brave, a dragon who is simply cold" },
-  { id: "futbol", es: "Fútbol", en: "Football", seed_idea: "a neighbourhood pitch, a match that cannot start because something is missing" },
-  { id: "montana", es: "La montaña", en: "The mountain", seed_idea: "a stone refuge above the clouds, a path that changes shape, a goat that knows the way" },
-  { id: "granja", es: "La granja", en: "The farm", seed_idea: "a farm at dawn, an animal that will not come out of the barn, a job nobody wants to do" },
-  { id: "ciudad", es: "Su barrio", en: "Their neighbourhood", seed_idea: "rooftops and balconies, a shopkeeper who knows everyone, something lost between two streets" },
-  { id: "circo", es: "El circo", en: "The circus", seed_idea: "a small travelling circus, a number that keeps going wrong, an act that needs one more pair of hands" },
-  { id: "piratas", es: "Piratas e islas", en: "Pirates and islands", seed_idea: "a crooked map, an island with two names, a crew that has forgotten how to agree" },
-  { id: "hielo", es: "El hielo", en: "The ice", seed_idea: "a white plain that creaks, a lamp in the long night, an animal following at a distance" },
-  { id: "jungla", es: "La selva", en: "The jungle", seed_idea: "green light under the canopy, a river that hums, a creature that copies every sound" },
-  { id: "fondomar", es: "El fondo del mar", en: "The deep sea", seed_idea: "a city of coral, a light that goes out every night, a shy creature that guards something" },
-  { id: "tren", es: "Un tren de noche", en: "A night train", seed_idea: "a sleeper train crossing the dark, a carriage that was not on the plan, a stop nobody announced" },
+  // Every entry is a PLACE — the world the story happens in. "Football" used
+  // to live here and never fitted: it is something a child does, not somewhere
+  // they are, and it already exists as a hobby (which is what resolves the
+  // story). Ordered from the child's own world outwards, which is also the
+  // order a parent scans.
   { id: "casa", es: "Dentro de su casa", en: "Inside their house", seed_idea: "the ordinary house turned enormous, under the beds and behind the wardrobes, something that only appears at night" },
+  { id: "ciudad", es: "Su barrio", en: "Their neighbourhood", seed_idea: "rooftops and balconies, a shopkeeper who knows everyone, something lost between two streets" },
+  { id: "granja", es: "La granja", en: "The farm", seed_idea: "a farm at dawn, an animal that will not come out of the barn, a job nobody wants to do" },
+  { id: "bosque", es: "El bosque", en: "The forest", seed_idea: "an old forest where the trees remember names, a shy animal that needs guiding home" },
+  { id: "montana", es: "La montaña", en: "The mountain", seed_idea: "a stone refuge above the clouds, a path that changes shape, a goat that knows the way" },
+  { id: "mar", es: "La playa y el mar", en: "The beach and the sea", seed_idea: "a coastal village, a lighthouse, a friendly sea creature that has lost something" },
+  { id: "fondomar", es: "El fondo del mar", en: "The deep sea", seed_idea: "a city of coral, a light that goes out every night, a shy creature that guards something" },
+  { id: "jungla", es: "La selva", en: "The jungle", seed_idea: "green light under the canopy, a river that hums, a creature that copies every sound" },
+  { id: "desierto", es: "El desierto", en: "The desert", seed_idea: "dunes that move overnight, a well everyone has forgotten, a camel with its own opinions" },
+  { id: "hielo", es: "El hielo y la nieve", en: "Ice and snow", seed_idea: "a white plain that creaks, a lamp in the long night, an animal following at a distance" },
+  { id: "espacio", es: "El espacio", en: "Space", seed_idea: "a small homemade rocket, a planet made of soft clouds, a lonely little moon" },
+  { id: "tren", es: "Un tren de noche", en: "A night train", seed_idea: "a sleeper train crossing the dark, a carriage that was not on the plan, a stop nobody announced" },
+  { id: "circo", es: "El circo", en: "The circus", seed_idea: "a small travelling circus, a number that keeps going wrong, an act that needs one more pair of hands" },
+  { id: "castillos", es: "Un castillo", en: "A castle", seed_idea: "a castle where nobody remembers how to be brave, a dragon who is simply cold" },
+  { id: "piratas", es: "Una isla pirata", en: "A pirate island", seed_idea: "a crooked map, an island with two names, a crew that has forgotten how to agree" },
+  { id: "dinosaurios", es: "El mundo de los dinosaurios", en: "The world of the dinosaurs", seed_idea: "a valley of gentle dinosaurs, a hatchling separated from its herd" },
 ];
+
 
 const PETS = [
   { id: "ninguna", es: "Ninguna", en: "None", visual: null },
@@ -50,19 +56,25 @@ const PETS = [
 ];
 
 const HOBBIES = [
-  { id: "dibujar", es: "Dibujar", en: "Drawing" },
+  // The hobby is what RESOLVES the story on page 12, so each one has to be
+  // something a child DOES. "The stars" and "plants" were interests, not
+  // skills: there is nothing to do with them when the plot needs saving.
+  { id: "dibujar", es: "Dibujar y pintar", en: "Drawing and painting" },
+  { id: "manualidades", es: "Las manualidades", en: "Arts and crafts" },
+  { id: "construir", es: "Construir con piezas", en: "Building with blocks" },
+  { id: "leer", es: "Leer cuentos", en: "Reading stories" },
+  { id: "cantar", es: "Cantar", en: "Singing" },
+  { id: "musica", es: "Tocar un instrumento", en: "Playing an instrument" },
   { id: "bailar", es: "Bailar", en: "Dancing" },
   { id: "futbol", es: "El fútbol", en: "Football" },
-  { id: "leer", es: "Leer", en: "Reading" },
-  { id: "cocinar", es: "Cocinar", en: "Cooking" },
-  { id: "musica", es: "La música", en: "Music" },
+  { id: "baloncesto", es: "El baloncesto", en: "Basketball" },
   { id: "nadar", es: "Nadar", en: "Swimming" },
-  { id: "construir", es: "Construir cosas", en: "Building things" },
-  { id: "animales", es: "Los animales", en: "Animals" },
-  { id: "estrellas", es: "Las estrellas", en: "The stars" },
-  { id: "bicicleta", es: "La bicicleta", en: "Cycling" },
-  { id: "plantas", es: "Las plantas", en: "Plants" },
+  { id: "bicicleta", es: "Montar en bici", en: "Riding a bike" },
+  { id: "patinar", es: "Patinar", en: "Skating" },
+  { id: "cocinar", es: "Cocinar", en: "Cooking" },
+  { id: "animales", es: "Cuidar animales", en: "Looking after animals" },
 ];
+
 
 const HAIR_COLORS = [
   { id: "castano", es: "Castaño", en: "Brown", visual: "brown" },
@@ -104,6 +116,8 @@ const RELATIONS = [
   { id: "madre", es: "Su madre", en: "Mother", role: "su madre", adult: true },
   { id: "abuelo", es: "Su abuelo", en: "Grandfather", role: "su abuelo", adult: true },
   { id: "abuela", es: "Su abuela", en: "Grandmother", role: "su abuela", adult: true },
+  { id: "tio", es: "Su tío", en: "Uncle", role: "su tío", adult: true },
+  { id: "tia", es: "Su tía", en: "Aunt", role: "su tía", adult: true },
   { id: "amigo", es: "Un amigo", en: "Friend (boy)", role: "su amigo", adult: false },
   { id: "amiga", es: "Una amiga", en: "Friend (girl)", role: "su amiga", adult: false },
   { id: "primo", es: "Su primo", en: "Cousin (boy)", role: "su primo", adult: false },
@@ -115,7 +129,8 @@ const RELATIONS = [
 // adults are never asked. AGE_BANDS stays what the book is written for.
 const PERSON_AGES = [
   { id: "bebe", es: "Un bebé", en: "A baby", visual: "a baby" },
-  { id: "3-5", es: "3 a 5 años", en: "3 to 5", visual: "a 4-year-old child" },
+  { id: "2-3", es: "2 y 3 años", en: "2 and 3", visual: "a 3-year-old child" },
+  { id: "4-5", es: "4 y 5 años", en: "4 and 5", visual: "a 5-year-old child" },
   { id: "6-8", es: "6 a 8 años", en: "6 to 8", visual: "a 7-year-old child" },
   { id: "9-12", es: "9 a 12 años", en: "9 to 12", visual: "a 10-year-old child" },
   { id: "adolescente", es: "Adolescente", en: "A teenager", visual: "a teenager" },
@@ -142,9 +157,38 @@ const TONES = [
 ];
 
 const AGE_BANDS = [
-  { id: "3-5", es: "3 a 5 años", en: "3 to 5" },
-  { id: "6-8", es: "6 a 8 años", en: "6 to 8" },
+  /*
+   * The reader's age is not decoration: it decides how long a page is and how
+   * it sounds. Two bands (3-5, 6-8) covered a narrow slice of the families who
+   * buy this, and both got the same 60-90 words — which is a lot of text for a
+   * three-year-old and thin for a ten-year-old.
+   *
+   * `words` is what the validator enforces; `target` is the narrower band the
+   * model is asked to aim at, so a small miss still passes instead of throwing
+   * a whole story away.
+   */
+  { id: "2-3", es: "2 y 3 años", en: "2 and 3", visual: "a 3-year-old", words: [25, 45], target: [30, 40],
+    reading_hint: "frases muy cortas, una idea por frase, palabras de todos los días. Repeticiones y sonidos (¡plif!, ¡plaf!) que se disfrutan al leer en voz alta" },
+  { id: "4-5", es: "4 y 5 años", en: "4 and 5", visual: "a 5-year-old", words: [40, 70], target: [48, 62],
+    reading_hint: "frases cortas y mucho diálogo. Alguna palabra nueva, siempre explicada por lo que pasa alrededor" },
+  { id: "6-8", es: "6 a 8 años", en: "6 to 8", visual: "a 7-year-old", words: [60, 90], target: [70, 85],
+    reading_hint: "frases de longitud media, vocabulario rico pero claro, humor amable y algún detalle sensorial" },
+  { id: "9-12", es: "9 a 12 años", en: "9 to 12", visual: "a 10-year-old", words: [85, 130], target: [95, 120],
+    reading_hint: "párrafos algo más largos, vocabulario amplio, más mundo interior del protagonista y diálogos con lo que no se dice" },
 ];
+
+// Orders taken before the bands were re-cut carry ids that no longer exist.
+// They are still readable stories: map them to the closest band rather than
+// crashing when one is revised.
+const LEGACY_AGE_BANDS = { "3-5": "4-5" };
+const DEFAULT_AGE_BAND = "6-8";
+
+/** The band for an id, never undefined: an unknown one reads as the default. */
+function ageBand(id) {
+  const key = LEGACY_AGE_BANDS[id] || id;
+  return AGE_BANDS.find((b) => b.id === key) || AGE_BANDS.find((b) => b.id === DEFAULT_AGE_BAND);
+}
+
 
 // The narrative shape every story must have, page by page. The validator
 // checks the sequence; the model is told to label each page with its beat.
@@ -252,6 +296,9 @@ module.exports = Object.freeze({
   BOOK_PAGE_COUNT,
   BLOCKLIST,
   NAME_WHITELIST,
+  LEGACY_AGE_BANDS,
+  DEFAULT_AGE_BAND,
+  ageBand,
   fallbackImage,
   ids,
 });

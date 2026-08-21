@@ -235,7 +235,13 @@ function checkPlaceholders(story, errors, options) {
   }
 }
 
-function checkStructure(story, errors) {
+/*
+ * `words` is the length band for the reader's age: a page for a three-year-old
+ * and one for a ten-year-old are not the same page. It defaults to the middle
+ * band, so a caller that does not know the age still gets the old behaviour.
+ */
+function checkStructure(story, errors, words) {
+  const [wordsMin, wordsMax] = words && words.length === 2 ? words : C.ageBand(C.DEFAULT_AGE_BAND).words;
   const pages = story.pages;
   if (!Array.isArray(pages)) return;
 
@@ -252,8 +258,8 @@ function checkStructure(story, errors) {
   pages.forEach((page, i) => {
     if (!page || typeof page.text !== "string") return;
     const words = countWords(page.text);
-    if (words < C.WORDS_MIN || words > C.WORDS_MAX) {
-      errors.push(`page ${i + 1}: ${words} words, must be between ${C.WORDS_MIN} and ${C.WORDS_MAX} words`);
+    if (words < wordsMin || words > wordsMax) {
+      errors.push(`page ${i + 1}: ${words} words, must be between ${wordsMin} and ${wordsMax} words`);
     }
   });
 
@@ -330,7 +336,8 @@ function checkContent(story, errors) {
 
 /**
  * @param {object} story
- * @param {object} [options]  { people: number } — how many {{PERSONAn}} were declared (0-2)
+ * @param {object} [options]  { people: number, words: [min, max] } — how many {{PERSONAn}}
+ *                            were declared (0-2), and the page length the reader's age asks for
  */
 function validateStory(story, options = {}) {
   const errors = [];
@@ -339,7 +346,7 @@ function validateStory(story, options = {}) {
       return { ok: false, errors: ["story must be an object"] };
     }
     checkSchema(story, SCHEMA, "", errors);
-    checkStructure(story, errors);
+    checkStructure(story, errors, options.words);
     checkPlaceholders(story, errors, { people: Number(options.people) || 0 });
     checkContent(story, errors);
   } catch (e) {

@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
-const { buildMessages, generateStory, describeChild, peopleOf } = require("../lib/prompt-story.js");
+const { buildMessages, buildRepairMessages, generateStory, describeChild, peopleOf } = require("../lib/prompt-story.js");
 const valid = require("./fixtures/story-valid.json");
 
 const INPUT = {
@@ -15,7 +15,7 @@ const INPUT = {
   theme: "mar",
   moment: "hermanito",
   tone: "dormir",
-  people: [{ relation: "abuela" }, { relation: "hermano", ageBand: "3-5" }],
+  people: [{ relation: "abuela" }, { relation: "hermano", ageBand: "4-5" }],
   locale: "es",
 };
 
@@ -35,7 +35,7 @@ test("people are described by relation and age, never by name", () => {
   const all = dump(INPUT);
   assert.match(all, /\{\{PERSONA1\}\}: su abuela/);
   // the age reads as words from the companion list, not as a raw band id
-  assert.match(all, /\{\{PERSONA2\}\}: su hermano \(3 a 5 años\)/);
+  assert.match(all, /\{\{PERSONA2\}\}: su hermano \(4 y 5 años\)/);
 });
 
 test("a person is given as a name anyway? it is not accepted as input", () => {
@@ -47,7 +47,7 @@ test("a person is given as a name anyway? it is not accepted as input", () => {
 
 test("the prompt carries the theme, hobby, pet, moment and tone", () => {
   const all = dump(INPUT);
-  assert.match(all, /El mar/);
+  assert.match(all, /La playa y el mar/);
   assert.match(all, /Dibujar/i);
   assert.match(all, /gato/);
   assert.match(all, /Va a tener un hermanito/);
@@ -202,4 +202,30 @@ test("generateStory regenerates in full when an error is not about one page", as
   };
   const r = await generateStory({ ...INPUT, people: [] }, { completeJson });
   assert.strictEqual(r.attempts, 2);
+});
+
+// --- the reader's age decides how long a page is --------------------------------
+
+test("a page for a three-year-old and one for a ten-year-old are not the same page", () => {
+  const C = require("../lib/collection.js");
+  const small = dump({ ...INPUT, ageBand: "2-3" }, null);
+  const big = dump({ ...INPUT, ageBand: "9-12" }, null);
+
+  assert.match(small, /entre 30 y 40 palabras/);
+  assert.match(small, /2 y 3 años/);
+  assert.match(big, /entre 95 y 120 palabras/);
+  assert.match(big, /9 a 12 años/);
+  // and the child drawn on the character sheet ages with the band
+  assert.match(small, /a 3-year-old/);
+  assert.match(big, /a 10-year-old/);
+  assert.ok(C.ageBand("2-3").reading_hint.length > 30);
+});
+
+test("the repair asks for the length of the band, not a hardcoded one", () => {
+  const C = require("../lib/collection.js");
+  const story = { title: "T", pages: [{ n: 3, text: "una palabra ".repeat(20), image_hint: "x" }] };
+  const msgs = buildRepairMessages(story, new Map([[3, ["page 3: too short"]]]), C.ageBand("9-12"));
+  const all = JSON.stringify(msgs);
+  assert.match(all, /entre 95 y 120 palabras/);
+  assert.ok(!/entre 70 y 85 palabras/.test(all), "the old fixed range must not survive");
 });

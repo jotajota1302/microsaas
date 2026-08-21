@@ -454,9 +454,9 @@ test("revise is still refused on a finished book", async () => {
 test("validateOrderInput takes an age only for companions who are children", () => {
   const withPeople = (people) => validateOrderInput({ ...GOOD, personalization: { ...GOOD.personalization, people } });
 
-  const child = withPeople([{ name: "Leo", relation: "hermano", ageBand: "3-5" }]);
+  const child = withPeople([{ name: "Leo", relation: "hermano", ageBand: "4-5" }]);
   assert.deepStrictEqual(child.errors, []);
-  assert.strictEqual(child.personalization.people[0].ageBand, "3-5");
+  assert.strictEqual(child.personalization.people[0].ageBand, "4-5");
 
   const teen = withPeople([{ name: "Sara", relation: "prima", ageBand: "adolescente" }]);
   assert.deepStrictEqual(teen.errors, []);

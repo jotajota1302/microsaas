@@ -92,13 +92,42 @@ test("there are enough places for a story to feel chosen, each visually distinct
 // A father offered "3 to 5 years old" is the form contradicting itself. Ages
 // only make sense for the companions who are children.
 test("relations say whether they are adults, and only children take an age", () => {
-  const adults = ["padre", "madre", "abuelo", "abuela"];
+  const adults = ["padre", "madre", "abuelo", "abuela", "tio", "tia"];
   for (const r of C.RELATIONS) {
     assert.strictEqual(typeof r.adult, "boolean", `${r.id}: missing the adult flag`);
     assert.strictEqual(r.adult, adults.includes(r.id), `${r.id}: wrong adult flag`);
   }
   assert.ok(C.PERSON_AGES.length >= 4);
   for (const a of C.PERSON_AGES) assert.ok(a.id && a.es && a.en, `${a.id}: incomplete`);
-  // the protagonist's own bands stay inside what the product is written for
-  assert.deepStrictEqual(C.AGE_BANDS.map((a) => a.id), ["3-5", "6-8"]);
+  // Every band the form offers has to carry the two things that depend on it:
+  // how long a page is and how it sounds. A band without them would silently
+  // fall back to the 6-8 length, which is what the bands exist to stop.
+  for (const b of C.AGE_BANDS) {
+    assert.ok(b.words && b.words.length === 2 && b.words[0] < b.words[1], `${b.id}: no word range`);
+    assert.ok(b.target[0] >= b.words[0] && b.target[1] <= b.words[1], `${b.id}: the target must sit inside what the validator accepts`);
+    assert.ok(b.reading_hint && b.visual, `${b.id}: no register or look`);
+  }
+  // bands are read in order and must not overlap or leave a gap
+  const spans = C.AGE_BANDS.map((b) => b.id.split("-").map(Number));
+  for (let i = 1; i < spans.length; i++) {
+    assert.strictEqual(spans[i][0], spans[i - 1][1] + 1, `${C.AGE_BANDS[i].id} does not follow ${C.AGE_BANDS[i - 1].id}`);
+  }
+});
+
+test("an age band that no longer exists still resolves, so old orders can be revised", () => {
+  // Orders taken before the bands were re-cut carry "3-5".
+  assert.strictEqual(C.ageBand("3-5").id, "4-5");
+  assert.strictEqual(C.ageBand("nonsense").id, C.DEFAULT_AGE_BAND);
+  assert.strictEqual(C.ageBand(undefined).id, C.DEFAULT_AGE_BAND);
+});
+
+test("the settings are places and the hobbies are things a child does", () => {
+  // "Football" was offered as a place to set a story in. It is not one, and it
+  // already exists as a hobby — which is what has to resolve the plot.
+  assert.ok(!C.THEMES.some((t) => t.id === "futbol"), "football is not a setting");
+  assert.ok(C.HOBBIES.some((h) => h.id === "futbol"), "football is a hobby");
+  for (const t of C.THEMES) assert.ok(t.seed_idea && t.seed_idea.length > 20, `${t.id}: no seed idea`);
+  assert.ok(C.THEMES.length >= 12 && C.HOBBIES.length >= 10);
+  const dup = (l) => new Set(l.map((x) => x.id)).size !== l.length;
+  assert.ok(!dup(C.THEMES) && !dup(C.HOBBIES) && !dup(C.RELATIONS) && !dup(C.PERSON_AGES));
 });

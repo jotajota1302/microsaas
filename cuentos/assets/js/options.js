@@ -19,14 +19,24 @@ window.CUENTOS_OPTIONS = {
   ],
   "ageBands": [
     {
-      "id": "3-5",
-      "es": "3 a 5 años",
-      "en": "3 to 5"
+      "id": "2-3",
+      "es": "2 y 3 años",
+      "en": "2 and 3"
+    },
+    {
+      "id": "4-5",
+      "es": "4 y 5 años",
+      "en": "4 and 5"
     },
     {
       "id": "6-8",
       "es": "6 a 8 años",
       "en": "6 to 8"
+    },
+    {
+      "id": "9-12",
+      "es": "9 a 12 años",
+      "en": "9 to 12"
     }
   ],
   "hairColors": [
@@ -145,8 +155,33 @@ window.CUENTOS_OPTIONS = {
   "hobbies": [
     {
       "id": "dibujar",
-      "es": "Dibujar",
-      "en": "Drawing"
+      "es": "Dibujar y pintar",
+      "en": "Drawing and painting"
+    },
+    {
+      "id": "manualidades",
+      "es": "Las manualidades",
+      "en": "Arts and crafts"
+    },
+    {
+      "id": "construir",
+      "es": "Construir con piezas",
+      "en": "Building with blocks"
+    },
+    {
+      "id": "leer",
+      "es": "Leer cuentos",
+      "en": "Reading stories"
+    },
+    {
+      "id": "cantar",
+      "es": "Cantar",
+      "en": "Singing"
+    },
+    {
+      "id": "musica",
+      "es": "Tocar un instrumento",
+      "en": "Playing an instrument"
     },
     {
       "id": "bailar",
@@ -159,19 +194,9 @@ window.CUENTOS_OPTIONS = {
       "en": "Football"
     },
     {
-      "id": "leer",
-      "es": "Leer",
-      "en": "Reading"
-    },
-    {
-      "id": "cocinar",
-      "es": "Cocinar",
-      "en": "Cooking"
-    },
-    {
-      "id": "musica",
-      "es": "La música",
-      "en": "Music"
+      "id": "baloncesto",
+      "es": "El baloncesto",
+      "en": "Basketball"
     },
     {
       "id": "nadar",
@@ -179,71 +204,31 @@ window.CUENTOS_OPTIONS = {
       "en": "Swimming"
     },
     {
-      "id": "construir",
-      "es": "Construir cosas",
-      "en": "Building things"
+      "id": "bicicleta",
+      "es": "Montar en bici",
+      "en": "Riding a bike"
+    },
+    {
+      "id": "patinar",
+      "es": "Patinar",
+      "en": "Skating"
+    },
+    {
+      "id": "cocinar",
+      "es": "Cocinar",
+      "en": "Cooking"
     },
     {
       "id": "animales",
-      "es": "Los animales",
-      "en": "Animals"
-    },
-    {
-      "id": "estrellas",
-      "es": "Las estrellas",
-      "en": "The stars"
-    },
-    {
-      "id": "bicicleta",
-      "es": "La bicicleta",
-      "en": "Cycling"
-    },
-    {
-      "id": "plantas",
-      "es": "Las plantas",
-      "en": "Plants"
+      "es": "Cuidar animales",
+      "en": "Looking after animals"
     }
   ],
   "themes": [
     {
-      "id": "mar",
-      "es": "El mar",
-      "en": "The sea"
-    },
-    {
-      "id": "bosque",
-      "es": "El bosque",
-      "en": "The forest"
-    },
-    {
-      "id": "espacio",
-      "es": "El espacio",
-      "en": "Space"
-    },
-    {
-      "id": "dinosaurios",
-      "es": "Dinosaurios",
-      "en": "Dinosaurs"
-    },
-    {
-      "id": "castillos",
-      "es": "Princesas y caballeros",
-      "en": "Princesses and knights"
-    },
-    {
-      "id": "futbol",
-      "es": "Fútbol",
-      "en": "Football"
-    },
-    {
-      "id": "montana",
-      "es": "La montaña",
-      "en": "The mountain"
-    },
-    {
-      "id": "granja",
-      "es": "La granja",
-      "en": "The farm"
+      "id": "casa",
+      "es": "Dentro de su casa",
+      "en": "Inside their house"
     },
     {
       "id": "ciudad",
@@ -251,24 +236,24 @@ window.CUENTOS_OPTIONS = {
       "en": "Their neighbourhood"
     },
     {
-      "id": "circo",
-      "es": "El circo",
-      "en": "The circus"
+      "id": "granja",
+      "es": "La granja",
+      "en": "The farm"
     },
     {
-      "id": "piratas",
-      "es": "Piratas e islas",
-      "en": "Pirates and islands"
+      "id": "bosque",
+      "es": "El bosque",
+      "en": "The forest"
     },
     {
-      "id": "hielo",
-      "es": "El hielo",
-      "en": "The ice"
+      "id": "montana",
+      "es": "La montaña",
+      "en": "The mountain"
     },
     {
-      "id": "jungla",
-      "es": "La selva",
-      "en": "The jungle"
+      "id": "mar",
+      "es": "La playa y el mar",
+      "en": "The beach and the sea"
     },
     {
       "id": "fondomar",
@@ -276,14 +261,49 @@ window.CUENTOS_OPTIONS = {
       "en": "The deep sea"
     },
     {
+      "id": "jungla",
+      "es": "La selva",
+      "en": "The jungle"
+    },
+    {
+      "id": "desierto",
+      "es": "El desierto",
+      "en": "The desert"
+    },
+    {
+      "id": "hielo",
+      "es": "El hielo y la nieve",
+      "en": "Ice and snow"
+    },
+    {
+      "id": "espacio",
+      "es": "El espacio",
+      "en": "Space"
+    },
+    {
       "id": "tren",
       "es": "Un tren de noche",
       "en": "A night train"
     },
     {
-      "id": "casa",
-      "es": "Dentro de su casa",
-      "en": "Inside their house"
+      "id": "circo",
+      "es": "El circo",
+      "en": "The circus"
+    },
+    {
+      "id": "castillos",
+      "es": "Un castillo",
+      "en": "A castle"
+    },
+    {
+      "id": "piratas",
+      "es": "Una isla pirata",
+      "en": "A pirate island"
+    },
+    {
+      "id": "dinosaurios",
+      "es": "El mundo de los dinosaurios",
+      "en": "The world of the dinosaurs"
     }
   ],
   "moments": [
@@ -378,6 +398,18 @@ window.CUENTOS_OPTIONS = {
       "adult": true
     },
     {
+      "id": "tio",
+      "es": "Su tío",
+      "en": "Uncle",
+      "adult": true
+    },
+    {
+      "id": "tia",
+      "es": "Su tía",
+      "en": "Aunt",
+      "adult": true
+    },
+    {
       "id": "amigo",
       "es": "Un amigo",
       "en": "Friend (boy)",
@@ -409,9 +441,14 @@ window.CUENTOS_OPTIONS = {
       "en": "A baby"
     },
     {
-      "id": "3-5",
-      "es": "3 a 5 años",
-      "en": "3 to 5"
+      "id": "2-3",
+      "es": "2 y 3 años",
+      "en": "2 and 3"
+    },
+    {
+      "id": "4-5",
+      "es": "4 y 5 años",
+      "en": "4 and 5"
     },
     {
       "id": "6-8",
