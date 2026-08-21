@@ -51,7 +51,7 @@ Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizad
 - [x] Investigación profunda: competencia, POD, modelos de IA, cobros/legal, canales (`docs/research-2026-08.md`)
 - [x] Diseño aprobado y plan de 22 tareas (`docs/superpowers/`)
 - [x] Giro a solo PDF con vista previa en URL temporal (mvp.md v2, revisión del spec y del plan, 2026-08-21)
-- [ ] Fase 0 — spikes (motor: 123 tests ✅; MiniMax medido y descartado; **Nano Banana 2 vía OpenRouter elegido**; modelo de texto en curso; Stripe MP pendiente de JJ)
+- [x] Fase 0 — spikes (235 tests ✅; MiniMax descartado; **`gemini-3.1-flash-lite-image` para imagen y `gemini-2.5-flash-lite` para texto**, ambos medidos; prueba de extremo a extremo completa el 21-08: **53 céntimos de IA por libro**. Stripe MP sigue pendiente de JJ y no bloquea, porque el MVP cobra por Etsy)
 - [ ] Fase 1 — mínimo que cobra (prueba: __ vistas previas / __ % conversión a pago / __ pagos / __ % interés impreso)
 - [ ] Fase 2 — colorear por créditos
 - [ ] Fase 3 — campaña Navidad/Reyes
@@ -59,6 +59,13 @@ Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizad
 - [ ] Fase 5 — impreso (condicionada al botón de interés)
 
 Al completar una fase, actualiza este checklist. Lo que afecte a los tres proyectos va en `../CLAUDE.md`.
+
+## Supabase (aplicado 2026-08-21)
+
+- Proyecto compartido `rgpzrbwpyaewughahpgo` (el mismo del RPG y de otras apps). **Todo vive en el schema `cuentos`**: 9 tablas con RLS activo en todas y sin políticas salvo `coloring_pages`, que es la única de lectura pública. Migraciones aplicadas: `0001_cuentos_schema` y `0002_claim_job`.
+- Bucket privado **`stories`** (25 MB por fichero) para hojas de personaje, páginas, líneas de colorear y PDF; se sirven por URL firmada. La galería gratuita **no usa bucket**: son ficheros estáticos en `colorear/`.
+- ⚠️ **`cuentos` tuvo que añadirse a los *exposed schemas* de PostgREST** (`public, storage, ai_agents, falm, cuentos`). Si alguien reescribe esa lista desde el panel y lo quita, todas las funciones devuelven «Invalid schema: cuentos». Es aditivo: no afecta a las otras apps.
+- `claimJob` va por la función `cuentos.claim_job(uuid,int)`, no por un UPDATE con filtros — ver el comentario de la migración 0002 y `docs/fase-0-resultados.md` §0.6.
 
 ## Vercel
 

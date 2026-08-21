@@ -19,6 +19,11 @@
 }
 
 * { box-sizing: border-box; }
+/* The user-agent rule for [hidden] is display:none, which any display:flex on
+   the same element silently beats — so a .stack or .row with hidden stayed
+   visible. Both the viewer's change form and the gallery's email form were
+   showing when they should not. */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -107,6 +112,7 @@ legend { font-family: Fraunces, Georgia, serif; font-weight: 600; padding: 0 .4r
 .pg .art { position: relative; aspect-ratio: 1 / 1; background: var(--sea-soft); }
 .pg .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pg .art.wide { aspect-ratio: 16 / 9; }
+.pg .art.later { aspect-ratio: 16 / 3; }
 .pg .art .veil { position: absolute; inset: 0; display: grid; place-items: center; padding: 1rem; text-align: center; background: repeating-linear-gradient(135deg, var(--sea-soft) 0 12px, #eaf1ee 12px 24px); }
 .pg .art .veil span { background: rgba(255,255,255,.95); border-radius: 999px; padding: .5rem 1rem; font-size: .88rem; color: var(--muted); }
 .pg .txt { padding: 1.1rem 1.3rem 1rem; position: relative; }
