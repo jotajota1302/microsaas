@@ -155,4 +155,5 @@ create policy coloring_public_read on cuentos.coloring_pages
 
 -- Storage buckets (created through the Storage API, recorded here):
 --   stories   private  — sheets, pages, colouring pages and PDFs, served by signed URL
---   coloring  public   — the free gallery
+-- The free gallery needs no bucket: it is committed as static files under
+-- colorear/ and served straight from the CDN.

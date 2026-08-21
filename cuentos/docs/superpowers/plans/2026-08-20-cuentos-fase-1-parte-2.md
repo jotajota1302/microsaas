@@ -375,16 +375,16 @@ git add cuentos/index.html cuentos/en cuentos/crear cuentos/pedido cuentos/asset
 git commit -m "feat(cuentos): add bilingual landing, instant sample and order flow"
 ```
 
-### Task 1.21: Galería de colorear y captura de email
+### Task 1.21: Galería de colorear y captura de email ✅ (2026-08-21)
 
 **Files:**
 - Create: `colorear/index.html`, `colorear/[slug].html` (generadas), `scripts/gen-coloring-gallery.js`, `api/subscribe.js`
 
-- [ ] **Step 1: Escribir `scripts/gen-coloring-gallery.js`** que genere 20 páginas (dinosaurios, unicornios, princesas, coches, gatos, dragones, sirenas, espacio, piratas, granja, mariposas, robots, hadas, tiburones, fútbol, navidad, halloween, flores, tren, superhéroes), las suba a Storage y las registre en `coloring_pages`.
+- [x] **Step 1: Escribir `scripts/gen-coloring-gallery.js`** que genere 20 páginas (dinosaurios, unicornios, princesas, coches, gatos, dragones, sirenas, espacio, piratas, granja, mariposas, robots, hadas, tiburones, fútbol, navidad, halloween, flores, tren, superhéroes). **Hecho 2026-08-21 con un cambio**: no se suben a Storage ni se registran en `coloring_pages` — se **commitean como ficheros estáticos** en `colorear/img/` y `colorear/pdf/`, porque una galería fija no necesita ni base de datos ni función que la sirva. La tabla `coloring_pages` queda para la fase 2 (colorear personalizado por créditos).
 
-- [ ] **Step 2: Ejecutarlo** — Run: `node scripts/gen-coloring-gallery.js` → Expected: 20 filas y 20 PNG. Coste ≈ 0,80 $.
+- [x] **Step 2: Ejecutarlo** — 20 páginas por **0,71 $** (modelo lite, 3,7-5,1 s cada una, 0 fallos). Medidas en `docs/fase-0-resultados.md` §0.5.
 
-- [ ] **Step 3: Escribir la galería** con una página por tema, título y descripción optimizados, descarga directa del PDF y un formulario de email que entrega un pack de 5 páginas extra.
+- [x] **Step 3: Escribir la galería** — `scripts/build-coloring-gallery.js` escribe 42 páginas (ES + EN) con canonical, hreflang y JSON-LD, más `sitemap.xml` y `robots.txt`. El formulario de email **avisa de dibujos nuevos** en vez de prometer un pack de 5 páginas extra: sin Resend configurado no se puede entregar nada, y prometer lo que no se cumple quema la lista.
 
 - [ ] **Step 4: Implementar `api/subscribe.js`** con doble opt-in y borrado a petición.
 
