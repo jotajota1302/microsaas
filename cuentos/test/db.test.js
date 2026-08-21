@@ -166,3 +166,13 @@ test("recentOrders and recentJobs read the newest first, capped", async () => {
   await createDb(c2).recentJobs(10);
   assert.strictEqual(c2.log[0].table, "jobs");
 });
+
+test("liveStoriesFor looks up a customer's stories by email, newest first", async () => {
+  const client = fakeClient({ data: [{ id: "o1" }], error: null });
+  const db = createDb(client);
+  await db.liveStoriesFor("PADRE@Ejemplo.ES ");
+  const names = ops(client);
+  assert.ok(names.includes("eq"), "it must filter by email");
+  const eq = client.log[0].calls.find((c) => c[0] === "eq");
+  assert.strictEqual(eq[2], "padre@ejemplo.es", "the email is normalised, or nobody ever matches");
+});

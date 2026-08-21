@@ -228,6 +228,33 @@ function waitlistHandler(deps) {
   };
 }
 
+// --- POST /api/recover { email } -------------------------------------------------
+//
+// There are no accounts on purpose: no password to forget, no profile to keep.
+// The trade-off is that the link IS the key, so losing the email would mean
+// losing the book. This sends the live links back.
+
+function recoverHandler(deps) {
+  return async (req, res) => {
+    if (!requireMethod(req, res, "POST")) return;
+    const body = await readJson(req).catch(() => null);
+    const email = String((body && body.email) || "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return send(res, 400, { error: "invalid_email" });
+
+    const orders = await deps.db.liveStoriesFor(email);
+    for (const order of orders) {
+      const story = await deps.db.getStoryByOrder(order.id);
+      // A dead link is worse than no email: it reads as "your book is gone".
+      if (!story || new Date(story.expires_at) < new Date()) continue;
+      await deps.sendEmail({ kind: "recover", to: order.email, locale: order.locale, token: story.token });
+    }
+
+    // Always the same answer. Telling a stranger whether an address is ours
+    // would turn this into a way to test email addresses.
+    return send(res, 200, { ok: true });
+  };
+}
+
 // --- POST /api/print-interest { token } --------------------------------------------
 
 function printInterestHandler(deps) {
@@ -391,5 +418,5 @@ function adminHandler(deps) {
 
 module.exports = {
   orderHandler, storyHandler, reviseHandler, approveHandler, waitlistHandler,
-  printInterestHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
+  printInterestHandler, recoverHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
 };

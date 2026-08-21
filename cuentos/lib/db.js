@@ -157,6 +157,21 @@ function createDb(client) {
      * one place. Two plain queries beat a dozen counting round trips at this
      * size, and they keep the arithmetic somewhere it can be tested.
      */
+    /**
+     * A customer who lost the email has no other way back: there are no
+     * accounts by design, so the link IS the key. This finds what is still
+     * alive for an address so it can be sent again.
+     */
+    async liveStoriesFor(email, limit = 5) {
+      const rows = await unwrap(
+        await t("orders")
+          .select("id,email,locale,status,created_at")
+          .eq("email", String(email || "").trim().toLowerCase())
+          .order("created_at", { ascending: false })
+          .limit(limit)
+      );
+      return rows || [];
+    },
     async recentOrders(limit = 100) {
       return unwrap(await t("orders").select("*").order("created_at", { ascending: false }).limit(limit));
     },

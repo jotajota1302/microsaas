@@ -170,11 +170,47 @@
       </div>
     </section>
 
+    <section class="stack" id="recover">
+      <div class="card stack" style="max-width:34rem">
+        <h2 style="font-size:1.25rem">Lost the link to your story?</h2>
+        <p class="muted" style="font-size:.95rem">No accounts and no passwords: the link is the key. Tell us your email and we will send it again.</p>
+        <form class="row" id="recoverForm">
+          <input type="email" name="email" required placeholder="you@email.com" style="flex:1;min-width:13rem">
+          <button class="btn secondary" type="submit">Send me the link</button>
+        </form>
+        <p class="muted" id="recoverMsg" hidden style="font-size:.9rem"></p>
+      </div>
+    </section>
   </div>
 </main>
 
 <footer class="wrap wide">
   <a href="/en/coloring/">Free colouring</a><a href="/legal/">Legal notice</a><a href="/legal/#privacidad">Privacy</a><a href="/legal/#condiciones">Terms</a><span>© 2026</span>
 </footer>
+
+<script>
+(function () {
+  var form = document.getElementById("recoverForm");
+  if (!form) return;
+  var msg = document.getElementById("recoverMsg");
+  form.addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var b = form.querySelector("button");
+    b.disabled = true;
+    try {
+      await fetch("/api/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email.value })
+      });
+    } catch (e) { /* the answer is the same either way */ }
+    // Deliberately the same message whatever happened: telling a stranger
+    // whether an address is ours would turn this into an address checker.
+    msg.textContent = "If we have a story for that address, it is on its way. Check your spam folder too.";
+    msg.hidden = false;
+    form.hidden = true;
+  });
+})();
+</script>
 </body>
 </html>

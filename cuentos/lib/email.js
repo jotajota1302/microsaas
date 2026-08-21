@@ -33,6 +33,14 @@ const T = {
       subject: "Tu cuento ha caducado",
       body: () => `El cuento que creaste ha caducado y hemos borrado sus datos, tal y como prometimos.\n\nSi quieres, puedes crear otro cuando quieras: ${BASE()}/crear/`,
     },
+    recover: {
+      subject: "Aquí tienes el enlace a tu cuento",
+      body: (url) => `Nos has pedido el enlace a tu cuento. Aquí está: ${url}
+
+No hace falta ninguna cuenta ni contraseña: guarda este correo y podrás volver siempre que quieras, hasta que el enlace caduque.
+
+Si no has sido tú quien lo ha pedido, puedes ignorar este mensaje: nadie más ha recibido nada.`,
+    },
     review_needed: {
       subject: "Tu cuento necesita un repaso nuestro",
       body: () => `Estamos revisando tu cuento a mano antes de entregarlo. Te avisamos en cuanto esté, como muy tarde mañana.`,
@@ -58,6 +66,14 @@ const T = {
     expired: {
       subject: "Your story has expired",
       body: () => `The story you created has expired and its data has been deleted, as promised.\n\nYou can create another one any time: ${BASE()}/en/create/`,
+    },
+    recover: {
+      subject: "Here is the link to your story",
+      body: (url) => `You asked us for the link to your story. Here it is: ${url}
+
+No account and no password needed: keep this email and you can come back whenever you like, until the link expires.
+
+If this was not you, you can ignore this message — nobody else received anything.`,
     },
     review_needed: {
       subject: "Your story needs a look from us",

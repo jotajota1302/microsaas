@@ -488,3 +488,48 @@ test("order sends the free note to moderation, not just the dedication", async (
   })(req({ body: { ...GOOD, personalization: { ...GOOD.personalization, notes: "le da miedo el ascensor" } } }), res());
   assert.strictEqual(seen.notes, "le da miedo el ascensor");
 });
+
+// There are no accounts: the link is the key. Losing the email must not mean
+// losing the book, and the reply must never reveal whether an address exists.
+test("recover emails the live links back, and says the same thing either way", async () => {
+  const sent = [];
+  const db = fakeDb({
+    liveStoriesFor: async (email) => (email === "padre@ejemplo.es"
+      ? [{ id: "o1", email, locale: "es", status: "delivered" }]
+      : []),
+    getStoryByOrder: async () => ({ token: "abcdefghijklmnopqrstuv", stage: "full", expires_at: new Date(Date.now() + 86400000).toISOString() }),
+  });
+  const deps = { db, sendEmail: async (m) => { sent.push(m); return { id: "e" }; } };
+
+  const hit = res();
+  await H.recoverHandler(deps)(req({ body: { email: "Padre@Ejemplo.es" } }), hit);
+  assert.strictEqual(hit.statusCode, 200);
+  assert.strictEqual(sent.length, 1);
+  assert.strictEqual(sent[0].kind, "recover");
+  assert.strictEqual(sent[0].token, "abcdefghijklmnopqrstuv");
+
+  const miss = res();
+  await H.recoverHandler(deps)(req({ body: { email: "nadie@ejemplo.es" } }), miss);
+  assert.strictEqual(miss.statusCode, 200);
+  assert.deepStrictEqual(miss.body, hit.body, "the answer must not tell an attacker which addresses exist");
+  assert.strictEqual(sent.length, 1, "nothing is sent for an address we do not have");
+});
+
+test("recover refuses a malformed address without touching the database", async () => {
+  const db = fakeDb({ liveStoriesFor: async () => { throw new Error("must not be reached"); } });
+  const r = res();
+  await H.recoverHandler({ db, sendEmail: async () => ({}) })(req({ body: { email: "nope" } }), r);
+  assert.strictEqual(r.statusCode, 400);
+});
+
+test("recover skips an expired story rather than sending a dead link", async () => {
+  const sent = [];
+  const db = fakeDb({
+    liveStoriesFor: async () => [{ id: "o1", email: "a@b.co", locale: "es", status: "script" }],
+    getStoryByOrder: async () => ({ token: "abcdefghijklmnopqrstuv", stage: "script", expires_at: new Date(Date.now() - 1000).toISOString() }),
+  });
+  const r = res();
+  await H.recoverHandler({ db, sendEmail: async (m) => { sent.push(m); return {}; } })(req({ body: { email: "a@b.co" } }), r);
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(sent.length, 0);
+});

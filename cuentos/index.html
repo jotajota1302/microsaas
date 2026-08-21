@@ -181,6 +181,17 @@
       </div>
     </section>
 
+    <section class="stack" id="recuperar">
+      <div class="card stack" style="max-width:34rem">
+        <h2 style="font-size:1.25rem">¿Has perdido el enlace de tu cuento?</h2>
+        <p class="muted" style="font-size:.95rem">No hacen falta cuentas ni contraseñas: el enlace es la llave. Dinos tu correo y te lo mandamos otra vez.</p>
+        <form class="row" id="recoverForm">
+          <input type="email" name="email" required placeholder="tu@correo.com" style="flex:1;min-width:13rem">
+          <button class="btn secondary" type="submit">Enviarme el enlace</button>
+        </form>
+        <p class="muted" id="recoverMsg" hidden style="font-size:.9rem"></p>
+      </div>
+    </section>
   </div>
 </main>
 
@@ -208,6 +219,31 @@
   }
   input.addEventListener("input", render);
   render();
+})();
+</script>
+
+<script>
+(function () {
+  var form = document.getElementById("recoverForm");
+  if (!form) return;
+  var msg = document.getElementById("recoverMsg");
+  form.addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var b = form.querySelector("button");
+    b.disabled = true;
+    try {
+      await fetch("/api/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email.value })
+      });
+    } catch (e) { /* the answer is the same either way */ }
+    // Deliberately the same message whatever happened: telling a stranger
+    // whether an address is ours would turn this into an address checker.
+    msg.textContent = "Si tenemos un cuento con ese correo, ya te lo hemos enviado. Mira también en spam.";
+    msg.hidden = false;
+    form.hidden = true;
+  });
 })();
 </script>
 </body>
