@@ -69,8 +69,16 @@
     </section>
 
     <section class="stack">
-      <h2>Últimos pedidos</h2>
-      <div class="tablewrap"><table id="recent"><tbody></tbody></table></div>
+      <div class="row" style="justify-content:space-between">
+        <h2>Todos los cuentos <span class="pill" id="allCount">0</span></h2>
+        <input type="search" id="filter" placeholder="Filtrar por email, título o token" style="flex:1 1 16rem;max-width:24rem">
+      </div>
+      <div class="tablewrap">
+        <table id="recent">
+          <thead><tr><th>Cuándo</th><th>Email</th><th>Estado</th><th>Canal</th><th>Cuento</th><th>Dibujos</th><th>Coste IA</th><th>Enlace</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
   </div>
 </div>
@@ -101,6 +109,7 @@
   let data = null, range = "today";
 
   $("auth").onsubmit = (e) => { e.preventDefault(); localStorage.setItem("cuentos_admin", $("tok").value.trim()); load(); };
+  $("filter").oninput = () => renderRecent();
   $("reload").onclick = load;
   $("range").onclick = (e) => {
     const b = e.target.closest("button[data-r]");
@@ -187,19 +196,29 @@
   }
 
   function renderRecent() {
-    const rows = data.recent || [];
+    const all = data.recent || [];
+    const q = ($("filter").value || "").trim().toLowerCase();
+    const rows = q
+      ? all.filter((o) => [o.email, o.story && o.story.title, o.story && o.story.token, o.status].filter(Boolean).join(" ").toLowerCase().includes(q))
+      : all;
+    $("allCount").textContent = q ? `${rows.length} de ${all.length}` : String(all.length);
     $("recent").querySelector("tbody").innerHTML = rows.length ? rows.map((o) => {
       const [label, cls] = STATUS[o.status] || [o.status, "off"];
+      const st = o.story;
+      // Where the book actually is, which the order status alone does not say:
+      // a paid order can be half drawn.
+      const drawn = st ? `${st.illustrated}/12${st.hasPdf ? " · PDF" : ""}` : "—";
       return `<tr>
         <td class="muted">${when(o.createdAt)}</td>
         <td>${esc(o.email)}</td>
         <td><span class="tag ${cls}">${label}</span></td>
         <td class="muted">${esc(o.channel || "web")} · ${esc(o.locale)}</td>
-        <td>${o.story ? `<a href="/c/${o.story.token}" target="_blank" rel="noopener">${esc(o.story.title || o.story.token)}</a>` : `<span class="muted">—</span>`}</td>
-        <td class="muted">${o.story ? o.story.revisions + " cambios" : ""}</td>
-        <td><code>${o.story ? o.story.token : ""}</code></td>
+        <td>${st ? `<a href="/c/${st.token}" target="_blank" rel="noopener">${esc(st.title || st.token)}</a>${st.revisions ? ` <span class="pill">${st.revisions} cambios</span>` : ""}` : `<span class="muted">sin guion</span>`}</td>
+        <td class="muted">${drawn}</td>
+        <td class="muted">${(o.costCents / 100).toFixed(2).replace(".", ",")} €</td>
+        <td>${st ? `<code>${st.token}</code>` : ""}</td>
       </tr>`;
-    }).join("") : `<tr><td class="muted">Todavía no hay pedidos.</td></tr>`;
+    }).join("") : `<tr><td class="muted" colspan="8">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
   }
 
   async function onAction(b) {

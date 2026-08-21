@@ -188,6 +188,19 @@ function createDb(client) {
       );
       return rows || [];
     },
+    /**
+     * The stories of many orders in one query. The panel used to ask for them
+     * one at a time, which is why it only ever showed the last 25: a hundred
+     * round trips to list a hundred rows.
+     */
+    async storiesForOrders(orderIds) {
+      if (!orderIds || !orderIds.length) return [];
+      return unwrap(
+        await t("stories")
+          .select("id,order_id,token,stage,story,revisions,retouched,expires_at,page_paths,pdf_path")
+          .in("order_id", orderIds)
+      );
+    },
     async recentOrders(limit = 100) {
       return unwrap(await t("orders").select("*").order("created_at", { ascending: false }).limit(limit));
     },

@@ -485,15 +485,26 @@ function adminHandler(deps) {
       }
       // The queue alone does not say whether the shop can trade: the panel also
       // reports which integrations are wired and how the funnel is converting.
-      const [orders, allJobs] = await Promise.all([deps.db.recentOrders(150), deps.db.recentJobs(300)]);
+      const [orders, allJobs] = await Promise.all([deps.db.recentOrders(200), deps.db.recentJobs(500)]);
+      // Every story, not the last 25: this is the only place the shop can be
+      // looked at. One query for all of them, and the cost comes from the jobs
+      // already fetched for the economics rather than from more round trips.
+      const rows = await deps.db.storiesForOrders(orders.map((o) => o.id));
       const stories = new Map();
-      for (const o of orders.slice(0, 25)) {
-        const s = await deps.db.getStoryByOrder(o.id);
-        if (s) stories.set(o.id, { token: s.token, stage: s.stage, title: s.story && s.story.title, revisions: s.revisions, expiresAt: s.expires_at });
+      for (const s of rows || []) {
+        stories.set(s.order_id, {
+          token: s.token, stage: s.stage, title: s.story && s.story.title,
+          revisions: s.revisions, retouched: s.retouched, expiresAt: s.expires_at,
+          illustrated: Object.keys(s.page_paths || {}).length,
+          hasPdf: Boolean(s.pdf_path),
+        });
       }
-      const recent = orders.slice(0, 25).map((o) => ({
+      const spent = new Map();
+      for (const j of allJobs || []) spent.set(j.order_id, (spent.get(j.order_id) || 0) + (j.cost_cents || 0));
+      const recent = orders.map((o) => ({
         id: o.id, email: o.email, status: o.status, channel: o.channel, locale: o.locale,
         priceCents: o.price_cents, createdAt: o.created_at, needsReview: o.needs_review,
+        costCents: spent.get(o.id) || 0,
         story: stories.get(o.id) || null,
       }));
       return send(res, 200, { items, recent, overview: dashboard.overview({ orders, jobs: allJobs, env: process.env }) });

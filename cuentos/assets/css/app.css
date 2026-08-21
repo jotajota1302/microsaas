@@ -411,3 +411,7 @@ dialog input { font: inherit; padding: .6rem .7rem; border: 1px solid var(--hair
 .pbar { background: var(--sunken); border-radius: 999px; height: .55rem; overflow: hidden; }
 .pbar span { display: block; height: 100%; background: var(--sea); border-radius: 999px; transition: width .4s ease; }
 @media (prefers-reduced-motion: reduce) { .pbar span { transition: none; } }
+
+/* the panel's table of every story */
+#recent thead th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; padding: 0 .7rem .5rem; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+#recent tbody tr:hover { background: var(--paper); }
