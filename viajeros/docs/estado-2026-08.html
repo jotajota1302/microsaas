@@ -1,0 +1,655 @@
+<title>Partes de Viajeros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Literata:opsz,wght@7..72,400;7..72,600&family=Share+Tech+Mono&display=swap">
+
+<style>
+  :root {
+    --paper:        #EFF1EE;
+    --surface:      #FFFFFF;
+    --surface-sunk: #E5E9E5;
+    --ink:          #16201C;
+    --ink-soft:     #5A6660;
+    --rule:         #CDD5CF;
+    --seal:         #0F5C4A;
+    --seal-soft:    #E2EFE9;
+    --stamp:        #A8341F;
+    --stamp-soft:   #F7E7E2;
+    --amber:        #8A6410;
+    --amber-soft:   #F6EEDB;
+
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body:    "Literata", Georgia, "Times New Roman", serif;
+    --mono:    "Share Tech Mono", "Courier New", monospace;
+
+    --measure: 68ch;
+    --step:    clamp(1rem, 0.6rem + 1.4vw, 1.55rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:        #0E1412;
+      --surface:      #161E1A;
+      --surface-sunk: #0A0F0D;
+      --ink:          #E3E9E5;
+      --ink-soft:     #93A099;
+      --rule:         #2B3833;
+      --seal:         #5CC5A3;
+      --seal-soft:    #14312A;
+      --stamp:        #E8836B;
+      --stamp-soft:   #35201B;
+      --amber:        #D9AE55;
+      --amber-soft:   #2C2413;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:        #0E1412;
+    --surface:      #161E1A;
+    --surface-sunk: #0A0F0D;
+    --ink:          #E3E9E5;
+    --ink-soft:     #93A099;
+    --rule:         #2B3833;
+    --seal:         #5CC5A3;
+    --seal-soft:    #14312A;
+    --stamp:        #E8836B;
+    --stamp-soft:   #35201B;
+    --amber:        #D9AE55;
+    --amber-soft:   #2C2413;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: clamp(1rem, 0.97rem + 0.15vw, 1.075rem);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 3rem);
+  }
+
+  .col { max-width: var(--measure); }
+
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h2 { font-size: clamp(1.5rem, 1.15rem + 1.3vw, 2.1rem); }
+  h3 { font-size: 1.12rem; font-weight: 600; letter-spacing: -0.01em; }
+
+  p { margin: 0; }
+  a { color: var(--seal); }
+
+  strong { font-weight: 600; }
+
+  .eyebrow {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead {
+    border-bottom: 1px solid var(--rule);
+    padding: clamp(2.5rem, 6vw, 4.5rem) 0 0;
+  }
+
+  .masthead-grid { display: flex; flex-direction: column; gap: 1.6rem; }
+
+  .doc-line {
+    display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--ink-soft);
+  }
+
+  .doc-line .live { color: var(--seal); }
+
+  h1 {
+    font-size: clamp(2.4rem, 1.3rem + 4.6vw, 4.6rem);
+    line-height: 0.98;
+  }
+
+  .standfirst {
+    font-size: clamp(1.08rem, 1rem + 0.4vw, 1.3rem);
+    color: var(--ink-soft);
+    max-width: 46ch;
+  }
+
+  /* ---------- MRZ band ---------- */
+
+  .mrz {
+    margin: clamp(2rem, 5vw, 3.2rem) 0 0;
+    background: var(--surface-sunk);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 1.3rem 0 1.1rem;
+    overflow-x: auto;
+  }
+
+  .mrz-inner { min-width: max-content; padding: 0 clamp(1.1rem, 4vw, 3rem); }
+
+  .mrz-line {
+    font-family: var(--mono);
+    font-size: clamp(0.72rem, 0.45rem + 1.1vw, 1.05rem);
+    letter-spacing: 0.14em;
+    line-height: 1.85;
+    white-space: pre;
+  }
+
+  .mrz-line span { padding: 0.12em 0; }
+
+  .z-support { background: var(--seal-soft); color: var(--seal); font-weight: bold; box-shadow: 0 1px 0 var(--seal); }
+  .z-doc     { background: var(--stamp-soft); color: var(--stamp); font-weight: bold; box-shadow: 0 1px 0 var(--stamp); }
+  .z-check   { background: var(--amber-soft); color: var(--amber); font-weight: bold; box-shadow: 0 1px 0 var(--amber); }
+  .z-fill    { color: var(--ink-soft); opacity: 0.5; }
+
+  .mrz-key {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+    margin-top: 1rem;
+    font-family: var(--display);
+    font-size: 0.73rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .mrz-key b { font-weight: 600; letter-spacing: 0.02em; }
+  .k-support b { color: var(--seal); }
+  .k-doc b     { color: var(--stamp); }
+  .k-check b   { color: var(--amber); }
+
+  .mrz-caption {
+    padding: 1.1rem clamp(1.1rem, 4vw, 3rem) 0;
+    max-width: 60ch;
+    font-size: 0.93rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding: clamp(2.8rem, 6vw, 4.6rem) 0; border-bottom: 1px solid var(--rule); }
+
+  .sec-head { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2rem; }
+
+  .stack { display: flex; flex-direction: column; gap: 1.15rem; }
+  .stack-lg { display: flex; flex-direction: column; gap: 2.2rem; }
+
+  /* ---------- verdict blocks ---------- */
+
+  .verdict {
+    border-left: 3px solid var(--stamp);
+    background: var(--stamp-soft);
+    padding: 1.15rem 1.4rem;
+    display: flex; flex-direction: column; gap: 0.6rem;
+  }
+
+  .verdict.calm { border-left-color: var(--seal); background: var(--seal-soft); }
+  .verdict.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+
+  .verdict .eyebrow { color: inherit; opacity: 0.72; }
+  .verdict.calm { color: var(--seal); }
+  .verdict.warn { color: var(--amber); }
+  .verdict      { color: var(--stamp); }
+  .verdict p, .verdict li { color: var(--ink); }
+
+  /* ---------- findings ---------- */
+
+  .findings { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+
+  .finding {
+    background: var(--surface);
+    padding: 1.3rem 1.4rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+
+  .finding .src {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+  }
+
+  @media (min-width: 52rem) {
+    .findings { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; }
+
+  caption {
+    text-align: left;
+    padding: 0.95rem 1.1rem;
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.68rem 1.1rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.94rem;
+  }
+
+  th {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  tr.spotlight td { background: var(--seal-soft); }
+  tr.spotlight td:first-child { font-weight: 600; box-shadow: inset 3px 0 0 var(--seal); }
+  tr.muted td { color: var(--ink-soft); }
+
+  /* ---------- status list ---------- */
+
+  .ledger { display: flex; flex-direction: column; border: 1px solid var(--rule); background: var(--surface); }
+
+  .row {
+    display: grid;
+    grid-template-columns: 5.4rem 1fr;
+    gap: 0 1.1rem;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+
+  .row:last-child { border-bottom: none; }
+
+  .mark {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 0.28rem 0.5rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .mark.done { background: var(--seal); color: var(--paper); }
+  .mark.next { background: var(--surface-sunk); color: var(--ink); border: 1px solid var(--rule); }
+  .mark.hold { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber); }
+
+  .row .what { display: flex; flex-direction: column; gap: 0.3rem; }
+  .row .what span { font-size: 0.9rem; color: var(--ink-soft); }
+
+  /* ---------- phases ---------- */
+
+  .phases { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+
+  .phase {
+    background: var(--surface);
+    padding: 1.35rem 1.4rem;
+    display: grid;
+    gap: 0.55rem 1.2rem;
+    grid-template-columns: 1fr;
+  }
+
+  .phase-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.9rem; }
+  .phase h3 { flex: 1 1 16rem; }
+
+  .effort {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--seal);
+    white-space: nowrap;
+  }
+
+  .phase.deferred { background: var(--surface-sunk); }
+  .phase.deferred .effort { color: var(--ink-soft); }
+
+  .phase p { font-size: 0.95rem; }
+  .phase .out { font-size: 0.9rem; color: var(--ink-soft); }
+  .phase .out b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- asks ---------- */
+
+  .asks { display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .ask { background: var(--surface); padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 0.35rem; }
+  .ask .why { font-size: 0.9rem; color: var(--ink-soft); }
+
+  footer { padding: 2.6rem 0 4rem; color: var(--ink-soft); font-size: 0.88rem; }
+  footer .col { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-sunk);
+    padding: 0.1em 0.35em;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .mrz-line span { animation: settle 0.5s ease-out both; }
+    .mrz-line span:nth-child(2) { animation-delay: 0.12s; }
+    .mrz-line span:nth-child(3) { animation-delay: 0.24s; }
+    .mrz-line span:nth-child(4) { animation-delay: 0.36s; }
+    @keyframes settle { from { opacity: 0; } to { opacity: 1; } }
+  }
+</style>
+
+<header class="masthead">
+  <div class="wrap masthead-grid">
+    <div class="doc-line">
+      <span>MICROSAAS / VIAJEROS</span>
+      <span>REV. 21-08-2026</span>
+      <span class="live">INVESTIGACIÓN CERRADA · LISTO PARA CONSTRUIR</span>
+    </div>
+    <h1>Partes de viajeros</h1>
+    <p class="standfirst">Un conducto de cumplimiento: del huésped al Ministerio del Interior, en plazo, con acuse guardado — y sin pedirle una foto del DNI a nadie.</p>
+  </div>
+
+  <div class="mrz">
+    <div class="mrz-inner">
+      <div class="mrz-line"><span class="z-fill">IDESP</span><span class="z-support">BAA000589</span><span class="z-check">5</span><span class="z-doc">99999999R</span><span class="z-fill">&lt;&lt;&lt;&lt;&lt;&lt;</span></div>
+      <div class="mrz-line"><span class="z-fill">8501019M3001019ESP&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</span><span class="z-check">5</span></div>
+      <div class="mrz-line"><span class="z-fill">GARCIA&lt;LOPEZ&lt;&lt;JUAN&lt;CARLOS&lt;&lt;&lt;&lt;&lt;</span></div>
+      <div class="mrz-key">
+        <span class="k-support"><b>■ 6–14</b> número de soporte</span>
+        <span class="k-doc"><b>■ 16–24</b> número de DNI</span>
+        <span class="k-check"><b>■</b> dígitos de control</span>
+      </div>
+    </div>
+    <p class="mrz-caption">La franja del reverso del DNI trae ya casi todo lo que exige el parte, y con tres comprobaciones matemáticas independientes. Este ejemplo es sintético y su código funciona: lo verifiqué contra el estándar ICAO.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <div class="sec-head col">
+      <p class="eyebrow">Punto de partida</p>
+      <h2>La ley obliga, la AEPD prohíbe el atajo</h2>
+    </div>
+    <div class="col stack">
+      <p>Desde diciembre de 2024, todo alojamiento turístico en España debe comunicar los datos de cada viajero al Ministerio del Interior en menos de 24 horas. No hacerlo es una infracción grave: de 601 a 30.000 euros.</p>
+      <p>Medio sector resolvía el papeleo fotografiando el DNI del huésped. Eso dejó de ser una opción.</p>
+      <div class="verdict">
+        <p class="eyebrow">Hallazgo que define el producto</p>
+        <p>La <strong>AEPD prohibió el 17 de junio de 2025</strong> pedir copia, foto o escaneo del DNI en hospedajes. Ya hay multa firme: <strong>5.400 € a un hotel de Girona</strong> por escanearlo en el check-in, aunque no conservara la imagen.</p>
+        <p>El MVP que teníamos escrito — «el huésped fotografía su documento, la IA extrae los campos» — era exactamente la conducta sancionada.</p>
+      </div>
+      <p>La salida resultó ser mejor que el plan original. El huésped rellena sus datos él mismo desde un enlace, autenticado con un código de un solo uso: uno de los tres métodos que la propia AEPD acepta por escrito. Y más adelante podrá escanear la franja de su documento <strong>con el procesamiento ocurriendo dentro de su móvil</strong>, sin que la imagen salga del teléfono.</p>
+      <p>Eso convierte una restricción legal en la única frase de venta que ningún competidor puede copiar sin rehacer su producto entero: <strong>sin foto del DNI</strong>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head col">
+      <p class="eyebrow">Seis investigaciones con fuentes primarias</p>
+      <h2>Lo que ahora sabemos</h2>
+    </div>
+    <div class="findings">
+      <article class="finding">
+        <h3>El servicio web, entero</h3>
+        <p>SOAP 1.1, autenticación básica, el XML comprimido en ZIP y codificado en Base64. Cinco operaciones, veinticuatro códigos de error, y ninguna operación de modificación: un parte mal enviado se anula y se reenvía.</p>
+        <p class="src">PDF oficial del Ministerio v3.1.3 + XSD + WSDL, ya en el repo</p>
+      </article>
+      <article class="finding">
+        <h3>Qué se pide de verdad</h3>
+        <p>Del bloque de pago solo es obligatorio el tipo. No existe campo para el número de tarjeta ni para el IBAN. La firma la exige el reglamento pero no viaja al Ministerio: se guarda tres años en nuestro registro.</p>
+        <p class="src">BOE, Anexo I del RD 933/2021, contrastado con el esquema</p>
+      </article>
+      <article class="finding">
+        <h3>Bruselas ha abierto expediente</h3>
+        <p>La Comisión Europea abrió un procedimiento de infracción contra España en junio de 2026 por la amplitud de los datos y el plazo de conservación. La orden de desarrollo está paralizada. El reglamento sigue plenamente exigible.</p>
+        <p class="src">INFR(2026)4005 · consecuencia: construir ligero, cobrar por uso</p>
+      </article>
+      <article class="finding">
+        <h3>La IA no puede tocar los documentos</h3>
+        <p>OpenRouter no supera un análisis de riesgo alto: el contrato de encargado solo existe para cuentas Enterprise y su política declara transferencias a Estados Unidos. Sí sirve para lo que no lleva datos personales.</p>
+        <p class="src">Verificado en sus términos · también avisado a los otros dos proyectos</p>
+      </article>
+      <article class="finding">
+        <h3>Cobrar 0,95 € de uno en uno es imposible</h3>
+        <p>La comisión de Stripe se lleva el 27,8 % de un cargo tan pequeño. En bonos prepago de 24 € baja al 2,5 %. Es la diferencia entre un negocio y una donación a la pasarela de pago.</p>
+        <p class="src">Tarifas oficiales de Stripe España</p>
+      </article>
+      <article class="finding">
+        <h3>El certificado del Ministerio caduca ya</h3>
+        <p>Los certificados de sus servidores expiran el 3 de septiembre, y los emite una autoridad que Node no reconoce. Hay que fijar la raíz, que dura años, y jamás desactivar la verificación TLS.</p>
+        <p class="src">Comprobado con openssl contra el servidor real</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head col">
+      <p class="eyebrow">Unidad económica</p>
+      <h2>El número que cambió el cliente objetivo</h2>
+    </div>
+    <div class="col stack">
+      <p>Íbamos a vender a propietarios de apartamentos turísticos. Al calcular cuántos partes genera cada perfil al mes, el plan se dio la vuelta.</p>
+    </div>
+
+    <div class="table-wrap" style="margin-top: 1.8rem;">
+      <table>
+        <caption>Ingreso mensual por cliente, a 0,95 € el parte</caption>
+        <thead>
+          <tr><th>Perfil</th><th class="num">Partes/mes</th><th class="num">Ingreso/mes</th><th class="num">Ingreso/año</th></tr>
+        </thead>
+        <tbody>
+          <tr class="muted"><td>Propietario de 1 apartamento</td><td class="num">3,7</td><td class="num">3,53 €</td><td class="num">42 €</td></tr>
+          <tr><td>Gestor de 5 apartamentos</td><td class="num">18,6</td><td class="num">17,65 €</td><td class="num">212 €</td></tr>
+          <tr><td>Gestor de 15 apartamentos</td><td class="num">55,7</td><td class="num">52,95 €</td><td class="num">635 €</td></tr>
+          <tr class="spotlight"><td>Hostal de 12 habitaciones</td><td class="num">87,6</td><td class="num">83,17 €</td><td class="num">998 €</td></tr>
+          <tr><td>Hotel de 30 habitaciones</td><td class="num">269,5</td><td class="num">255,98 €</td><td class="num">3.072 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col stack" style="margin-top: 1.6rem;">
+      <p>Un propietario suelto deja <strong>3,53 € al mes</strong>: no cubre ni un correo de soporte. Un hostal deja <strong>veinticuatro veces más</strong> por el mismo esfuerzo comercial. El cliente objetivo pasa a ser el gestor de cinco o más alojamientos y, sobre todo, el hostal y la pensión. Al propietario de un apartamento se le atiende por autoservicio, sin gastar comercial en él.</p>
+      <p>Esto también corrige a la baja la estimación optimista que traíamos: con una cartera de apartamentos, 380 alojamientos son unos 6.500 € al mes, no los once mil que suponíamos.</p>
+    </div>
+
+    <div class="table-wrap" style="margin-top: 2rem;">
+      <table>
+        <caption>Precio propuesto — bonos que no caducan</caption>
+        <thead>
+          <tr><th>Producto</th><th class="num">Precio</th><th class="num">Por parte</th><th class="num">Comisión</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Bono de 25 partes</td><td class="num">24 €</td><td class="num">0,96 €</td><td class="num">2,5 %</td></tr>
+          <tr><td>Bono de 100 partes</td><td class="num">89 €</td><td class="num">0,89 €</td><td class="num">2,1 %</td></tr>
+          <tr><td>Bono de 500 partes</td><td class="num">399 €</td><td class="num">0,80 €</td><td class="num">1,8 %</td></tr>
+          <tr><td>Plan Hostal — 25 partes incluidos</td><td class="num">19 €/mes</td><td class="num">0,75 € extra</td><td class="num">2,8 %</td></tr>
+          <tr class="muted"><td>Cobro suelto de un parte — descartado</td><td class="num">0,95 €</td><td class="num">0,95 €</td><td class="num">27,8 %</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col stack" style="margin-top: 1.6rem;">
+      <p>El coste fijo mientras construimos es <strong>cero</strong>: Vercel ya está pagado por el portafolio y Supabase va en plan gratuito hasta que haya un cliente. A partir del primero, 42 € al mes. <strong>El punto de equilibrio son 46 partes al mes: un solo hostal.</strong></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head col">
+      <p class="eyebrow">Estado</p>
+      <h2>Lo que ya está hecho</h2>
+    </div>
+    <div class="ledger">
+      <div class="row">
+        <span class="mark done">Hecho</span>
+        <div class="what">
+          <p>Seis investigaciones con fuentes primarias</p>
+          <span>Marco legal, especificación del servicio web, identidad y RGPD, infraestructura y cobro, lectura de MRZ en el navegador. La de mercado sigue en curso.</span>
+        </div>
+      </div>
+      <div class="row">
+        <span class="mark done">Hecho</span>
+        <div class="what">
+          <p>Esquemas oficiales del Ministerio en el repositorio</p>
+          <span>Los XSD y el WSDL de la versión 3.1.3, más las especificaciones en PDF. Ya no dependemos de blogs de terceros para saber qué espera el servicio.</span>
+        </div>
+      </div>
+      <div class="row">
+        <span class="mark done">Hecho</span>
+        <div class="what">
+          <p>Plan maestro y plan de implementación</p>
+          <span>Diez tareas con el código escrito, sus tests y el orden exacto — pensado para ejecutarse con otro modelo sin más contexto que el propio documento.</span>
+        </div>
+      </div>
+      <div class="row">
+        <span class="mark done">Hecho</span>
+        <div class="what">
+          <p>El plan está verificado, no solo escrito</p>
+          <span>Extraje su código y lo ejecuté: 42 de 42 tests en verde, el ZIP lo abre <code>unzip</code>, y el XML generado valida contra el XSD oficial. Aparecieron dos bugs reales y ya están corregidos.</span>
+        </div>
+      </div>
+      <div class="row">
+        <span class="mark done">Hecho</span>
+        <div class="what">
+          <p>Documentos de proyecto saneados</p>
+          <span>El alcance describía el flujo que la AEPD sanciona. Reescrito, para que ningún modelo que lo lea construya lo prohibido.</span>
+        </div>
+      </div>
+      <div class="row">
+        <span class="mark hold">Espera</span>
+        <div class="what">
+          <p>Email al Ministerio, redactado y listo para enviar</p>
+          <span>Pide credenciales de preproducción. Es el camino crítico más largo del proyecto y solo puedes enviarlo tú.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head col">
+      <p class="eyebrow">Construcción</p>
+      <h2>Lo que vamos a hacer</h2>
+    </div>
+    <div class="col stack" style="margin-bottom: 2rem;">
+      <p>Cada fase termina en algo que funciona y se puede enseñar. Ninguna toca el entorno real del Ministerio hasta tener credenciales de pruebas.</p>
+    </div>
+
+    <div class="phases">
+      <article class="phase">
+        <div class="phase-top">
+          <h3>Núcleo: validador, XML y sobre SOAP</h3>
+          <span class="effort">2–3 días · sin bloqueos</span>
+        </div>
+        <p>La pieza de la que depende todo. Convierte los datos de un check-in en un mensaje que el Ministerio acepta, y rechaza cualquier cosa que no cumpla las reglas: documento obligatorio en adultos, parentesco en menores, código INE si la residencia es española, letra del DNI correcta.</p>
+        <p class="out"><b>Al terminar:</b> el plan está escrito y probado; solo hay que ejecutarlo.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-top">
+          <h3>Check-in del huésped</h3>
+          <span class="effort">3 días</span>
+        </div>
+        <p>Un enlace que el gestor manda por WhatsApp. El huésped se identifica con un código de un solo uso, rellena sus datos en español o inglés, y firma en pantalla. Sin cámara y sin subir nada.</p>
+        <p class="out"><b>Al terminar:</b> se puede hacer un check-in completo y descargar el fichero para subirlo a mano a la sede. <b>Ya es vendible sin la fase siguiente.</b></p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-top">
+          <h3>Envío automático al Ministerio</h3>
+          <span class="effort">2–3 días · espera credenciales</span>
+        </div>
+        <p>El cliente SOAP con el certificado raíz correcto, la cola con reintentos, la consulta del lote hasta que el Ministerio confirma, y el aviso cuando quedan menos de seis horas de plazo.</p>
+        <p class="out"><b>Al terminar:</b> parte enviado de verdad y acuse guardado.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-top">
+          <h3>Cobro y panel del gestor</h3>
+          <span class="effort">2 días</span>
+        </div>
+        <p>Bonos con Stripe, saldo, cinco partes de prueba, y una pantalla donde ver alojamientos, estancias, estado de cada parte y descargar los acuses.</p>
+        <p class="out"><b>Al terminar:</b> primer cobro real.</p>
+      </article>
+
+      <article class="phase deferred">
+        <div class="phase-top">
+          <h3>Escáner del documento en el móvil</h3>
+          <span class="effort">9 días · aplazado a propósito</span>
+        </div>
+        <p>Cuesta más que todas las fases anteriores juntas y ahorra tiempo al huésped, no al cliente que paga. Va después del primer cobro, y solo si los datos dicen que hace falta: si no sube la proporción de check-ins terminados, no vale esos nueve días.</p>
+        <p class="out"><b>Ya adelantado:</b> los dígitos de control y el desglose de la franja están construidos y probados. Cuando llegue el momento, la mitad difícil está hecha.</p>
+      </article>
+
+      <article class="phase deferred">
+        <div class="phase-top">
+          <h3>Calendarios de Airbnb y Booking</h3>
+          <span class="effort">después</span>
+        </div>
+        <p>Crear las estancias solas desde las reservas y mandar el enlace de check-in sin que el gestor toque nada. Es la función que convierte la herramienta en costumbre.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head col">
+      <p class="eyebrow">Fuera del código</p>
+      <h2>Lo que depende de ti</h2>
+    </div>
+    <div class="asks">
+      <div class="ask">
+        <p><strong>Enviar el correo al Ministerio.</strong> Está redactado y esperando.</p>
+        <p class="why">Es lo único que puede retrasar el proyecto semanas enteras. Todo lo demás avanza sin él.</p>
+      </div>
+      <div class="ask">
+        <p><strong>Conseguir un alojamiento real que ceda sus credenciales.</strong> A cambio de partes gratis.</p>
+        <p class="why">Dijiste que podías conseguirlo entre los primeros contactos. Sin uno, la prueba de extremo a extremo se queda a medias.</p>
+      </div>
+      <div class="ask">
+        <p><strong>Alta en Hacienda antes de la primera venta.</strong> Modelo 036.</p>
+        <p class="why">Y el contrato de encargado del tratamiento en las condiciones: el responsable de los datos es el alojamiento, nosotros somos el encargado.</p>
+      </div>
+      <div class="ask">
+        <p><strong>Decidir el dominio.</strong> Diez euros al año.</p>
+        <p class="why">Es el único coste nuevo hasta que haya un cliente pagando.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom: none;">
+    <div class="col stack">
+      <div class="verdict calm">
+        <p class="eyebrow">Dónde estamos</p>
+        <p>La investigación está cerrada y el diseño decidido. El siguiente paso no necesita permisos, credenciales ni dinero: <strong>ejecutar el plan del núcleo</strong>, que ya está escrito, probado y esperando.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <div class="col">
+    <p>Todo lo afirmado aquí procede de fuentes primarias — BOE, AEPD, la especificación del propio Ministerio, las tarifas publicadas de Stripe y Supabase — y queda documentado con su enlace en <code>docs/research/</code> del repositorio.</p>
+    <p>Documento de trabajo · 21 de agosto de 2026</p>
+  </div>
+</footer>
