@@ -166,3 +166,39 @@ test("generateStory gives up after three attempts and reports the errors", async
     (e) => e.name === "StoryNotValidError" && e.errors.length > 0 && e.costUsd > 0
   );
 });
+
+// Measured against the real model: the commonest rejection is a page or two
+// coming in at 56-59 words. Regenerating the whole story to fix that trades a
+// known small defect for a fresh unknown one, which is how a run burns all
+// three attempts. When every error names a page, repair those pages only.
+
+test("generateStory repairs page-level errors instead of regenerating everything", async () => {
+  const short = JSON.parse(JSON.stringify(valid));
+  short.pages[3].text = "Solo cinco palabras aqui vale.";
+  const seen = [];
+  const completeJson = async ({ messages, schema }) => {
+    seen.push({ schema, last: messages[messages.length - 1].content });
+    if (seen.length === 1) return { data: short, costUsd: 0.001 };
+    return { data: { pages: [{ n: 4, text: valid.pages[3].text, image_hint: valid.pages[3].image_hint }] }, costUsd: 0.0002 };
+  };
+  const r = await generateStory({ ...INPUT, people: [] }, { completeJson });
+  assert.strictEqual(r.attempts, 2);
+  assert.strictEqual(r.story.pages[3].text, valid.pages[3].text, "the repaired page must be merged back");
+  assert.strictEqual(r.story.title, valid.title, "the rest of the story must survive untouched");
+  assert.match(seen[1].last, /pagina 4|página 4/i);
+  assert.ok(seen[1].last.length < seen[0].last.length, "the repair prompt is the short one");
+});
+
+test("generateStory regenerates in full when an error is not about one page", async () => {
+  const broken = JSON.parse(JSON.stringify(valid));
+  broken.pages.pop(); // "12 pages required" — not a page-level error
+  let calls = 0;
+  const completeJson = async ({ messages }) => {
+    calls++;
+    if (calls === 1) return { data: broken, costUsd: 0.001 };
+    assert.match(messages[messages.length - 1].content, /RECHAZADO/);
+    return { data: valid, costUsd: 0.001 };
+  };
+  const r = await generateStory({ ...INPUT, people: [] }, { completeJson });
+  assert.strictEqual(r.attempts, 2);
+});

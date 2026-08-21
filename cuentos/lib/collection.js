@@ -172,9 +172,22 @@ const BLOCKLIST = [
 
 // Common Spanish words that are capitalised mid-sentence without being proper
 // names. Used by the invented-name check so it does not produce false alarms.
+// Capitalised words the validator must NOT read as an invented character name.
+// These are real names a children's story legitimately reaches for; without
+// them the validator rejects the very story the prompt asked for (measured:
+// a stargazing story was refused four times over "Osa Mayor").
 const NAME_WHITELIST = [
   "Sol", "Luna", "Mar", "Tierra", "Norte", "Sur", "Este", "Oeste",
   "Navidad", "Reyes", "Papá", "Mamá", "Abuela", "Abuelo", "Señor", "Señora",
+  // sky
+  "Osa", "Mayor", "Menor", "Vía", "Láctea", "Polar", "Estrella", "Cruz",
+  "Marte", "Venus", "Júpiter", "Saturno", "Mercurio", "Neptuno", "Urano", "Plutón", "Orión",
+  // calendar
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
+  "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo",
+  // places a Spanish child hears every day
+  "España", "Atlántico", "Mediterráneo", "Cantábrico", "Pirineos",
 ];
 
 // Fallback illustrations, one battery per theme, pre-generated with the same

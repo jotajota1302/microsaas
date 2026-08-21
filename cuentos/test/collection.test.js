@@ -60,3 +60,12 @@ test("fallbackImage returns a path inside the theme battery and wraps around", (
 test("fallbackImage rejects an unknown theme instead of guessing", () => {
   assert.throws(() => C.fallbackImage("piratas", 0), /unknown theme/);
 });
+
+// Measured 2026-08-21: a story about stargazing was rejected four times for
+// "invented proper name Osa Mayor". Real names the model may legitimately use
+// belong in the whitelist, or the validator fights the story it asked for.
+test("the whitelist covers real names a children's story reaches for", () => {
+  for (const n of ["Osa", "Mayor", "Menor", "Vía", "Láctea", "Polar", "Marte", "Júpiter", "Saturno", "Enero", "Lunes", "España"]) {
+    assert.ok(C.NAME_WHITELIST.includes(n), `"${n}" should be whitelisted`);
+  }
+});

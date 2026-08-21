@@ -126,18 +126,18 @@ function createDb(client) {
     async getJob(id) {
       return unwrap(await t("jobs").select("*").eq("id", id).maybeSingle());
     },
-    /** Claims a job for LOCK_MINUTES; returns null if someone else holds it. */
+    /**
+     * Claims a job for LOCK_MINUTES; returns null if someone else holds it.
+     *
+     * This goes through a database function on purpose. A filtered UPDATE from
+     * here writes the row but comes back empty: PostgREST re-applies the
+     * filters to the result, and the row it just wrote no longer satisfies
+     * "locked_until is null or in the past". See migration 0002.
+     */
     async claimJob(id) {
-      const now = new Date();
-      const { data, error } = await t("jobs")
-        .update({ state: "running", locked_until: new Date(now.getTime() + LOCK_MINUTES * 60000).toISOString() })
-        .eq("id", id)
-        .in("state", ["pending", "running"])
-        .or(`locked_until.is.null,locked_until.lt.${now.toISOString()}`)
-        .select()
-        .maybeSingle();
+      const { data, error } = await client.rpc("claim_job", { p_id: id, p_minutes: LOCK_MINUTES });
       if (error) throw new Error(`[cuentos] db: ${error.message}`);
-      return data || null;
+      return (Array.isArray(data) ? data[0] : data) || null;
     },
     async staleJobs(limit = 10) {
       return unwrap(

@@ -21,10 +21,13 @@ function fakeClient(result = { data: { id: "row-1" }, error: null }) {
     return chain;
   }
   const storageLog = [];
+  const rpcLog = [];
   return {
     log,
     storageLog,
+    rpcLog,
     from: (table) => builder(table),
+    rpc: async (fn, args) => { rpcLog.push([fn, args]); return result; },
     storage: {
       from: (bucket) => ({
         upload: async (path, buffer, opts) => { storageLog.push(["upload", bucket, path, buffer.length, opts]); return { error: null }; },
@@ -86,20 +89,22 @@ test("markPaid extends the expiry to 30 days", async () => {
   assert.ok(days > 29.9 && days < 30.1);
 });
 
-test("claimJob only takes pending or unlocked jobs", async () => {
-  const client = fakeClient({ data: { id: "j1", state: "running" }, error: null });
+// The claim goes through a database function, not a filtered UPDATE: PostgREST
+// re-applies the filters to the returned row, and the row we just wrote no
+// longer matches them, so the update landed but came back empty and no job ever
+// ran. See migration 0002.
+test("claimJob calls the claim_job function with the lock window", async () => {
+  const client = fakeClient({ data: [{ id: "j1", state: "running" }], error: null });
   const db = createDb(client);
   const job = await db.claimJob("j1");
   assert.strictEqual(job.id, "j1");
-  const names = ops(client);
-  assert.deepStrictEqual(names, ["update", "eq", "in", "or", "select", "maybeSingle"]);
-  const inCall = client.log[0].calls.find((c) => c[0] === "in");
-  assert.deepStrictEqual(inCall[2], ["pending", "running"]);
+  assert.strictEqual(client.log.length, 0, "the claim must not go through a table update");
+  assert.deepStrictEqual(client.rpcLog, [["claim_job", { p_id: "j1", p_minutes: 5 }]]);
 });
 
 test("claimJob returns null when another worker holds the lock", async () => {
-  const db = createDb(fakeClient({ data: null, error: null }));
-  assert.strictEqual(await db.claimJob("j1"), null);
+  assert.strictEqual(await createDb(fakeClient({ data: [], error: null })).claimJob("j1"), null);
+  assert.strictEqual(await createDb(fakeClient({ data: null, error: null })).claimJob("j1"), null);
 });
 
 test("recordBilling upserts on provider_id and ignores duplicates", async () => {

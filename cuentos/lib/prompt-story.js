@@ -14,7 +14,10 @@ const SCHEMA = require("../schema/story.schema.json");
 const { validateStory } = require("./validate-story.js");
 const llm = require("./llm.js");
 
-const MAX_ATTEMPTS = 3;
+// Four, not three: after the first full generation the retries are surgical
+// page repairs costing ~0,0003 $ and two seconds each, so an extra go is far
+// cheaper than losing the customer at the first gate.
+const MAX_ATTEMPTS = 4;
 
 function label(list, id, field = "en") {
   const found = list.find((x) => x.id === id);
@@ -158,6 +161,92 @@ Escribe el cuento ahora.`;
   return messages;
 }
 
+/**
+ * Errors that name a page ("page 4: 56 words, must be…") can be fixed by
+ * rewriting that page alone. Returns a Map of page number -> its errors, or
+ * null if any error is about the story as a whole (wrong page count, a beat
+ * out of order, an invented name), which needs a full regeneration.
+ */
+function pageErrors(errors) {
+  const byPage = new Map();
+  for (const e of errors) {
+    const s = String(e);
+    // Two shapes reach here: the structure checks say "page 4: …" (1-based)
+    // and the schema checks say "pages[3].text …" (0-based index).
+    const prose = /^page (\d+): /.exec(s);
+    const schema = /^pages\[(\d+)\]\./.exec(s);
+    if (!prose && !schema) return null;
+    const n = prose ? Number(prose[1]) : Number(schema[1]) + 1;
+    if (!byPage.has(n)) byPage.set(n, []);
+    byPage.get(n).push(prose ? s.slice(prose[0].length) : s.slice(schema[0].length));
+  }
+  return byPage.size ? byPage : null;
+}
+
+const REPAIR_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["pages"],
+  properties: {
+    pages: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["n", "text", "image_hint"],
+        properties: { n: { type: "integer" }, text: { type: "string" }, image_hint: { type: "string" } },
+      },
+    },
+  },
+};
+
+function buildRepairMessages(story, byPage) {
+  const asks = [...byPage.entries()].sort((a, b) => a[0] - b[0]).map(([n, errs]) => {
+    const page = story.pages.find((p) => p.n === n) || {};
+    const count = String(page.text || "").trim().split(/\s+/).filter(Boolean).length;
+    const aim = count > 85 ? `Ahora tiene ${count} palabras: sobran ${count - 78}, recórtalo hasta unas 78.`
+      : count < 70 ? `Ahora tiene ${count} palabras: faltan ${78 - count}, alárgalo hasta unas 78.`
+      : `Ahora tiene ${count} palabras, que está bien: no cambies la longitud.`;
+    return `## Página ${n}
+Qué falla: ${errs.join("; ")}
+${aim}
+Texto actual: ${page.text || ""}
+image_hint actual: ${page.image_hint || ""}`;
+  }).join("\n\n");
+
+  return [
+    {
+      role: "system",
+      content:
+        "Corriges páginas sueltas de un álbum ilustrado infantil en español. Devuelves EXCLUSIVAMENTE un objeto JSON " +
+        '{"pages":[{"n":N,"text":"…","image_hint":"…"}]} con SOLO las páginas que te pidan, sin markdown ni explicaciones.\n\n' +
+        "Reglas que debes cumplir en cada página que devuelvas:\n" +
+        "- El texto tiene entre 70 y 85 palabras. Cuéntalas antes de responder.\n" +
+        "  · Si se queda corto, alarga con un detalle sensorial (un olor, un sonido, una textura), nunca con relleno.\n" +
+        "  · Si se pasa, recorta: quita adjetivos y frases accesorias, junta frases. Nunca quites una acción de la historia.\n" +
+        "- Conserva lo que ya pasa en la página: los mismos personajes, el mismo sitio, la misma acción. No cambies la historia, solo arregla lo que falla.\n" +
+        "- Los marcadores {{NOMBRE}}, {{PERSONA1}} y {{PERSONA2}} se escriben tal cual, con las dobles llaves. No inventes nombres propios.\n" +
+        "- Español de España con todas las tildes. Comillas angulares «así» o rayas de diálogo —así—, jamás comillas dobles.\n" +
+        "- image_hint va en INGLÉS, máximo 25 palabras, una sola frase, y NUNCA pide texto, carteles ni letras en la imagen.",
+    },
+    {
+      role: "user",
+      content: `El cuento se titula "${story.title || ""}". Corrige unicamente estas paginas:
+
+${asks}`,
+    },
+  ];
+}
+
+/** Merges repaired pages back into the story, leaving everything else alone. */
+function mergePages(story, repaired) {
+  const pages = story.pages.map((p) => {
+    const fix = (repaired || []).find((r) => Number(r.n) === Number(p.n));
+    return fix ? { ...p, text: fix.text, image_hint: fix.image_hint } : p;
+  });
+  return { ...story, pages };
+}
+
 async function generateStory(input, deps = {}) {
   const complete = deps.completeJson || llm.completeJson;
   const maxAttempts = deps.maxAttempts || MAX_ATTEMPTS;
@@ -166,17 +255,26 @@ async function generateStory(input, deps = {}) {
   let errors = [];
   let costUsd = 0;
 
+  let story = null;
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const messages = buildMessages(input, attempt > 1 ? errors : null);
-    const result = await complete({ messages, schema: SCHEMA });
+    // A previous attempt that only broke individual pages gets those pages
+    // rewritten; anything broader is generated again from scratch.
+    const byPage = story ? pageErrors(errors) : null;
+    const result = byPage
+      ? await complete({ messages: buildRepairMessages(story, byPage), schema: REPAIR_SCHEMA })
+      : await complete({ messages: buildMessages(input, attempt > 1 ? errors : null), schema: SCHEMA });
     costUsd += result.costUsd || 0;
 
-    const verdict = validateStory(result.data, { people });
+    const candidate = byPage ? mergePages(story, result.data && result.data.pages) : result.data;
+
+    const verdict = validateStory(candidate, { people });
     if (verdict.ok) {
-      return { story: result.data, attempts: attempt, costUsd, errors: [] };
+      return { story: candidate, attempts: attempt, costUsd, errors: [] };
     }
+    story = candidate;
     errors = verdict.errors;
-    console.log(`[cuentos] attempt ${attempt} rejected: ${errors.length} errors`);
+    console.log(`[cuentos] attempt ${attempt} rejected: ${errors.length} errors${byPage ? " (after repair)" : ""}`);
   }
 
   const err = new Error(`story did not validate after ${maxAttempts} attempts`);
@@ -186,4 +284,4 @@ async function generateStory(input, deps = {}) {
   throw err;
 }
 
-module.exports = { buildMessages, generateStory, describeChild, peopleOf, SYSTEM, MAX_ATTEMPTS };
+module.exports = { buildMessages, buildRepairMessages, pageErrors, mergePages, generateStory, describeChild, peopleOf, SYSTEM, MAX_ATTEMPTS };
