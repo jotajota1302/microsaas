@@ -21,6 +21,7 @@
     { "source": "/api/checkout", "destination": "/api/flow?fn=checkout" },
     { "source": "/api/resume", "destination": "/api/flow?fn=resume" },
     { "source": "/api/config", "destination": "/api/misc?fn=config" },
+    { "source": "/api/health", "destination": "/api/misc?fn=health" },
     { "source": "/api/waitlist", "destination": "/api/misc?fn=waitlist" },
     { "source": "/api/print-interest", "destination": "/api/misc?fn=print-interest" },
     { "source": "/api/recover", "destination": "/api/misc?fn=recover" },

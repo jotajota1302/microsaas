@@ -15,8 +15,21 @@ async function config(req, res) {
   return send(res, 200, { turnstileSiteKey: siteKey() });
 }
 
+/*
+ * Is the machine able to work at all? The two native pieces (sharp's platform
+ * binary, the PDF writer) either load on this runtime or the paid book cannot
+ * be produced, and the only way to find out used to be a customer paying. It
+ * reports capabilities and versions, never a secret and never a value.
+ */
+async function health(req, res) {
+  if (!requireMethod(req, res, "GET")) return;
+  const can = (m) => { try { require(m); return true; } catch (e) { return String(e.message).slice(0, 120); } };
+  return send(res, 200, { ok: true, node: process.version, region: process.env.VERCEL_REGION || null, sharp: can("sharp"), pdf: can("pdf-lib") });
+}
+
 module.exports = mountRouter({
   config,
+  health,
   waitlist: "waitlistHandler",
   "print-interest": "printInterestHandler",
   recover: "recoverHandler",
