@@ -124,8 +124,15 @@ function checkSchema(value, schema, path, errors) {
 
 // --- domain rules ------------------------------------------------------------
 
-const ALLOWED_PLACEHOLDERS = ["{{NOMBRE}}", "{{AMIGO}}"];
 const PLACEHOLDER_MIN_PAGES = 6;
+const PERSON_MIN_PAGES = 2;
+
+/** The markers a story may use, given how many people were declared. */
+function allowedPlaceholders(people) {
+  const out = ["{{NOMBRE}}"];
+  for (let i = 1; i <= (people || 0); i++) out.push(`{{PERSONA${i}}}`);
+  return out;
+}
 
 // Characters that legitimately precede a capital letter without it being a
 // proper name: sentence ends, dialogue dashes, quotes and Spanish openers.
@@ -179,16 +186,17 @@ function sentences(text) {
     .filter(Boolean);
 }
 
-function checkPlaceholders(story, errors) {
+function checkPlaceholders(story, errors, options) {
   const pages = Array.isArray(story.pages) ? story.pages : [];
-  let withName = 0;
+  const allowed = allowedPlaceholders(options.people);
+  const pagesWith = Object.fromEntries(allowed.map((m) => [m, 0]));
 
   const scan = (text, where) => {
     const re = /\{\{[^}]*\}\}/g;
     let m;
     while ((m = re.exec(String(text))) !== null) {
-      if (!ALLOWED_PLACEHOLDERS.includes(m[0])) {
-        errors.push(`${where}: unknown placeholder ${m[0]} (only ${ALLOWED_PLACEHOLDERS.join(" and ")} are allowed)`);
+      if (!allowed.includes(m[0])) {
+        errors.push(`${where}: unknown placeholder ${m[0]} (only ${allowed.join(", ")} allowed)`);
       }
     }
   };
@@ -199,13 +207,17 @@ function checkPlaceholders(story, errors) {
   pages.forEach((page, i) => {
     if (!page || typeof page.text !== "string") return;
     scan(page.text, `page ${i + 1}`);
-    if (page.text.includes("{{NOMBRE}}")) withName++;
+    for (const marker of allowed) if (page.text.includes(marker)) pagesWith[marker]++;
   });
 
-  if (pages.length && withName < PLACEHOLDER_MIN_PAGES) {
-    errors.push(
-      `{{NOMBRE}} must appear on at least ${PLACEHOLDER_MIN_PAGES} pages, found on ${withName}`
-    );
+  if (!pages.length) return;
+  if (pagesWith["{{NOMBRE}}"] < PLACEHOLDER_MIN_PAGES) {
+    errors.push(`{{NOMBRE}} must appear on at least ${PLACEHOLDER_MIN_PAGES} pages, found on ${pagesWith["{{NOMBRE}}"]}`);
+  }
+  for (const marker of allowed.slice(1)) {
+    if (pagesWith[marker] < PERSON_MIN_PAGES) {
+      errors.push(`${marker} was declared and must appear on at least ${PERSON_MIN_PAGES} pages with a real role, found on ${pagesWith[marker]}`);
+    }
   }
 }
 
@@ -302,7 +314,11 @@ function checkContent(story, errors) {
 
 // --- public API --------------------------------------------------------------
 
-function validateStory(story) {
+/**
+ * @param {object} story
+ * @param {object} [options]  { people: number } — how many {{PERSONAn}} were declared (0-2)
+ */
+function validateStory(story, options = {}) {
   const errors = [];
   try {
     if (story === null || typeof story !== "object" || Array.isArray(story)) {
@@ -310,7 +326,7 @@ function validateStory(story) {
     }
     checkSchema(story, SCHEMA, "", errors);
     checkStructure(story, errors);
-    checkPlaceholders(story, errors);
+    checkPlaceholders(story, errors, { people: Number(options.people) || 0 });
     checkContent(story, errors);
   } catch (e) {
     errors.push(`validator crashed: ${e.message}`);
@@ -318,4 +334,4 @@ function validateStory(story) {
   return { ok: errors.length === 0, errors };
 }
 
-module.exports = { validateStory, normalise, countWords, blocklistHits, inventedNames };
+module.exports = { validateStory, allowedPlaceholders, normalise, countWords, blocklistHits, inventedNames };

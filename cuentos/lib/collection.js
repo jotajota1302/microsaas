@@ -85,6 +85,41 @@ const GENDERS = [
   { id: "neutro", es: "Prefiero no decirlo", en: "Prefer not to say", visual: "child", noun: null },
 ];
 
+// People the child can bring into the story. Only the relation travels to
+// the model; the name stays home as {{PERSONA1}} / {{PERSONA2}}.
+const RELATIONS = [
+  { id: "hermano", es: "Su hermano", en: "Brother", role: "su hermano" },
+  { id: "hermana", es: "Su hermana", en: "Sister", role: "su hermana" },
+  { id: "padre", es: "Su padre", en: "Father", role: "su padre" },
+  { id: "madre", es: "Su madre", en: "Mother", role: "su madre" },
+  { id: "abuelo", es: "Su abuelo", en: "Grandfather", role: "su abuelo" },
+  { id: "abuela", es: "Su abuela", en: "Grandmother", role: "su abuela" },
+  { id: "amigo", es: "Un amigo", en: "Friend (boy)", role: "su amigo" },
+  { id: "amiga", es: "Una amiga", en: "Friend (girl)", role: "su amiga" },
+  { id: "primo", es: "Su primo", en: "Cousin (boy)", role: "su primo" },
+  { id: "prima", es: "Su prima", en: "Cousin (girl)", role: "su prima" },
+];
+const MAX_PEOPLE = 2;
+
+// The life moment fixes the story's problem. conflict_hint is what the model
+// is told to build the "problem" beat around.
+const MOMENTS = [
+  { id: "cumple", es: "Es su cumpleaños", en: "It's their birthday", conflict_hint: "es el día de su cumpleaños y algo importante para la fiesta falta o se tuerce; el conflicto es cómo salvar el día sin que nadie se lo resuelva" },
+  { id: "hermanito", es: "Va a tener un hermanito", en: "A baby sibling is coming", conflict_hint: "va a llegar un bebé a casa y teme dejar de ser importante; el conflicto es ese miedo, tratado con ternura y sin sermones" },
+  { id: "mudanza", es: "Se muda de casa", en: "Moving house", conflict_hint: "acaba de mudarse o va a mudarse y todo le resulta extraño; el conflicto es hacer suyo un sitio nuevo" },
+  { id: "cole", es: "Empieza el cole", en: "Starting school", conflict_hint: "empieza el colegio (o un curso nuevo) y le da vértigo lo desconocido; el conflicto es el primer día" },
+  { id: "oscuridad", es: "Le da miedo la oscuridad", en: "Afraid of the dark", conflict_hint: "le da miedo la oscuridad o dormir solo; el conflicto es la noche, y la solución sale de su afición, nunca de un adulto que lo arregla" },
+  { id: "anoranza", es: "Echa de menos a alguien", en: "Missing someone", conflict_hint: "echa de menos a alguien que está lejos (un abuelo, un amigo que se mudó); el conflicto es la distancia, y la resolución encuentra una forma de seguir cerca" },
+  { id: "aventura", es: "Una aventura sin más", en: "Just an adventure", conflict_hint: "una aventura en el mundo del tema elegido, sin carga emocional especial: algo se pierde o se rompe y hay que resolverlo" },
+];
+
+// The tone fixes the register and the kind of ending.
+const TONES = [
+  { id: "dormir", es: "Para dormir", en: "Bedtime", register_hint: "ritmo lento y sereno, frases que arrullan, final en calma con el protagonista a punto de dormir o ya tranquilo; nada de sustos ni gritos" },
+  { id: "divertido", es: "Divertido", en: "Funny", register_hint: "humor amable y situaciones absurdas pero nunca crueles; repeticiones y onomatopeyas que hagan reír al leer en voz alta; final alegre" },
+  { id: "valiente", es: "Valiente", en: "Brave", register_hint: "el protagonista se enfrenta a algo que le da miedo y lo supera por sí mismo; tensión suave, nunca terror; final de orgullo tranquilo" },
+];
+
 const AGE_BANDS = [
   { id: "3-5", es: "3 a 5 años", en: "3 to 5" },
   { id: "6-8", es: "6 a 8 años", en: "6 to 8" },
@@ -107,7 +142,7 @@ const BEAT_RULES = Object.freeze({
 });
 
 const COLORING_PAGE_COUNT = 4;
-const BOOK_PAGE_COUNT = 32;
+const BOOK_PAGE_COUNT = 18; // title + 12 scenes + 4 colouring + card/colophon
 
 // Words that must never appear in a story for 3-8 year olds. Matched on
 // normalised text (lowercase, no accents), on word boundaries.
@@ -165,6 +200,10 @@ module.exports = Object.freeze({
   HAIR_TYPES,
   SKIN_TONES,
   GENDERS,
+  RELATIONS,
+  MAX_PEOPLE,
+  MOMENTS,
+  TONES,
   AGE_BANDS,
   PAGE_COUNT,
   WORDS_MIN,

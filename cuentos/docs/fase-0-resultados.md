@@ -69,7 +69,7 @@ Segundo personaje (`--character leo --scenes 6`: niño de 7 años, pelo negro li
 |---|---|---|---|---|---|
 | `gemini-3.1-flash-image` (NB2) | 0,068-0,069 | 14 s | ✅ | ✅ | referencia; 18 imágenes medidas en 2 personajes |
 | `gemini-2.5-flash-image` (NB1) | 0,039 | ~10 s | ✅ | ✅ pero más pobre: poses rígidas, hoja con peinados mezclados, marcos raros | 7 imágenes |
-| **`gemini-3.1-flash-lite-image`** | **0,034** | **5 s** | ✅ | ✅ **indistinguible de NB2** en la escena probada (bosque nocturno con farolillo) | **1 sola imagen**: hay que confirmar con 6+ escenas |
+| **`gemini-3.1-flash-lite-image`** | **0,034** | **5-6 s** | ✅ | ✅ misma acuarela en las 7 (hoja + 6 escenas). Matiz: al vestido le añadió un estampado floral que no estaba en la descripción, coherente en todas las páginas | **7 imágenes, 0,24 $ — CONFIRMADO y elegido como modelo por defecto** (NB2 de respaldo automático en `lib/images.js`) |
 | MiniMax `image-01` | 0,0035 | 40-65 s | ✅ | ❌ colapsa | descartado |
 
 Con lite a 0,034 $: cuento completo (17 imágenes) ≈ **0,58 $** en vez de 1,17 $; muestra (hoja + 2) ≈ 0,10 $ en vez de 0,21 $.

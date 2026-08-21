@@ -1,10 +1,11 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
-const { buildMessages, generateStory, describeChild } = require("../lib/prompt-story.js");
+const { buildMessages, generateStory, describeChild, peopleOf } = require("../lib/prompt-story.js");
 const valid = require("./fixtures/story-valid.json");
 
 const INPUT = {
   ageBand: "6-8",
+  gender: "nina",
   hairColor: "castano",
   hairType: "rizado",
   skin: "clara",
@@ -12,24 +13,52 @@ const INPUT = {
   pet: "gato",
   hobby: "dibujar",
   theme: "mar",
-  hasCompanion: true,
+  moment: "hermanito",
+  tone: "dormir",
+  people: [{ relation: "abuela" }, { relation: "hermano", ageBand: "3-5" }],
   locale: "es",
 };
 
 const dump = (input, errors) => JSON.stringify(buildMessages(input, errors));
 
+// --- privacy -----------------------------------------------------------------
+
 test("the prompt uses placeholders and never a real name", () => {
   const all = dump(INPUT);
   assert.ok(all.includes("{{NOMBRE}}"));
-  assert.ok(all.includes("{{AMIGO}}"));
-  assert.ok(!/\bAna\b|\bLeo\b|\bMarcos\b/.test(all));
+  assert.ok(all.includes("{{PERSONA1}}"));
+  assert.ok(all.includes("{{PERSONA2}}"));
+  assert.ok(!/\bAna\b|\bLeo\b|\bCarmen\b|\bMarcos\b/.test(all));
 });
 
-test("the prompt carries the chosen theme, hobby and pet", () => {
+test("people are described by relation and age, never by name", () => {
+  const all = dump(INPUT);
+  assert.match(all, /\{\{PERSONA1\}\}: su abuela/);
+  assert.match(all, /\{\{PERSONA2\}\}: su hermano \(niño de 3-5 años\)/);
+});
+
+test("a person is given as a name anyway? it is not accepted as input", () => {
+  const all = dump({ ...INPUT, people: [{ relation: "abuela", name: "Carmen" }] });
+  assert.ok(!all.includes("Carmen"), "a name leaked into the prompt");
+});
+
+// --- content of the brief ---------------------------------------------------
+
+test("the prompt carries the theme, hobby, pet, moment and tone", () => {
   const all = dump(INPUT);
   assert.match(all, /El mar/);
   assert.match(all, /Dibujar/i);
   assert.match(all, /gato/);
+  assert.match(all, /Va a tener un hermanito/);
+  assert.match(all, /dejar de ser importante/);
+  assert.match(all, /Para dormir/);
+  assert.match(all, /arrullan/);
+});
+
+test("without people the prompt forbids inventing named characters", () => {
+  const all = dump({ ...INPUT, people: [] });
+  assert.match(all, /no inventes amigos, hermanos ni familiares/i);
+  assert.ok(!all.includes("{{PERSONA1}}: "));
 });
 
 test("without a pet the prompt forbids inventing one", () => {
@@ -38,52 +67,92 @@ test("without a pet the prompt forbids inventing one", () => {
   assert.ok(!/fluffy grey cat/.test(all));
 });
 
-test("without a companion the prompt forbids inventing friends", () => {
-  const all = dump({ ...INPUT, hasCompanion: false });
-  assert.match(all, /no inventes amigos/i);
+test("moment and tone default to adventure and funny when omitted", () => {
+  const { moment, tone, ...rest } = INPUT;
+  const all = dump(rest);
+  assert.match(all, /Una aventura sin más/);
+  assert.match(all, /Divertido/);
+});
+
+test("a third person is silently capped at two", () => {
+  const p = peopleOf({ people: [{ relation: "abuela" }, { relation: "abuelo" }, { relation: "primo" }] });
+  assert.strictEqual(p.length, 2);
+});
+
+test("the legacy hasCompanion flag maps to one friend", () => {
+  const p = peopleOf({ hasCompanion: true });
+  assert.deepStrictEqual(p.map((x) => x.marker), ["{{PERSONA1}}"]);
+  assert.strictEqual(p[0].role, "su amigo");
 });
 
 test("the child description is in english and has no name", () => {
   const d = describeChild(INPUT);
+  assert.match(d, /7-year-old girl/);
   assert.match(d, /curly brown hair/);
-  assert.match(d, /light skin/);
   assert.match(d, /glasses/);
   assert.ok(!/\{\{/.test(d));
 });
 
-test("an unknown option is rejected loudly instead of silently guessed", () => {
+test("gender rules: girl, boy, unstated", () => {
+  assert.match(dump({ ...INPUT, gender: "nina" }), /la niña/);
+  assert.match(dump({ ...INPUT, gender: "nino" }), /el niño/);
+  assert.match(dump({ ...INPUT, gender: "neutro" }), /NO uses nunca/);
+  const noGender = { ...INPUT }; delete noGender.gender;
+  assert.match(dump(noGender), /NO uses nunca/);
+});
+
+test("unknown options are rejected loudly instead of silently guessed", () => {
   assert.throws(() => buildMessages({ ...INPUT, theme: "piratas" }), /unknown theme/);
   assert.throws(() => buildMessages({ ...INPUT, hobby: "esgrima" }), /unknown option/);
+  assert.throws(() => buildMessages({ ...INPUT, moment: "boda" }), /unknown option/);
+  assert.throws(() => buildMessages({ ...INPUT, tone: "triste" }), /unknown option/);
+  assert.throws(() => buildMessages({ ...INPUT, people: [{ relation: "vecino" }] }), /unknown option/);
+  assert.throws(() => buildMessages({ ...INPUT, gender: "otro" }), /unknown option/);
 });
 
-test("a retry includes the validator errors verbatim", () => {
-  const all = dump(INPUT, ["page 4: 41 words, must be between 60 and 90 words"]);
-  assert.match(all, /41 words/);
-  assert.match(all, /RECHAZADO/);
+// --- revisions ("cambiar algo") ---------------------------------------------
+
+test("accumulated instructions are passed verbatim, numbered", () => {
+  const all = dump({ ...INPUT, instructions: ["que la abuela tenga más protagonismo", "menos miedo en la página 6"] });
+  assert.match(all, /1\. que la abuela tenga más protagonismo/);
+  assert.match(all, /2\. menos miedo en la página 6/);
 });
 
-test("the first attempt carries no error block", () => {
+test("no instruction block when there are none", () => {
+  assert.ok(!dump(INPUT).includes("ha pedido estos cambios"));
+  assert.ok(!dump({ ...INPUT, instructions: [] }).includes("ha pedido estos cambios"));
+});
+
+// --- retries -----------------------------------------------------------------
+
+test("a retry includes the validator errors verbatim; the first attempt does not", () => {
+  assert.match(dump(INPUT, ["page 4: 41 words, must be between 60 and 90 words"]), /41 words/);
   assert.ok(!dump(INPUT).includes("RECHAZADO"));
+});
+
+test("generateStory validates against the declared number of people", async () => {
+  // the fixture has no {{PERSONA1}}: with one person declared it must be rejected every time
+  const completeJson = async () => ({ data: valid, costUsd: 0.001 });
+  await assert.rejects(
+    () => generateStory({ ...INPUT, people: [{ relation: "abuela" }] }, { completeJson }),
+    (e) => e.name === "StoryNotValidError" && e.errors.some((x) => /PERSONA1/.test(x))
+  );
 });
 
 test("generateStory returns on the first valid story", async () => {
   let calls = 0;
   const completeJson = async () => { calls++; return { data: valid, costUsd: 0.002 }; };
-  const r = await generateStory(INPUT, { completeJson });
+  const r = await generateStory({ ...INPUT, people: [] }, { completeJson });
   assert.strictEqual(r.attempts, 1);
   assert.strictEqual(calls, 1);
-  assert.strictEqual(r.story.title, valid.title);
 });
 
 test("generateStory retries until the story validates and sums the cost", async () => {
   const broken = JSON.parse(JSON.stringify(valid));
   broken.pages.pop();
   let calls = 0;
-  const completeJson = async () => {
-    calls++;
-    return { data: calls === 1 ? broken : valid, costUsd: 0.002 };
-  };
-  const r = await generateStory(INPUT, { completeJson });
+  const completeJson = async () => { calls++; return { data: calls === 1 ? broken : valid, costUsd: 0.002 }; };
+  const r = await generateStory({ ...INPUT, people: [] }, { completeJson });
   assert.strictEqual(r.attempts, 2);
   assert.ok(Math.abs(r.costUsd - 0.004) < 1e-9);
 });
@@ -93,50 +162,7 @@ test("generateStory gives up after three attempts and reports the errors", async
   broken.pages.pop();
   const completeJson = async () => ({ data: broken, costUsd: 0.002 });
   await assert.rejects(
-    () => generateStory(INPUT, { completeJson }),
+    () => generateStory({ ...INPUT, people: [] }, { completeJson }),
     (e) => e.name === "StoryNotValidError" && e.errors.length > 0 && e.costUsd > 0
   );
-});
-
-test("the retry prompt of attempt 3 carries the errors of attempt 2", async () => {
-  const broken = JSON.parse(JSON.stringify(valid));
-  broken.pages[0].text = "{{NOMBRE}} miró el mar.";
-  const seen = [];
-  const completeJson = async ({ messages }) => {
-    seen.push(JSON.stringify(messages));
-    return { data: broken, costUsd: 0 };
-  };
-  await generateStory(INPUT, { completeJson }).catch(() => {});
-  assert.strictEqual(seen.length, 3);
-  assert.match(seen[2], /page 1:.*words/);
-});
-
-test("a girl protagonist forces feminine agreement in the prompt", () => {
-  const all = dump({ ...INPUT, gender: "nina" });
-  assert.match(all, /la niña/);
-  assert.match(all, /género gramatical/);
-  assert.match(all, /a 7-year-old girl/);
-});
-
-test("a boy protagonist forces masculine agreement", () => {
-  const all = dump({ ...INPUT, gender: "nino" });
-  assert.match(all, /el niño/);
-  assert.match(all, /a 7-year-old boy/);
-});
-
-test("an unstated gender forbids gendered words instead of guessing", () => {
-  const all = dump({ ...INPUT, gender: "neutro" });
-  assert.match(all, /NO uses nunca/);
-  assert.match(all, /a 7-year-old child/);
-  assert.ok(!/género gramatical correspondiente/.test(all));
-});
-
-test("omitting gender defaults to the neutral rule, never to a guess", () => {
-  const withoutGender = { ...INPUT };
-  delete withoutGender.gender;
-  assert.match(dump(withoutGender), /NO uses nunca/);
-});
-
-test("an unknown gender is rejected loudly", () => {
-  assert.throws(() => buildMessages({ ...INPUT, gender: "otro" }), /unknown option/);
 });

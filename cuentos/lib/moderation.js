@@ -67,14 +67,16 @@ function blocklisted(text) {
  * Runs before charging. Returns { ok, reason, needsReview }.
  * needsReview is true when we let it through without a model verdict.
  */
-async function checkInput({ name, companionName, dedication }, deps = {}) {
+async function checkInput({ name, companionName, people, dedication }, deps = {}) {
   const complete = deps.completeJson || completeJson;
 
   if (!name || !String(name).trim()) {
     return { ok: false, reason: "name is required", needsReview: false };
   }
 
-  for (const [value, field] of [[name, "name"], [companionName, "companion name"]]) {
+  const named = [[name, "name"], [companionName, "companion name"]];
+  (Array.isArray(people) ? people : []).forEach((p, i) => named.push([p && p.name, `person ${i + 1} name`]));
+  for (const [value, field] of named) {
     const problem = localNameProblem(value, field);
     if (problem) return { ok: false, reason: problem, needsReview: false };
   }

@@ -202,6 +202,7 @@ const PROVIDERS = {
   // Nano Banana 2 and Nano Banana (2.5) via OpenRouter — the ones we can run today.
   "or-nb2": viaOpenRouter(env.OPENROUTER_IMAGE_MODEL || "google/gemini-3.1-flash-image", 0.067),
   "or-nb25": viaOpenRouter("google/gemini-2.5-flash-image", 0.039),
+  "or-lite": viaOpenRouter("google/gemini-3.1-flash-lite-image", 0.034),
   "or-pro": viaOpenRouter("google/gemini-3-pro-image", 0.134),
 };
 

@@ -213,3 +213,36 @@ test("still rejects a companion of the wrong type", () => {
   s.character_sheet.companion = 42;
   assert.match(joined(s), /companion.*string/);
 });
+
+// --- people ------------------------------------------------------------------
+
+test("with no people declared, {{PERSONA1}} is an unknown placeholder", () => {
+  const s = clone();
+  s.pages[2].text = s.pages[2].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
+  assert.match(validateStory(s).errors.join(" | "), /unknown placeholder \{\{PERSONA1\}\}/);
+});
+
+test("a declared person must appear on at least 2 pages", () => {
+  const s = clone();
+  assert.match(validateStory(s, { people: 1 }).errors.join(" | "), /PERSONA1.*at least 2 pages.*found on 0/);
+  s.pages[3].text = s.pages[3].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
+  assert.match(validateStory(s, { people: 1 }).errors.join(" | "), /found on 1/);
+  s.pages[6].text = s.pages[6].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
+  assert.deepStrictEqual(validateStory(s, { people: 1 }).errors, []);
+});
+
+test("two people: both are required, a third is unknown", () => {
+  const s = clone();
+  // pages 5 and 11 of the fixture have no {{NOMBRE}}; pick pages that do
+  for (const i of [3, 6]) s.pages[i].text = s.pages[i].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
+  for (const i of [7, 8]) s.pages[i].text = s.pages[i].text.replace("{{NOMBRE}}", "{{PERSONA2}}");
+  assert.deepStrictEqual(validateStory(s, { people: 2 }).errors, []);
+  s.pages[9].text = s.pages[9].text.replace("{{NOMBRE}}", "{{PERSONA3}}");
+  assert.match(validateStory(s, { people: 2 }).errors.join(" | "), /unknown placeholder \{\{PERSONA3\}\}/);
+});
+
+test("{{AMIGO}} is no longer a valid placeholder", () => {
+  const s = clone();
+  s.pages[2].text = s.pages[2].text.replace("{{NOMBRE}}", "{{AMIGO}}");
+  assert.match(validateStory(s, { people: 1 }).errors.join(" | "), /unknown placeholder \{\{AMIGO\}\}/);
+});

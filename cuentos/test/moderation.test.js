@@ -131,3 +131,14 @@ test("localNameProblem returns null for an absent optional field", () => {
   assert.strictEqual(localNameProblem(undefined, "companion name"), null);
   assert.strictEqual(localNameProblem("", "companion name"), null);
 });
+
+test("people names go through the same local rules", async () => {
+  const r = await checkInput({ name: "Ana", people: [{ relation: "abuela", name: "Carmen" }, { relation: "hermano", name: "Leo99" }] }, { completeJson: never });
+  assert.strictEqual(r.ok, false);
+  assert.match(r.reason, /person 2 name.*digits/);
+});
+
+test("clean people names pass without a model call", async () => {
+  const r = await checkInput({ name: "Ana", people: [{ relation: "abuela", name: "Carmen" }] }, { completeJson: never });
+  assert.strictEqual(r.ok, true);
+});
