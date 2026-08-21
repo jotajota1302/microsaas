@@ -25,6 +25,7 @@
     { "source": "/api/waitlist", "destination": "/api/misc?fn=waitlist" },
     { "source": "/api/print-interest", "destination": "/api/misc?fn=print-interest" },
     { "source": "/api/recover", "destination": "/api/misc?fn=recover" },
+    { "source": "/api/contact", "destination": "/api/misc?fn=contact" },
     { "source": "/api/job", "destination": "/api/misc?fn=job" }
   ],
   "regions": ["fra1"],

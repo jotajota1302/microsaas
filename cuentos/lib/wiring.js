@@ -12,7 +12,7 @@ const { generateStory } = require("./prompt-story.js");
 const { buildSheet, renderPages } = require("./character.js");
 const { toLineArt } = require("./lineart.js");
 const { renderPdf } = require("./pdf.js");
-const { sendEmail } = require("./email.js");
+const { sendEmail, sendContact } = require("./email.js");
 const turnstile = require("./turnstile.js");
 const stripe = require("./stripe.js");
 const { send, query } = require("./http.js");
@@ -23,7 +23,7 @@ function deps() {
   try {
     const db = getDb();
     const jobDeps = { db, generateStory, reviewStory: moderation.reviewStory, buildSheet, renderPages, toLineArt, renderPdf, sendEmail };
-    cached = { db, moderation, sendEmail, stripe, turnstile: (token, ip) => turnstile.verify(token, ip), runJob: (id) => runJob(id, jobDeps) };
+    cached = { db, moderation, sendEmail, sendContact, stripe, turnstile: (token, ip) => turnstile.verify(token, ip), runJob: (id) => runJob(id, jobDeps) };
   } catch (e) {
     console.error(`[cuentos] not configured: ${e.message}`);
     cached = null;

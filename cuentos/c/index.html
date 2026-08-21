@@ -227,6 +227,18 @@
              <div id="amsg" class="note" hidden></div>
            </div>`
         : "";
+      // Always reachable, at every stage: this is the only door back to a
+      // person when the address was wrong or the book is not right.
+      const help = `<details class="card stack help">
+          <summary>${T.help_title}</summary>
+          <p class="muted" style="font-size:.92rem">${T.help_body}</p>
+          <form id="helpForm" class="stack">
+            <label><span>${T.help_email}</span><input type="email" name="email" required autocomplete="email"></label>
+            <label><span>${T.help_msg}</span><textarea name="message" rows="3" maxlength="1500" required></textarea></label>
+            <div class="row"><button class="btn secondary">${T.help_send}</button></div>
+          </form>
+          <div id="hmsg" class="note" hidden></div>
+        </details>`;
       const escape = `<p class="muted escape">
           ${T.keep_link} ${new Date(view.expiresAt).toLocaleDateString(view.locale === "en" ? "en-GB" : "es-ES", { day: "numeric", month: "long" })} ·
           <a href="/crear/${view.locale === "en" ? "?lang=en" : ""}">${T.other_story}</a>
@@ -244,6 +256,7 @@
         </div>
         ${actions}
         ${sheet}
+        ${help}
         ${escape}`
         : `
         ${railHtml()}
@@ -260,6 +273,7 @@
         <div class="book">${pagesHtml()}</div>
         <p class="muted story-text"><b>${T.moral}:</b> ${esc(view.moral)}</p>
         ${coloring}
+        ${help}
         ${escape}`;
 
       bind();
@@ -336,6 +350,20 @@
           say(T.error, "alarm");
         }
         payBtn.disabled = false; payBtn.textContent = T.buy_card;
+      };
+      const helpForm = document.getElementById("helpForm");
+      if (helpForm) helpForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const f = new FormData(helpForm);
+        const b = helpForm.querySelector("button");
+        busy(b, "…");
+        await fetch("/api/contact", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: f.get("email"), message: f.get("message"), token }),
+        }).catch(() => {});
+        const m = document.getElementById("hmsg");
+        if (m) { m.hidden = false; m.className = "note sea"; m.textContent = T.help_sent; }
+        helpForm.remove();
       };
       const printBtn = document.getElementById("printBtn");
       if (printBtn) printBtn.onclick = async () => {

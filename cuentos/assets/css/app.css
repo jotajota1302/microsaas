@@ -423,3 +423,16 @@ dialog input { font: inherit; padding: .6rem .7rem; border: 1px solid var(--hair
 .sheetgrid dt { color: var(--muted); }
 .sheetgrid dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-word; }
 @media (max-width: 34rem) { .sheetgrid { grid-template-columns: 1fr; gap: 0 } .sheetgrid dd { margin-bottom: .5rem } }
+
+/* the panel's section menu */
+.adminnav { display: flex; flex-wrap: wrap; gap: .3rem; background: var(--sunken); border-radius: 999px; padding: .25rem; align-self: flex-start; }
+.adminnav button { border: 0; background: transparent; font: inherit; font-weight: 700; font-size: .92rem; color: var(--muted); padding: .45rem 1.1rem; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem; }
+.adminnav button:hover { color: var(--ink); }
+.adminnav button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.adminnav .pill { background: var(--hair); }
+.adminnav button.on .pill { background: var(--sea); color: #fff; }
+
+/* the way back to a person, on every stage of the story page */
+.help { border-style: dashed; box-shadow: none; }
+.help summary { cursor: pointer; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.05rem; }
+.help[open] summary { margin-bottom: .4rem; }

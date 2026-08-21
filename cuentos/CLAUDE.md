@@ -65,6 +65,16 @@ Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizad
 
 Al completar una fase, actualiza este checklist. Lo que afecte a los tres proyectos va en `../CLAUDE.md`.
 
+## Nunca perder a quien ha pagado (22-08)
+
+Un cliente que teclea mal su correo se perdía entero: ni libro, ni enlace, ni recordatorios. Tres redes, de automática a manual:
+
+1. **Stripe sabe una dirección buena.** En `checkout.session.completed`, `customer_details.email` es donde acaba de llegar el recibo. Si no coincide con la nuestra, se guarda en `orders.paid_email` (migración `0003_paid_email`) y **la entrega va a las dos** (`recipientsOf` en `lib/email.js`). Automático, sin que el cliente haga nada.
+2. **El panel repara y reenvía**: acciones `set_email` (cambia la dirección y reenvía el enlace que toque según el estado) y `resend` (reenvía a todas las que tengamos). Es el mostrador donde se arregla «no me ha llegado».
+3. **Formulario de contacto** (`POST /api/contact` → `sendContact` → `CONTACT_EMAIL`, por defecto info@4bitsengineering.com) en el pie del visor, en todas las etapas. Lleva el token del cuento, que es lo que identifica el pedido sin preguntárselo. Un fallo al retransmitir se registra en los logs y al cliente se le dice que sí: contestar «algo ha fallado» a quien escribe porque algo ha fallado es la peor respuesta posible.
+
+**El panel** (`/admin/`) tiene menú de secciones: **Hoy** (cola de revisión, con contador), **Cuentos** (todos, con filtro y ficha por pedido), **Dinero** (embudo y márgenes) y **Sistema** (integraciones y cobro manual). La sección elegida se recuerda en localStorage.
+
 ## Supabase (aplicado 2026-08-21)
 
 - Proyecto compartido `rgpzrbwpyaewughahpgo` (el mismo del RPG y de otras apps). **Todo vive en el schema `cuentos`**: 9 tablas con RLS activo en todas y sin políticas salvo `coloring_pages`, que es la única de lectura pública. Migraciones aplicadas: `0001_cuentos_schema` y `0002_claim_job`.

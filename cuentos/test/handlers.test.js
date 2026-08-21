@@ -743,3 +743,135 @@ test("cancel refuses an order that does not exist", async () => {
   delete process.env.ADMIN_TOKEN;
   assert.strictEqual(r.statusCode, 400);
 });
+
+// --- never losing a paying customer -------------------------------------------------
+
+test("a typo in our form is repaired by the address Stripe used", async () => {
+  // The buyer typed "padre@ejmplo.es" into our form and their real address into
+  // Stripe's. The book used to go to nobody. Stripe's is better evidence: the
+  // receipt reached it seconds earlier.
+  const db = fakeDb();
+  db.story.stage = "sample";
+  db.order.email = "padre@ejmplo.es";
+  const r = res();
+  await H.stripeWebhookHandler({
+    db,
+    runJob: async () => ({ state: "done" }),
+    stripe: {
+      readEvent: () => ({
+        type: "checkout.session.completed",
+        data: { object: { id: "cs_1", client_reference_id: db.story.token, payment_status: "paid", customer_details: { email: "Padre@Ejemplo.es" } } },
+      }),
+    },
+  })(req({ body: {} }), r);
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(db.order.paid_email, "padre@ejemplo.es");
+});
+
+test("the same address twice is not recorded twice", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  db.order.email = "a@b.c";
+  const r = res();
+  await H.stripeWebhookHandler({
+    db,
+    runJob: async () => ({ state: "done" }),
+    stripe: {
+      readEvent: () => ({
+        type: "checkout.session.completed",
+        data: { object: { id: "cs_2", client_reference_id: db.story.token, payment_status: "paid", customer_details: { email: "A@B.C" } } },
+      }),
+    },
+  })(req({ body: {} }), r);
+  assert.strictEqual(db.order.paid_email, undefined);
+});
+
+test("the panel can put the right address on an order and send the link again", async () => {
+  const db = fakeDb();
+  db.order.status = "delivered";
+  const sent = [];
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db, sendEmail: async (m) => sent.push(m) })(
+    req({ body: { action: "set_email", token: db.story.token, email: "Bien@Ejemplo.es " }, headers: { authorization: "Bearer adm" } }), r
+  );
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(db.order.email, "bien@ejemplo.es");
+  assert.strictEqual(sent.length, 1);
+  assert.strictEqual(sent[0].kind, "book_ready", "a delivered order gets the book, not the script");
+  assert.deepStrictEqual(sent[0].to, ["bien@ejemplo.es"]);
+});
+
+test("the panel refuses to write to something that is not an address", async () => {
+  const db = fakeDb();
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db, sendEmail: async () => {} })(
+    req({ body: { action: "set_email", token: db.story.token, email: "no-arroba" }, headers: { authorization: "Bearer adm" } }), r
+  );
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.statusCode, 400);
+  assert.strictEqual(db.order.email, "a@b.c", "the order keeps the address it had");
+});
+
+test("resend writes to every address we hold for them", async () => {
+  const db = fakeDb();
+  db.order.email = "typo@ejmplo.es";
+  db.order.paid_email = "real@ejemplo.es";
+  db.story.stage = "sample";
+  const sent = [];
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db, sendEmail: async (m) => sent.push(m) })(
+    req({ body: { action: "resend", token: db.story.token }, headers: { authorization: "Bearer adm" } }), r
+  );
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.statusCode, 200);
+  assert.deepStrictEqual(sent[0].to, ["typo@ejmplo.es", "real@ejemplo.es"]);
+});
+
+test("contact reaches a person, and carries the story so nobody has to ask which one", async () => {
+  const db = fakeDb();
+  db.order.status = "delivered";
+  const sent = [];
+  const r = res();
+  await H.contactHandler({ db, sendContact: async (m) => sent.push(m) })(
+    req({ body: { email: "Padre@Ejemplo.es", message: "No me ha llegado el libro", token: db.story.token } }), r
+  );
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(sent[0].from, "padre@ejemplo.es");
+  assert.strictEqual(sent[0].token, db.story.token, "the token identifies the order without asking for it");
+  assert.strictEqual(sent[0].status, "delivered");
+});
+
+test("contact without a story still gets through", async () => {
+  const db = fakeDb();
+  const sent = [];
+  const r = res();
+  await H.contactHandler({ db, sendContact: async (m) => sent.push(m) })(
+    req({ body: { email: "a@b.co", message: "una pregunta sobre el libro impreso" } }), r
+  );
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(sent[0].token, null);
+});
+
+test("contact refuses an empty message or a bad address", async () => {
+  const db = fakeDb();
+  for (const body of [{ email: "a@b.co", message: "hm" }, { email: "nope", message: "hola que tal" }]) {
+    const r = res();
+    await H.contactHandler({ db, sendContact: async () => {} })(req({ body }), r);
+    assert.strictEqual(r.statusCode, 400);
+  }
+});
+
+test("a relay that fails is our problem, not the customer's", async () => {
+  // Answering "something went wrong" to somebody already writing because
+  // something went wrong is the worst reply available.
+  const db = fakeDb();
+  const r = res();
+  await H.contactHandler({ db, sendContact: async () => { throw new Error("resend down"); } })(
+    req({ body: { email: "a@b.co", message: "el libro no llega" } }), r
+  );
+  assert.strictEqual(r.statusCode, 200, "the customer is told it was received; the failure goes to our logs");
+});

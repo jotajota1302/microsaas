@@ -33,5 +33,6 @@ module.exports = mountRouter({
   waitlist: "waitlistHandler",
   "print-interest": "printInterestHandler",
   recover: "recoverHandler",
+  contact: "contactHandler",
   job: "jobHandler",
 });

@@ -14,6 +14,7 @@ const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
 const { send, readJson, rawBody, query, clientIp, requireMethod, requireSecret } = require("./http.js");
 const dashboard = require("./dashboard.js");
+const { recipientsOf } = require("./email.js");
 const { SAMPLE_PAGES } = require("./steps.js");
 
 const CAPS = () => ({
@@ -310,7 +311,14 @@ function stripeWebhookHandler(deps) {
       return send(res, 200, { already: order.status });
     }
 
-    await deps.db.updateOrder(order.id, { status: "paid", channel: "web", external_ref: session.id });
+    // The address the buyer typed into Stripe's own form, which is where the
+    // receipt just landed. If it is not the one they typed into ours, ours had
+    // a typo — and a typo used to lose the customer for good, because the book,
+    // the link and every reminder went to nobody. Delivery goes to both.
+    const paidEmail = String((session.customer_details && session.customer_details.email) || session.customer_email || "").trim().toLowerCase();
+    const patch = { status: "paid", channel: "web", external_ref: session.id };
+    if (paidEmail && paidEmail !== String(order.email || "").toLowerCase()) patch.paid_email = paidEmail;
+    await deps.db.updateOrder(order.id, patch);
     await deps.db.markPaid(story.id);
     const job = await deps.db.createJob({ orderId: order.id, storyId: story.id, kind: "full" });
     // The book is NOT drawn here. Illustrating it takes minutes and a webhook
@@ -381,6 +389,46 @@ function recoverHandler(deps) {
 }
 
 // --- POST /api/print-interest { token } --------------------------------------------
+
+// --- POST /api/contact { email, message, token? } ------------------------------
+//
+// The last resort when nothing else worked: the address was wrong, the link is
+// gone, or something is simply not right with the book. It reaches a person.
+// The story token travels when the customer writes from their own page, which
+// saves asking them for it — it is the one thing that identifies the order.
+
+const CONTACT_MAX = 1500;
+
+function contactHandler(deps) {
+  return async (req, res) => {
+    if (!requireMethod(req, res, "POST")) return;
+    const body = await readJson(req).catch(() => null);
+    const email = String((body && body.email) || "").trim().toLowerCase();
+    const message = String((body && body.message) || "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return send(res, 400, { error: "invalid_email" });
+    if (message.length < 5) return send(res, 400, { error: "empty_message" });
+
+    const token = String((body && body.token) || "").trim();
+    const story = /^[A-Za-z0-9_-]{22}$/.test(token) ? await deps.db.getStoryByToken(token).catch(() => null) : null;
+    const order = story ? await deps.db.getOrder(story.order_id).catch(() => null) : null;
+
+    // A failure to relay is ours to find in the logs. Answering "something
+    // went wrong" to somebody already writing because something went wrong is
+    // the worst reply available.
+    if (deps.sendContact) {
+      await deps.sendContact({
+        from: email,
+        message: message.slice(0, CONTACT_MAX),
+        token: story ? story.token : null,
+        orderEmail: order ? order.email : null,
+        status: order ? order.status : null,
+      }).catch((e) => console.error(`[cuentos] contact relay failed for ${email}: ${e.message}`));
+    }
+    // Always the same answer, sent or not: the customer has done their part and
+    // a failure to relay is ours to see in the logs, not theirs to decode.
+    return send(res, 200, { ok: true });
+  };
+}
 
 function printInterestHandler(deps) {
   return async (req, res) => {
@@ -504,6 +552,7 @@ function adminHandler(deps) {
       const recent = orders.map((o) => ({
         id: o.id, email: o.email, status: o.status, channel: o.channel, locale: o.locale,
         priceCents: o.price_cents, createdAt: o.created_at, needsReview: o.needs_review,
+        paidEmail: o.paid_email || null,
         costCents: spent.get(o.id) || 0,
         story: stories.get(o.id) || null,
       }));
@@ -539,7 +588,8 @@ function adminHandler(deps) {
         await deps.db.updateStory(story.id, { stage: "full", retouched: job.kind === "retouch" ? true : story.retouched });
         await deps.db.saveJob(job.id, { state: "done", error: null });
         await deps.db.updateOrder(order.id, { status: "delivered", needs_review: false });
-        if (deps.sendEmail) await deps.sendEmail({ kind: "book_ready", to: order.email, locale: order.locale, token: story.token });
+        // To every address we have for them, which after a typo is two.
+        if (deps.sendEmail) await deps.sendEmail({ kind: "book_ready", to: recipientsOf(order), locale: order.locale, token: story.token });
         return send(res, 200, { ok: true });
       }
       // Closes an order for good: nothing more is generated, nothing more is
@@ -562,6 +612,40 @@ function adminHandler(deps) {
         const s2 = story || (await deps.db.getStoryByOrder(orderId));
         if (s2) await deps.db.updateStory(s2.id, { expires_at: new Date().toISOString() });
         return send(res, 200, { ok: true, cancelled: orderId, wasPaid });
+      }
+      /*
+       * A customer writes in because the book never arrived: they mistyped
+       * their address. This is the counter where that is fixed. It changes
+       * where we write to and sends the link again — it never touches the
+       * story, the payment or anything the customer could not see anyway.
+       */
+      case "set_email": {
+        const email = String(body.email || "").trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return send(res, 400, { error: "invalid_email" });
+        const story = body.token ? await deps.db.getStoryByToken(body.token) : null;
+        const orderId = body.orderId || (story && story.order_id);
+        if (!orderId) return send(res, 400, { error: "bad_request" });
+        const order = await deps.db.getOrder(orderId);
+        if (!order) return send(res, 404, { error: "not_found" });
+        const s2 = story || (await deps.db.getStoryByOrder(orderId));
+        await deps.db.updateOrder(orderId, { email });
+        if (body.resend !== false && deps.sendEmail && s2) {
+          const kind = order.status === "delivered" ? "book_ready" : s2.stage === "sample" ? "sample_ready" : "script_ready";
+          await deps.sendEmail({ kind, to: [email], locale: order.locale, token: s2.token });
+        }
+        return send(res, 200, { ok: true, email });
+      }
+      // Sends the link again to wherever we already write. For "it went to
+      // spam" and "I deleted it", which is most of the post is.
+      case "resend": {
+        const story = body.token ? await deps.db.getStoryByToken(body.token) : await deps.db.getStoryByOrder(body.orderId);
+        if (!story) return send(res, 404, { error: "not_found" });
+        const order = await deps.db.getOrder(story.order_id);
+        const to = recipientsOf(order);
+        if (!to.length) return send(res, 409, { error: "no_recipient" });
+        const kind = order.status === "delivered" ? "book_ready" : story.stage === "sample" ? "sample_ready" : "script_ready";
+        if (deps.sendEmail) await deps.sendEmail({ kind, to, locale: order.locale, token: story.token });
+        return send(res, 200, { ok: true, sent: to.length });
       }
       case "retry": {
         const job = await deps.db.getJob(body.jobId);
@@ -588,5 +672,5 @@ function adminHandler(deps) {
 
 module.exports = {
   orderHandler, storyHandler, reviseHandler, approveHandler, waitlistHandler,
-  printInterestHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, resumeHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
+  printInterestHandler, contactHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, resumeHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
 };

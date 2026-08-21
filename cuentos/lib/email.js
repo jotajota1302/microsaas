@@ -91,21 +91,66 @@ function render({ kind, locale = "es", token }) {
   return { subject: tpl.subject, text: tpl.body(url) };
 }
 
+/**
+ * Every address a customer can be reached at. Usually one; two when the buyer
+ * typed one address into our form and another into Stripe's, which is what a
+ * typo looks like from here. The book goes to both rather than to nobody.
+ */
+function recipientsOf(order) {
+  const seen = [];
+  for (const e of [order && order.email, order && order.paid_email]) {
+    const clean = String(e || "").trim().toLowerCase();
+    if (clean && !seen.includes(clean)) seen.push(clean);
+  }
+  return seen;
+}
+
 async function sendEmail({ kind, to, locale, token }, deps = {}) {
   const fetchFn = deps.fetch || fetch;
   const { subject, text } = render({ kind, locale, token });
+  const recipients = Array.isArray(to) ? to.filter(Boolean) : [to].filter(Boolean);
+  if (!recipients.length) return { skipped: true, subject, reason: "no recipient" };
   if (!env.RESEND_API_KEY) {
-    console.log(`[cuentos] email skipped (no RESEND_API_KEY): ${kind} -> ${to}`);
+    console.log(`[cuentos] email skipped (no RESEND_API_KEY): ${kind} -> ${recipients.join(", ")}`);
     return { skipped: true, subject };
   }
   const res = await fetchFn("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM(), to: [to], subject, text }),
+    body: JSON.stringify({ from: FROM(), to: recipients, subject, text }),
   });
   if (!res.ok) throw new Error(`[cuentos] resend HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
   return { id: data.id, subject };
 }
 
-module.exports = { sendEmail, render, TEMPLATES: T };
+/**
+ * A customer writing in. It goes to the shop's own address, with reply-to set
+ * to theirs so answering is one click, and it carries the story token when
+ * there is one — that is what identifies the order without asking for it.
+ */
+async function sendContact({ from, message, token, orderEmail, status }, deps = {}) {
+  const fetchFn = deps.fetch || fetch;
+  const to = env.CONTACT_EMAIL || env.EMAIL_FROM_ADDRESS || "info@4bitsengineering.com";
+  const lines = [
+    `De: ${from}`,
+    token ? `Cuento: ${BASE()}/c/${token}` : "Sin cuento asociado",
+    orderEmail && orderEmail !== from ? `El pedido está a nombre de: ${orderEmail}` : "",
+    status ? `Estado del pedido: ${status}` : "",
+    "",
+    message,
+  ].filter(Boolean);
+  if (!env.RESEND_API_KEY) {
+    console.log(`[cuentos] contact skipped (no RESEND_API_KEY): ${from}`);
+    return { skipped: true };
+  }
+  const res = await fetchFn("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM(), to: [to], reply_to: from, subject: `Contacto — ${from}`, text: lines.join("\n") }),
+  });
+  if (!res.ok) throw new Error(`[cuentos] resend HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return await res.json();
+}
+
+module.exports = { sendEmail, sendContact, render, recipientsOf, TEMPLATES: T };

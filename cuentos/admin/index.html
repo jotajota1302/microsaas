@@ -33,13 +33,20 @@
   </form>
 
   <div id="panel" hidden>
-    <section class="stack">
+    <nav class="adminnav" id="nav">
+      <button type="button" data-s="hoy" class="on">Hoy <span class="pill" id="navQueue">0</span></button>
+      <button type="button" data-s="cuentos">Cuentos</button>
+      <button type="button" data-s="dinero">Dinero</button>
+      <button type="button" data-s="sistema">Sistema</button>
+    </nav>
+
+    <section class="stack" data-s="sistema" hidden>
       <h2>Integraciones</h2>
       <p class="muted" id="healthLine"></p>
       <div class="checks" id="health"></div>
     </section>
 
-    <section class="stack">
+    <section class="stack" data-s="dinero" hidden>
       <h2>El embudo</h2>
       <div class="tabs" id="range">
         <button class="on" data-r="today" type="button">Hoy</button>
@@ -49,7 +56,7 @@
       <div class="funnel" id="funnel"></div>
     </section>
 
-    <section class="stack">
+    <section class="stack" data-s="sistema" hidden>
       <h2>Registrar un cobro</h2>
       <p class="muted" style="font-size:.92rem">Marca un cuento como pagado y dispara la generación del libro completo. Es lo que hará el webhook de Stripe cuando esté conectado.</p>
       <form id="paid" class="card stack">
@@ -63,12 +70,12 @@
       </form>
     </section>
 
-    <section class="stack">
+    <section class="stack" data-s="hoy">
       <h2>Necesita tu revisión <span class="pill" id="queueCount">0</span></h2>
       <div id="list" class="stack"></div>
     </section>
 
-    <section class="stack">
+    <section class="stack" data-s="cuentos" hidden>
       <div class="row" style="justify-content:space-between">
         <h2>Todos los cuentos <span class="pill" id="allCount">0</span></h2>
         <input type="search" id="filter" placeholder="Filtrar por email, título o token" style="flex:1 1 16rem;max-width:24rem">
@@ -122,9 +129,18 @@
 
   const tok = () => localStorage.getItem("cuentos_admin") || "";
   const headers = () => ({ Authorization: "Bearer " + tok(), "Content-Type": "application/json" });
-  let data = null, range = "today";
+  let data = null, range = "today", started = false;
 
   $("auth").onsubmit = (e) => { e.preventDefault(); localStorage.setItem("cuentos_admin", $("tok").value.trim()); load(); };
+  // The menu. Everything is already in memory from one request, so switching
+  // section is showing and hiding, never another round trip.
+  function showSection(name) {
+    document.querySelectorAll("#panel section[data-s]").forEach((el) => { el.hidden = el.dataset.s !== name; });
+    document.querySelectorAll("#nav button").forEach((b) => b.classList.toggle("on", b.dataset.s === name));
+    try { localStorage.setItem("cuentos.admin.section", name); } catch (e) { /* private window */ }
+  }
+  document.querySelectorAll("#nav button").forEach((b) => { b.onclick = () => showSection(b.dataset.s); });
+
   $("filter").oninput = () => renderRecent();
   $("reload").onclick = load;
   $("range").onclick = (e) => {
@@ -268,6 +284,7 @@
 
     const euro = (c) => (c / 100).toFixed(2).replace(".", ",") + " €";
     const facts = [
+      ["Le escribimos a", o.paidEmail && o.paidEmail !== o.email ? `${o.email} y ${o.paidEmail} (la de Stripe)` : o.email],
       ["Precio", euro(o.priceCents) + (o.channel ? ` · ${o.channel}` : "")],
       ["Coste de IA", euro(o.costCents)],
       ["Margen bruto", euro(o.priceCents - o.costCents)],
@@ -290,6 +307,8 @@
     if (job && job.job.state === "needs_review") actions.push(btn("approve", "Aprobar y entregar", ""));
     if (job && job.job.state === "needs_review" && job.job.error && !/awaiting/.test(job.job.error)) actions.push(btn("retry", "Reintentar"));
     if (st && o.status === "delivered" && !st.retouched) actions.push(btn("retouch", "Retocar páginas"));
+    if (st) actions.push(btn("resend", "Reenviar el enlace"));
+    actions.push(btn("set_email", "Cambiar el correo…"));
     if (o.status !== "cancelled") actions.push(btn("cancel", "Cancelar el pedido", "ghost"));
     $("shActions").innerHTML = actions.join("") || `<span class="muted">Nada que hacer aquí.</span>`;
     $("shActions").querySelectorAll("button[data-sa]").forEach((b) => {
@@ -328,6 +347,18 @@
       if (!(await confirmDlg("Aprobar y entregar", "Se marca como entregado y sale el correo con el enlace al libro."))) return;
       $("sheet").close();
       return act({ action: "approve", jobId: job.job.id });
+    }
+    if (a === "resend") {
+      $("sheet").close();
+      return act({ action: "resend", token: st.token });
+    }
+    if (a === "set_email") {
+      // The counter where "the book never arrived" gets fixed: they mistyped
+      // their address, so we write to the right one and send the link again.
+      const email = await ask("Cambiar el correo del pedido", `Ahora escribimos a ${o.email}. Pon la dirección correcta y le reenviamos el enlace.`, "correo@ejemplo.es");
+      if (!email) return;
+      $("sheet").close();
+      return act({ action: "set_email", orderId: o.id, email });
     }
     if (a === "retry") { $("sheet").close(); return act({ action: "retry", jobId: job.job.id }); }
   }
@@ -435,6 +466,13 @@
       $("auth").hidden = true; $("panel").hidden = false;
       $("clock").textContent = "Actualizado a las " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
       renderHealth(); renderStats(); renderQueue(); renderRecent();
+      $("navQueue").textContent = (data.items || []).length;
+      if (!started) {
+        started = true;
+        let last = "hoy";
+        try { last = localStorage.getItem("cuentos.admin.section") || "hoy"; } catch (e) { /* private window */ }
+        showSection(document.querySelector(`#nav button[data-s="${last}"]`) ? last : "hoy");
+      }
     } catch (e) {
       say($("authMsg"), "No se pudo conectar: " + e.message, "alarm");
     }
