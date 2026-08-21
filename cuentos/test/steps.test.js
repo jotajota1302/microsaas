@@ -209,3 +209,14 @@ test("every plan ends in a notification or an approval, never in silence", () =>
     assert.ok(["notify", "approval"].includes(last), `${kind} ends with ${last}`);
   }
 });
+
+// The revision counter has exactly one owner: reviseHandler, which is what
+// decides whether a round is available and what tells the customer how many are
+// left. The text step incrementing it too spent two of the two free rounds on
+// one request, and the reply said "1 left" right before refusing the next one.
+test("a revision job does not touch the revision counter", async () => {
+  const story = { id: "s1", order_id: "o1", token: "tok123", stage: "script", story: valid, revisions: 1, instructions: ["mas gato"], page_paths: {}, coloring_paths: [], fallbacks: 0 };
+  const db = memDb({ job: { id: "j1", order_id: "o1", story_id: "s1", kind: "script", input: { revision: true } }, order: ORDER, story });
+  await runJob("j1", okDeps(db));
+  assert.strictEqual(db.state.story.revisions, 1, "the counter belongs to the handler alone");
+});

@@ -184,3 +184,9 @@ Coste idéntico (0,009 $ las seis). Tres fallos concretos del modelo, ya corregi
 ### Caché de imágenes para el banco de pruebas
 
 `IMAGE_CACHE_DIR` guarda cada imagen en disco por (prompt, referencias, tamaño, modelo). Apagada salvo que la variable exista, así que no llega a producción. Repetir la prueba del libro completo pasa de 0,48 $ a 0 $.
+
+Se pasa **por línea de órdenes, nunca en el `.env`**: metida en el fichero contamina también la batería de tests, que dejan de ser deterministas.
+
+```
+IMAGE_CACHE_DIR=/ruta/al/cache node scripts/...
+```

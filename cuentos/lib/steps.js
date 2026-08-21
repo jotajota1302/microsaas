@@ -70,6 +70,9 @@ async function loadPages(db, story, indices) {
 // --- the steps -----------------------------------------------------------------
 
 const STEPS = {
+  // Note: the revision counter is NOT touched here. reviseHandler owns it —
+  // it is what checks a round is available and what reports how many are left.
+  // Incrementing in both places spent both free rounds on a single request.
   async text(ctx, deps) {
     const input = anonymise(ctx.order.personalization);
     const { story, attempts, costUsd } = await deps.generateStory(input);
@@ -79,7 +82,6 @@ const STEPS = {
       ctx.story = await deps.db.updateStory(ctx.story.id, {
         story: withTheme,
         people_count: peopleCount,
-        revisions: (ctx.story.revisions || 0) + (ctx.job.input && ctx.job.input.revision ? 1 : 0),
         instructions: input.instructions,
       });
     } else {

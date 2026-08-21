@@ -1,5 +1,13 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
+const { env } = require("../lib/env.js");
+
+// The disk cache is a bench tool (see IMAGE_CACHE_DIR). If it leaks into the
+// suite the tests stop being deterministic, so it is off by default here and
+// only the cache test turns it on.
+delete env.IMAGE_CACHE_DIR;
+delete process.env.IMAGE_CACHE_DIR;
+
 const { generateImage, verifyPage, withStyle, ImageBlockedError, ImageError, DEFAULT_MODEL } = require("../lib/images.js");
 const C = require("../lib/collection.js");
 
@@ -157,7 +165,7 @@ test("with a cache directory an identical image request is served from disk", as
   const os = require("os");
   const path = require("path");
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cuentos-img-"));
-  process.env.IMAGE_CACHE_DIR = dir;
+  env.IMAGE_CACHE_DIR = dir;
   try {
     let calls = 0;
     const fetchFn = async () => {
@@ -173,7 +181,7 @@ test("with a cache directory an identical image request is served from disk", as
     await generateImage({ prompt: "a different lighthouse" }, { fetch: fetchFn });
     assert.strictEqual(calls, 2, "a different prompt is a different image");
   } finally {
-    delete process.env.IMAGE_CACHE_DIR;
+    delete env.IMAGE_CACHE_DIR;
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
