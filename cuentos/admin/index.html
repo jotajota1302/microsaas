@@ -75,7 +75,7 @@
       </div>
       <div class="tablewrap">
         <table id="recent">
-          <thead><tr><th>Cuándo</th><th>Email</th><th>Estado</th><th>Canal</th><th>Cuento</th><th>Dibujos</th><th>Coste IA</th><th>Enlace</th></tr></thead>
+          <thead><tr><th>Cuándo</th><th>Email</th><th>Estado</th><th>Canal</th><th>Cuento</th><th>Dibujos</th><th>Coste IA</th><th>Enlace</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -205,6 +205,7 @@
           <button class="btn secondary" data-a="retry" data-j="${job.id}">Reintentar</button>
           ${story && story.pdf ? `<a class="btn secondary" href="${story.pdf}" target="_blank" rel="noopener">Ver PDF</a>` : ""}
           ${story ? `<button class="btn ghost" data-a="retouch" data-t="${story.token}">Retocar páginas…</button>` : ""}
+          <button class="btn ghost" data-a="cancel" data-o="${order && order.id}">Cancelar el pedido</button>
         </div>
       </div>`).join("") : `<p class="muted">Nada esperando. Todo entregado.</p>`;
 
@@ -233,8 +234,9 @@
         <td class="muted">${drawn}</td>
         <td class="muted">${(o.costCents / 100).toFixed(2).replace(".", ",")} €</td>
         <td>${st ? `<code>${st.token}</code>` : ""}</td>
+        <td class="muted" aria-hidden="true">abrir ›</td>
       </tr>`;
-    }).join("") : `<tr><td class="muted" colspan="8">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
+    }).join("") : `<tr><td class="muted" colspan="9">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
 
     // A row opens the order rather than being a dead line of text: what state
     // it is in, and what can be done about it from here.
@@ -336,6 +338,10 @@
       const pages = await ask("Retocar páginas", "Números del 1 al 12, separados por comas. Máximo tres: cada una vuelve a dibujarse.", "1, 4, 9");
       if (!pages) return;
       return act({ action: "retouch", token: b.dataset.t, pages: pages.split(",").map((n) => Number(n.trim()) - 1) });
+    }
+    if (a === "cancel") {
+      if (!(await confirmDlg("Cancelar el pedido", "Se detiene todo lo pendiente y el enlace del cliente deja de funcionar. El dinero NO se toca: si hay que devolverlo, hazlo en Stripe."))) return;
+      return act({ action: "cancel", orderId: b.dataset.o });
     }
     if (a === "approve" && !(await confirmDlg("Aprobar y entregar", "Se marca como entregado y sale el correo con el enlace al libro."))) return;
     act({ action: a, jobId: b.dataset.j });

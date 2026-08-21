@@ -265,6 +265,30 @@
       bind();
       // Only "paid" means work is owed: "needs_review" is a person's turn.
       if (view.status === "paid" && view.stage !== "full") drive();
+      // ...but a person's turn ends, and the page has to notice. Without this
+      // the screen said "we are checking it" for ever, long after the book had
+      // been approved and delivered.
+      else if (making()) watch();
+    }
+
+    let watching = false;
+    async function watch() {
+      if (watching) return;
+      watching = true;
+      try {
+        while (making()) {
+          await sleep(15000);
+          const res = await fetch(`/api/story?token=${encodeURIComponent(token)}`).catch(() => null);
+          if (!res || !res.ok) continue;
+          const next = await res.json().catch(() => null);
+          if (!next) continue;
+          const changed = next.stage !== view.stage || next.status !== view.status;
+          view = next;
+          if (changed) { render(); return; }
+        }
+      } finally {
+        watching = false;
+      }
     }
 
     function busy(btn, text) { btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${text}`; }

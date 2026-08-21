@@ -25,6 +25,19 @@ const meter = require("./meter.js");
 class ImageBlockedError extends Error {
   constructor(message) { super(message); this.name = "ImageBlockedError"; }
 }
+/*
+ * There is no credit left. Not "this image failed" — nothing will be drawn for
+ * anyone until somebody pays. It must never be confused with a page that could
+ * not be drawn: that reads as a defective book and sends a paid order to human
+ * review, when what is needed is a top-up. A 5xx or a 429 is NOT this: those
+ * are worth retrying and worth trying another model for.
+ */
+class OutOfCreditError extends Error {
+  constructor(message, { status } = {}) { super(message); this.name = "OutOfCreditError"; this.status = status; }
+}
+
+const OUT_OF_CREDIT = new Set([402]);
+
 class ImageError extends Error {
   constructor(message, { status } = {}) { super(message); this.name = "ImageError"; this.status = status; }
 }
@@ -87,6 +100,9 @@ async function openrouterOnce({ model, prompt, refs, size, fetchFn }) {
   if (!res.ok) {
     const msg = JSON.stringify(data.error || data).slice(0, 300);
     if (BLOCKED_RE.test(msg)) throw new ImageBlockedError(msg);
+    if (OUT_OF_CREDIT.has(res.status)) {
+      throw new OutOfCreditError(`openrouter HTTP ${res.status}: ${msg}`, { status: res.status });
+    }
     throw new ImageError(`openrouter HTTP ${res.status}: ${msg}`, { status: res.status });
   }
 
@@ -211,6 +227,8 @@ async function generateImageUncached({ prompt, refs = [], size = "1:1", provider
       return { ...out, provider: "openrouter" };
     } catch (e) {
       if (e instanceof ImageBlockedError) throw e;
+      // Another model on the same account is refused for the same reason.
+      if (e instanceof OutOfCreditError) throw e;
       lastError = e;
       console.warn(`[cuentos] image model ${model} failed (${e.message.slice(0, 120)}), trying next`);
     }
@@ -224,6 +242,7 @@ async function attempt(fn, deps) {
     return await fn();
   } catch (e) {
     if (e instanceof ImageBlockedError) throw e;
+    if (e instanceof OutOfCreditError) throw e; // waiting 1.5 s does not buy credit
     if (delay) await new Promise((r) => setTimeout(r, delay));
     return fn();
   }
@@ -285,6 +304,7 @@ async function verifyPage(sheet, page, deps = {}) {
 }
 
 module.exports = {
+  OutOfCreditError,
   generateImage,
   verifyPage,
   withStyle,

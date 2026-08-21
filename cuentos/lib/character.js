@@ -111,6 +111,10 @@ async function renderOne({ story, sheetBuffer, refs, index, verify }, deps) {
     try {
       out = await generate({ prompt, refs, size: "1:1", label: `page-${index + 1}` }, deps);
     } catch (e) {
+      // No credit left: nothing is wrong with this page and nothing will be
+      // by trying again. Let it out, so the job stops and says what it needs
+      // instead of delivering a book with blanks in it.
+      if (e instanceof images.OutOfCreditError) throw e;
       issues.push(`attempt ${attempt}: ${e.name}: ${e.message.slice(0, 120)}`);
       if (e instanceof images.ImageBlockedError) break; // a verdict, not a glitch
       continue;

@@ -185,3 +185,20 @@ test("with a cache directory an identical image request is served from disk", as
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("no credit stops everything at once: no retry, no other model, its own error", async () => {
+  // What actually happened in production: the key hit its spending cap, every
+  // image came back 402, and four pages of a PAID book were recorded as
+  // "could not be drawn". They could have been drawn perfectly well; nobody
+  // had paid the bill. One is a defect in the book, the other is an invoice.
+  const s = stub([
+    { status: 402, body: { error: { message: "This request requires more credits" } } },
+    { status: 402, body: { error: { message: "This request requires more credits" } } },
+    { status: 402, body: { error: { message: "This request requires more credits" } } },
+  ]);
+  await assert.rejects(
+    () => generateImage({ prompt: "a girl", models: ["primary/model", "backup/model"] }, deps(s)),
+    (e) => e.name === "OutOfCreditError" && /402/.test(e.message)
+  );
+  assert.strictEqual(s.calls.length, 1, "no retry and no second model: they bill the same empty account");
+});

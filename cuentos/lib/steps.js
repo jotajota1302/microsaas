@@ -140,6 +140,9 @@ const STEPS = {
 
     const indices = queue.slice(0, PAGE_BATCH);
     const sheet = await deps.db.download(BUCKET, story.sheet_path);
+    // If this throws because the provider is refusing everyone, nothing is
+    // recorded: these pages are NOT marked as attempted, so the retry after a
+    // top-up draws them rather than skipping them as already tried.
     const { pages, costUsd, fallbacks } = await deps.renderPages(
       { ...story.story, theme: story.story.theme },
       [sheet],
