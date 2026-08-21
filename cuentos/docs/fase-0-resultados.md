@@ -149,3 +149,38 @@ Dos hallazgos:
 
 1. **`generateImage` añadía el sufijo de acuarela a los prompts de line-art**, que piden justo lo contrario ("no colour, no shading"). Corregido con la opción `style: false`, que usan ahora tanto la galería como `lib/lineart.js` (las páginas de colorear del libro estaban saliendo peor de lo necesario por esto).
 2. **El umbral delata las zonas sombreadas**: un fondo con degradado (la luna llena de Halloween) queda como un cerco gris sucio. La solución no es tocar sharp sino pedirlo en el prompt: "no shaded areas". Composiciones que "llenen la página" también salen mejor que las descriptivas.
+
+
+## 0.6 — Primera prueba real de extremo a extremo (2026-08-21)
+
+Con el schema `cuentos` y el bucket `stories` ya aplicados en el proyecto Supabase compartido, un pedido completo recorrió los tres tramos contra los servicios de verdad:
+
+| Tramo | Tiempo | Coste | Resultado |
+|---|---|---|---|
+| `script` | 12 s | < 1 céntimo | 12 páginas válidas al segundo intento |
+| `sample` | 14 s | 9 céntimos | hoja de personaje + páginas 1 y 6 |
+| `full` | 62 s | 44 céntimos | 12/12 ilustradas, 4/4 de colorear, PDF de 6,9 MB, **0 fallbacks** |
+
+**53 céntimos de IA por libro vendido a 12,90 €**, dentro del techo de 150 previsto. El job se detuvo solo en `needs_review` esperando la aprobación humana, como debe.
+
+### Lo que sólo podía aparecer aquí
+
+1. **Ningún job se ejecutaba nunca.** `claimJob` era un UPDATE con filtros; PostgREST vuelve a aplicar esos filtros a la fila devuelta, y la fila recién escrita ya no los cumplía (`locked_until` había pasado a futuro). El UPDATE se aplicaba y la respuesta venía vacía, así que `runJob` lo leía como «otro proceso tiene el job» y devolvía `{state:"locked"}` **siempre**. Los tests unitarios no podían verlo: usan una base de datos falsa. Arreglado con una función en Postgres (migración 0002).
+2. **El schema no estaba expuesto en PostgREST.** Hubo que añadir `cuentos` a `pgrst.db_schemas` (aditivo; los de las otras apps siguen intactos). Si alguien reescribe los *exposed schemas* desde el panel, hay que volver a incluirlo.
+
+### Fiabilidad del guion, medida sobre 6 casos reales
+
+| | 1.er intento válido | Válidos al final |
+|---|---|---|
+| Regenerando el cuento entero en cada reintento | 0-2 de 6 | 5 de 6 |
+| Reparando sólo las páginas que fallan | 3 de 6 | **6 de 6** |
+
+Coste idéntico (0,009 $ las seis). Tres fallos concretos del modelo, ya corregidos:
+
+- **Páginas cortas en bloque**: 8-9 páginas seguidas entre 48 y 59 palabras. El prompt de reparación sólo decía qué hacer si faltaba texto, nunca si sobraba; ahora es simétrico y lleva el recuento actual y un objetivo.
+- **La mascota con nombre propio** («Michi», «Pipo»): el modelo bautiza al gato pese a la prohibición.
+- **Dos falsos positivos del validador**: «Osa Mayor» como nombre inventado (es una constelación) y «vino» como alcohol (es el pretérito de «venir», mucho más frecuente en un cuento). Ambos rechazaban historias buenas y ninguna reparación podía satisfacerlos.
+
+### Caché de imágenes para el banco de pruebas
+
+`IMAGE_CACHE_DIR` guarda cada imagen en disco por (prompt, referencias, tamaño, modelo). Apagada salvo que la variable exista, así que no llega a producción. Repetir la prueba del libro completo pasa de 0,48 $ a 0 $.

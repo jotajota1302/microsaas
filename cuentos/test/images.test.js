@@ -151,3 +151,29 @@ test("style:false leaves the prompt alone, so line art is not asked for watercol
   assert.strictEqual(parts[0].text, "black outlines only, no colour");
   assert.ok(!parts[0].text.includes("watercolour"), "watercolour suffix leaked into a line-art prompt");
 });
+
+test("with a cache directory an identical image request is served from disk", async () => {
+  const fs = require("fs");
+  const os = require("os");
+  const path = require("path");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cuentos-img-"));
+  process.env.IMAGE_CACHE_DIR = dir;
+  try {
+    let calls = 0;
+    const fetchFn = async () => {
+      calls++;
+      return { ok: true, text: async () => JSON.stringify({ choices: [{ message: { images: [{ image_url: { url: "data:image/png;base64,QUJD" } }] } }] }) };
+    };
+    const a = await generateImage({ prompt: "a lighthouse at dusk" }, { fetch: fetchFn });
+    const b = await generateImage({ prompt: "a lighthouse at dusk" }, { fetch: fetchFn });
+    assert.strictEqual(calls, 1, "the second identical request must not hit the network");
+    assert.deepStrictEqual(b.buffer, a.buffer);
+    assert.strictEqual(b.costUsd, 0, "a cached image costs nothing");
+
+    await generateImage({ prompt: "a different lighthouse" }, { fetch: fetchFn });
+    assert.strictEqual(calls, 2, "a different prompt is a different image");
+  } finally {
+    delete process.env.IMAGE_CACHE_DIR;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

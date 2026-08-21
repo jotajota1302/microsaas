@@ -14,6 +14,9 @@
  * sheet) travel as images; never a photo of a real person.
  */
 
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const { env } = require("./env.js");
 const C = require("./collection.js");
 const llm = require("./llm.js");
@@ -128,6 +131,38 @@ async function minimaxOnce({ prompt, refs, size, fetchFn }) {
   return { buffer: await download(url, fetchFn), costUsd: MODEL_COST_USD["image-01"], model: "image-01" };
 }
 
+// --- local cache -------------------------------------------------------------
+//
+// Off unless IMAGE_CACHE_DIR is set, so it never exists in production. It is
+// for the bench: an end-to-end run of the full book is 14 images (~0,48 $), and
+// re-running it to check a PDF change should not pay for them again.
+
+function cacheKey({ prompt, refs = [], size = "1:1", provider, models, style = true }) {
+  const h = crypto.createHash("sha256");
+  h.update(JSON.stringify([prompt, size, style, provider || env.IMAGE_PROVIDER || "", models || env.OPENROUTER_IMAGE_MODEL || ""]));
+  for (const ref of refs) h.update(crypto.createHash("sha256").update(ref).digest());
+  return h.digest("hex").slice(0, 32);
+}
+
+function cachePath(args) {
+  const dir = env.IMAGE_CACHE_DIR;
+  if (!dir) return null;
+  fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, `${cacheKey(args)}.png`);
+}
+
+function readCache(args) {
+  const file = cachePath(args);
+  if (!file || !fs.existsSync(file)) return null;
+  console.log(`[cuentos] image from cache ${path.basename(file)}`);
+  return { buffer: fs.readFileSync(file), costUsd: 0, model: "cache", cached: true };
+}
+
+function writeCache(args, out) {
+  const file = cachePath(args);
+  if (file && out && out.buffer) fs.writeFileSync(file, out.buffer);
+}
+
 // --- public API --------------------------------------------------------------
 
 /**
@@ -136,7 +171,15 @@ async function minimaxOnce({ prompt, refs, size, fetchFn }) {
  * it is a verdict, and it propagates so the caller can fall back to the
  * catalogue and flag the order.
  */
-async function generateImage({ prompt, refs = [], size = "1:1", provider, models, style = true }, deps = {}) {
+async function generateImage(args, deps = {}) {
+  const cached = readCache(args);
+  if (cached) return cached;
+  const out = await generateImageUncached(args, deps);
+  writeCache(args, out);
+  return out;
+}
+
+async function generateImageUncached({ prompt, refs = [], size = "1:1", provider, models, style = true }, deps = {}) {
   const fetchFn = deps.fetch || fetch;
   const which = provider || env.IMAGE_PROVIDER || "openrouter";
   // Line art asks for the opposite of the collection style (no colour, no

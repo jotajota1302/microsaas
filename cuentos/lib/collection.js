@@ -157,7 +157,10 @@ const BLOCKLIST = [
   "pesadilla", "terror", "monstruo horrible", "demonio", "infierno", "fantasma aterrador",
   "secuestrar", "raptar", "desaparecer para siempre", "abandonar para siempre",
   // adult content and substances
-  "sexo", "desnudo", "desnuda", "alcohol", "borracho", "cerveza", "vino", "tabaco",
+  // "vino" alone is the preterite of "venir" ("el sol vino a despertarla") and
+  // refused good stories; the drink is matched in the shapes it turns up in.
+  "sexo", "desnudo", "desnuda", "alcohol", "borracho", "cerveza", "tabaco",
+  "copa de vino", "botella de vino", "vaso de vino", "vino tinto", "vino blanco",
   "fumar", "droga", "casino", "apostar",
   // illness and self-harm
   "cancer", "suicidio", "hacerse dano", "cortarse",

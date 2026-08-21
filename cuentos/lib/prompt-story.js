@@ -250,6 +250,7 @@ function mergePages(story, repaired) {
 async function generateStory(input, deps = {}) {
   const complete = deps.completeJson || llm.completeJson;
   const maxAttempts = deps.maxAttempts || MAX_ATTEMPTS;
+  const log = deps.log || ((m) => console.log(`[cuentos] ${m}`));
   const people = peopleOf(input).length;
 
   let errors = [];
@@ -274,7 +275,9 @@ async function generateStory(input, deps = {}) {
     }
     story = candidate;
     errors = verdict.errors;
-    console.log(`[cuentos] attempt ${attempt} rejected: ${errors.length} errors${byPage ? " (after repair)" : ""}`);
+    // The errors themselves, not just the count: without them a run that
+    // exhausts its attempts in production is undiagnosable.
+    log(`attempt ${attempt} rejected${byPage ? " (after repair)" : ""}: ${errors.join(" | ")}`);
   }
 
   const err = new Error(`story did not validate after ${maxAttempts} attempts`);

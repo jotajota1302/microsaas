@@ -69,3 +69,18 @@ test("the whitelist covers real names a children's story reaches for", () => {
     assert.ok(C.NAME_WHITELIST.includes(n), `"${n}" should be whitelisted`);
   }
 });
+
+// Measured 2026-08-21: "el sol vino a despertarla" was refused as alcohol.
+// "vino" is the preterite of "venir" and is far commoner in a children's story
+// than the drink; a bare word match cannot tell them apart, so the drink is
+// matched in the shapes it actually appears in.
+test("the blocklist does not trip over the preterite of venir", () => {
+  assert.ok(!C.BLOCKLIST.includes("vino"), '"vino" alone catches "vino a verla"');
+  assert.ok(C.BLOCKLIST.some((w) => /vino/.test(w)), "the drink must still be blocked in context");
+});
+
+test("the blocklist keeps the words that actually matter", () => {
+  for (const w of ["matar", "sangre", "pistola", "droga", "suicidio", "borracho"]) {
+    assert.ok(C.BLOCKLIST.includes(w), `"${w}" must stay blocked`);
+  }
+});
