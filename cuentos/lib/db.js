@@ -165,6 +165,20 @@ function createDb(client) {
       );
       return (rows && rows[0]) || null;
     },
+    /**
+     * Stops whatever is still owed on an order. Used when it is cancelled:
+     * without this the sweep would pick the job up again an hour later and
+     * carry on spending on a book nobody is going to receive.
+     */
+    async cancelJobsFor(orderId) {
+      return unwrap(
+        await t("jobs")
+          .update({ state: "cancelled", locked_until: null, error: "cancelled by the shop" })
+          .eq("order_id", orderId)
+          .in("state", ["pending", "running", "needs_review"])
+          .select()
+      );
+    },
     async saveJob(id, patch) {
       return unwrap(await t("jobs").update(patch).eq("id", id).select().single());
     },

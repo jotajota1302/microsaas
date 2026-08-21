@@ -145,3 +145,26 @@ test("the illustration is inset from the page edges, not bled to the top", async
   assert.ok(ART_BOX.x > 0, "and a margin at the sides");
   assert.ok(ART_BOX.top + ART_BOX.height < PAGE_PT, "the art must not reach the bottom either");
 });
+
+test("the book can be quoted: every letter comes back out as itself", async () => {
+  // The shaper turns "fi" into one glyph and pdf-lib cannot map that back to
+  // two letters, so a delivered colophon read "arti?cial" to anyone who copied
+  // it. Ligatures are off; this is what proves they stay off.
+  const { PDFDocument } = require("pdf-lib");
+  const fontkit = require("@pdf-lib/fontkit");
+  const fs = require("fs");
+  const path = require("path");
+
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+  const face = fs.readFileSync(path.join(__dirname, "..", "assets", "fonts", "Andika-Regular.ttf"));
+  const withLigatures = await doc.embedFont(face, { subset: false });
+  const asWeEmbedIt = await doc.embedFont(face, { subset: false, features: { liga: false, clig: false, rlig: false } });
+
+  // encodeText gives a PDF hex string, <XXXX> per glyph: four digits a glyph
+  const glyphs = (font, text) => (font.encodeText(text).toString().match(/[0-9a-f]{4}/gi) || []).length;
+  for (const word of ["artificial", "oficio", "filo", "afligido"]) {
+    assert.strictEqual(glyphs(asWeEmbedIt, word), word.length, `${word}: letters were merged into one glyph`);
+  }
+  assert.ok(glyphs(withLigatures, "artificial") < "artificial".length, "the default really does ligate — the guard is not theatre");
+});

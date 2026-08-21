@@ -187,8 +187,15 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   // almost every glyph and the pages came out as scattered single letters.
   // The whole face costs about 500 kB across the two weights, which is
   // nothing next to fourteen illustrations, and it always renders.
-  const regular = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Regular.ttf")), { subset: false });
-  const bold = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Bold.ttf")), { subset: false });
+  //
+  // Ligatures OFF, and not for looks: the shaper turns "fi" into a single
+  // glyph, and pdf-lib has no way back from that glyph to two letters, so the
+  // book said "artificial" on paper and gave "arti?cial" to anyone who copied
+  // the text out or searched it. A children's book has to survive being
+  // quoted. Reported on a delivered colophon.
+  const FACE = { subset: false, features: { liga: false, clig: false, rlig: false } };
+  const regular = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Regular.ttf")), FACE);
+  const bold = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Bold.ttf")), FACE);
 
   const title = substitute(story.title, personalization);
   doc.setTitle(title);
@@ -260,7 +267,6 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
       width: embedded.width * scale, height: embedded.height * scale,
     });
     if (i === 0) {
-      page.drawText("Para colorear", { x: margin, y: PAGE_PT - margin - 10, size: 11, font: bold, color: MUTED });
     }
     if (mode === "preview") stampWatermark(page, bold);
   }

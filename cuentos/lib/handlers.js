@@ -542,6 +542,27 @@ function adminHandler(deps) {
         if (deps.sendEmail) await deps.sendEmail({ kind: "book_ready", to: order.email, locale: order.locale, token: story.token });
         return send(res, 200, { ok: true });
       }
+      // Closes an order for good: nothing more is generated, nothing more is
+      // spent, and the customer's link stops working. The money is NOT touched
+      // — a refund is a decision taken in Stripe, by a person, on purpose.
+      case "cancel": {
+        const story = body.token ? await deps.db.getStoryByToken(body.token) : null;
+        const orderId = body.orderId || (story && story.order_id);
+        if (!orderId) return send(res, 400, { error: "bad_request" });
+        const order = await deps.db.getOrder(orderId);
+        if (!order) return send(res, 404, { error: "not_found" });
+        // Read before writing: after the update the status is "cancelled" and
+        // whether money had changed hands would be unanswerable.
+        const wasPaid = ["paid", "needs_review", "delivered"].includes(order.status);
+
+        await deps.db.cancelJobsFor(orderId);
+        await deps.db.updateOrder(orderId, { status: "cancelled", needs_review: false });
+        // Expiring the story rather than deleting it: the sweep purges the
+        // content on its next run, and until then a mistake can be undone.
+        const s2 = story || (await deps.db.getStoryByOrder(orderId));
+        if (s2) await deps.db.updateStory(s2.id, { expires_at: new Date().toISOString() });
+        return send(res, 200, { ok: true, cancelled: orderId, wasPaid });
+      }
       case "retry": {
         const job = await deps.db.getJob(body.jobId);
         if (!job) return send(res, 404, { error: "not_found" });

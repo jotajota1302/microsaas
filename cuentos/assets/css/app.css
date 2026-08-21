@@ -415,3 +415,11 @@ dialog input { font: inherit; padding: .6rem .7rem; border: 1px solid var(--hair
 /* the panel's table of every story */
 #recent thead th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; padding: 0 .7rem .5rem; border-bottom: 1px solid var(--hair); white-space: nowrap; }
 #recent tbody tr:hover { background: var(--paper); }
+
+/* the order sheet: one order, its numbers and what can be done with it */
+#recent tbody tr[data-order] { cursor: pointer; }
+#recent tbody tr[data-order]:focus-visible { outline: 2px solid var(--sea); outline-offset: -2px; }
+.sheetgrid { display: grid; grid-template-columns: auto 1fr; gap: .35rem 1.2rem; margin: 0; font-size: .92rem; }
+.sheetgrid dt { color: var(--muted); }
+.sheetgrid dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-word; }
+@media (max-width: 34rem) { .sheetgrid { grid-template-columns: 1fr; gap: 0 } .sheetgrid dd { margin-bottom: .5rem } }

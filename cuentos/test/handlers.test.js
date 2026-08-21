@@ -712,3 +712,34 @@ test("cron pushes a batched job to the end instead of one step per run", async (
   assert.strictEqual(r.body.resumed, 1);
   assert.strictEqual(r.body.batches, 3, "it kept going until the job stopped asking");
 });
+
+// --- cancelling an order -----------------------------------------------------------
+
+test("cancel stops the work, closes the order and kills the link — but never the money", async () => {
+  const cancelled = [];
+  const db = fakeDb({ cancelJobsFor: async (id) => { cancelled.push(id); return []; } });
+  db.order.status = "paid";
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(
+    req({ body: { action: "cancel", token: db.story.token }, headers: { authorization: "Bearer adm" } }), r
+  );
+  delete process.env.ADMIN_TOKEN;
+
+  assert.strictEqual(r.statusCode, 200);
+  assert.deepStrictEqual(cancelled, ["o1"], "whatever was still owed must stop, or the sweep resumes it");
+  assert.strictEqual(db.order.status, "cancelled");
+  assert.ok(new Date(db.story.expires_at) <= new Date(), "the customer's link stops working");
+  assert.strictEqual(r.body.wasPaid, true, "the panel is told a refund may be owed");
+  // A refund is a decision taken in Stripe by a person: nothing here may move money.
+  assert.ok(!db.calls.some((c) => c[0] === "billing"), "cancelling must not touch the billing record");
+});
+
+test("cancel refuses an order that does not exist", async () => {
+  const db = fakeDb({ cancelJobsFor: async () => [] });
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(req({ body: { action: "cancel", token: "nope" }, headers: { authorization: "Bearer adm" } }), r);
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.statusCode, 400);
+});

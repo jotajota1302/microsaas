@@ -83,6 +83,22 @@
   </div>
 </div>
 
+<dialog id="sheet">
+  <div class="stack" style="min-width:min(34rem,92vw)">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div class="stack" style="gap:.2rem">
+        <h3 id="shTitle">Pedido</h3>
+        <span class="muted" id="shWho" style="font-size:.9rem"></span>
+      </div>
+      <span id="shTag"></span>
+    </div>
+    <dl class="sheetgrid" id="shFacts"></dl>
+    <div class="row" id="shLinks"></div>
+    <p class="note" id="shMsg" hidden></p>
+    <div class="row" id="shActions" style="justify-content:flex-end"></div>
+  </div>
+</dialog>
+
 <dialog id="dlg">
   <form method="dialog" class="stack" style="min-width:min(26rem,88vw)">
     <h3 id="dlgTitle">Retocar páginas</h3>
@@ -123,7 +139,7 @@
     script: ["Leyendo el guion", "wait"], sample: ["Vio la muestra", "wait"],
     paid: ["Pagado", "good"], needs_review: ["Esperando revisión", "warn"],
     delivered: ["Entregado", "good"], refunded: ["Devuelto", "bad"],
-    failed: ["Falló", "bad"], expired: ["Caducado", "off"],
+    failed: ["Falló", "bad"], expired: ["Caducado", "off"], cancelled: ["Cancelado", "off"],
   };
 
   function renderHealth() {
@@ -208,7 +224,7 @@
       // Where the book actually is, which the order status alone does not say:
       // a paid order can be half drawn.
       const drawn = st ? `${st.illustrated}/12${st.hasPdf ? " · PDF" : ""}` : "—";
-      return `<tr>
+      return `<tr data-order="${o.id}" tabindex="0">
         <td class="muted">${when(o.createdAt)}</td>
         <td>${esc(o.email)}</td>
         <td><span class="tag ${cls}">${label}</span></td>
@@ -219,6 +235,99 @@
         <td>${st ? `<code>${st.token}</code>` : ""}</td>
       </tr>`;
     }).join("") : `<tr><td class="muted" colspan="8">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
+
+    // A row opens the order rather than being a dead line of text: what state
+    // it is in, and what can be done about it from here.
+    $("recent").querySelectorAll("tr[data-order]").forEach((tr) => {
+      const open = (e) => { if (e.target.closest("a")) return; openOrder(tr.dataset.order); };
+      tr.onclick = open;
+      tr.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } };
+    });
+  }
+
+  /*
+   * The order sheet. Every action the shop can take on one order lives here,
+   * and only the ones that make sense for its state are offered — an order
+   * that was never paid has nothing to approve, a delivered one has nothing to
+   * pay for. "Cancel" closes it and stops the spending; it never moves money,
+   * because a refund is a decision taken in Stripe by a person.
+   */
+  function openOrder(id) {
+    const o = (data.recent || []).find((x) => x.id === id);
+    if (!o) return;
+    const st = o.story;
+    const [label, cls] = STATUS[o.status] || [o.status, "off"];
+    const job = (data.items || []).find((i) => i.order && i.order.id === id);
+
+    $("shTitle").textContent = st ? (st.title || "Cuento sin título") : "Pedido sin guion";
+    $("shWho").textContent = `${o.email} · ${when(o.createdAt)}`;
+    $("shTag").innerHTML = `<span class="tag ${cls}">${label}</span>`;
+    $("shMsg").hidden = true;
+
+    const euro = (c) => (c / 100).toFixed(2).replace(".", ",") + " €";
+    const facts = [
+      ["Precio", euro(o.priceCents) + (o.channel ? ` · ${o.channel}` : "")],
+      ["Coste de IA", euro(o.costCents)],
+      ["Margen bruto", euro(o.priceCents - o.costCents)],
+      ["Dibujos", st ? `${st.illustrated} de 12${st.hasPdf ? " · PDF hecho" : ""}` : "—"],
+      ["Cambios pedidos", st ? String(st.revisions || 0) : "—"],
+      ["Retoque", st ? (st.retouched ? "usado" : "disponible") : "—"],
+      ["El enlace caduca", st ? new Date(st.expiresAt).toLocaleString("es-ES") : "—"],
+      ["Token", st ? st.token : "—"],
+    ];
+    $("shFacts").innerHTML = facts.map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join("");
+
+    $("shLinks").innerHTML = st
+      ? `<a class="btn secondary" href="/c/${st.token}" target="_blank" rel="noopener">Ver el cuento</a>`
+      : "";
+
+    const paid = ["paid", "needs_review", "delivered"].includes(o.status);
+    const btn = (a, text, kind) => `<button class="btn ${kind || "secondary"}" data-sa="${a}">${text}</button>`;
+    const actions = [];
+    if (st && !paid && o.status !== "cancelled") actions.push(btn("mark_paid", "Marcar pagado", ""));
+    if (job && job.job.state === "needs_review") actions.push(btn("approve", "Aprobar y entregar", ""));
+    if (job && job.job.state === "needs_review" && job.job.error && !/awaiting/.test(job.job.error)) actions.push(btn("retry", "Reintentar"));
+    if (st && o.status === "delivered" && !st.retouched) actions.push(btn("retouch", "Retocar páginas"));
+    if (o.status !== "cancelled") actions.push(btn("cancel", "Cancelar el pedido", "ghost"));
+    $("shActions").innerHTML = actions.join("") || `<span class="muted">Nada que hacer aquí.</span>`;
+    $("shActions").querySelectorAll("button[data-sa]").forEach((b) => {
+      b.onclick = () => onSheetAction(b.dataset.sa, o, job);
+    });
+
+    $("sheet").showModal();
+  }
+
+  async function onSheetAction(a, o, job) {
+    const st = o.story;
+    if (a === "cancel") {
+      const paid = ["paid", "needs_review", "delivered"].includes(o.status);
+      const ok = await confirmDlg(
+        "Cancelar el pedido",
+        paid
+          ? "Se detiene todo lo pendiente y el enlace del cliente deja de funcionar. El dinero NO se toca: si hay que devolverlo, hazlo en Stripe."
+          : "Se detiene todo lo pendiente y el enlace deja de funcionar. No se ha cobrado nada."
+      );
+      if (!ok) return;
+      $("sheet").close();
+      return act({ action: "cancel", orderId: o.id });
+    }
+    if (a === "retouch") {
+      const pages = await ask("Retocar páginas", "Números del 1 al 12, separados por comas. Máximo tres.", "1, 4, 9");
+      if (!pages) return;
+      $("sheet").close();
+      return act({ action: "retouch", token: st.token, pages: pages.split(",").map((n) => Number(n.trim()) - 1) });
+    }
+    if (a === "mark_paid") {
+      if (!(await confirmDlg("Marcar pagado", "Se ilustra el libro entero. Úsalo cuando el cobro esté confirmado fuera de la web (Etsy, transferencia).")) ) return;
+      $("sheet").close();
+      return act({ action: "mark_paid", token: st.token, provider: "manual" });
+    }
+    if (a === "approve") {
+      if (!(await confirmDlg("Aprobar y entregar", "Se marca como entregado y sale el correo con el enlace al libro."))) return;
+      $("sheet").close();
+      return act({ action: "approve", jobId: job.job.id });
+    }
+    if (a === "retry") { $("sheet").close(); return act({ action: "retry", jobId: job.job.id }); }
   }
 
   async function onAction(b) {
