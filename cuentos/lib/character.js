@@ -20,11 +20,29 @@ const SHEET_PROMPT = (sheet) =>
   `front view, side profile, full body standing, happy face close-up. The child is ${sheet.appearance}, ` +
   `wearing ${sheet.outfit}. No text, no labels.`;
 
-const PAGE_PROMPT = (sheet, hint) =>
-  `${sheet.appearance}, wearing ${sheet.outfit}` +
-  (sheet.companion ? `, with ${sheet.companion}` : "") +
-  `. Scene: ${hint}. Keep the child exactly identical to the reference sheet: same face, same hair, ` +
-  `same glasses, same clothes and colours. Storybook page, no text.`;
+/** The described people, if any. Tolerates an older story with no list. */
+function peopleOf(sheet) {
+  return (Array.isArray(sheet && sheet.people) ? sheet.people : [])
+    .map((d) => String(d || "").trim())
+    .filter(Boolean);
+}
+
+const PEOPLE_SHEET_PROMPT = (people) =>
+  `Character reference sheet on a plain white background: ${people.length} separate full-body panels, ` +
+  `one per person, each shown standing and facing forward. ` +
+  people.map((d, i) => `Panel ${i + 1}: ${d}.`).join(" ") +
+  ` Same illustration style as the reference image. No text, no labels.`;
+
+const PAGE_PROMPT = (sheet, hint) => {
+  const people = peopleOf(sheet);
+  return `${sheet.appearance}, wearing ${sheet.outfit}` +
+    (sheet.companion ? `, with ${sheet.companion}` : "") +
+    (people.length ? `. Also in this story: ${people.join("; ")}` : "") +
+    `. Scene: ${hint}. Keep the child exactly identical to the reference sheet: same face, same hair, ` +
+    `same glasses, same clothes and colours` +
+    (people.length ? `, and keep every other person identical to their reference panel too: same face, same hair, same clothes` : "") +
+    `. Storybook page, no text.`;
+};
 
 class TooManyFallbacksError extends Error {
   constructor(count) {
@@ -36,10 +54,34 @@ class TooManyFallbacksError extends Error {
 
 const MAX_FALLBACKS = 2; // 3+ means review, never silent delivery
 
+/**
+ * One sheet for the child, and — when anyone else is in the story — a second
+ * one for them. Both travel as references to every page.
+ *
+ * Measured on a delivered book: the protagonist was the same throughout
+ * because the sheet described them, while the grandmother was re-invented in
+ * every scene because nothing did. The second sheet costs one more image
+ * (~0,034 $ on a 57-cent book) and is the only thing that fixes it.
+ */
 async function buildSheet(characterSheet, deps = {}) {
   const generate = deps.generateImage || images.generateImage;
   const out = await generate({ prompt: SHEET_PROMPT(characterSheet), refs: [], size: "16:9", label: "sheet" }, deps);
-  return { sheet: out.buffer, refs: [out.buffer], costUsd: out.costUsd, model: out.model };
+
+  const people = peopleOf(characterSheet);
+  if (!people.length) {
+    return { sheet: out.buffer, refs: [out.buffer], costUsd: out.costUsd, model: out.model };
+  }
+
+  const cast = await generate(
+    { prompt: PEOPLE_SHEET_PROMPT(people), refs: [out.buffer], size: "16:9", label: "sheet-people" },
+    deps
+  );
+  return {
+    sheet: out.buffer,
+    refs: [out.buffer, cast.buffer],
+    costUsd: (out.costUsd || 0) + (cast.costUsd || 0),
+    model: out.model,
+  };
 }
 
 /** Minimal semaphore: run `fn` over `items` with at most `limit` in flight. */
@@ -120,4 +162,4 @@ async function renderPages(story, refs, options = {}, deps = {}) {
   return { pages, costUsd, fallbacks };
 }
 
-module.exports = { buildSheet, renderPages, mapLimit, SHEET_PROMPT, PAGE_PROMPT, TooManyFallbacksError, MAX_FALLBACKS };
+module.exports = { buildSheet, PEOPLE_SHEET_PROMPT, renderPages, mapLimit, SHEET_PROMPT, PAGE_PROMPT, TooManyFallbacksError, MAX_FALLBACKS };

@@ -80,13 +80,14 @@ Un cuento de 12 páginas para leer en voz alta a un niño de 3 a 8 años. Cada p
 11. Cada página lleva "image_hint": descripción visual EN INGLÉS de lo que se ve en esa página (lugar, acción, luz). MÁXIMO 25 PALABRAS: cuéntalas. Una sola frase, sin subordinadas. Un image_hint de 30 palabras o más invalida el cuento. Si en la página aparece una de las personas, descríbela por su relación y edad («her grandmother», «his older sister»), nunca por un nombre.
 12. PROHIBIDO pedir texto en la imagen: nada de carteles, letras, palabras, rótulos ni títulos. El modelo de imagen no sabe escribir.
 13. "character_sheet" describe al niño EN INGLÉS con los rasgos que te doy, y su ropa. Esa ropa es la misma en las 12 páginas: no la cambies en el texto.
+13b. "character_sheet.people" es una lista con UNA descripción visual EN INGLÉS por cada persona de su vida que te indique, EN EL MISMO ORDEN ({{PERSONA1}} primero). Cada una: edad aproximada, constitución, pelo y ropa concreta («a woman in her seventies, short white hair, round glasses, a blue knitted cardigan»). Sin nombres. Con esas descripciones se dibuja siempre igual a cada persona: si faltan, en cada página saldría una cara distinta. Si no te indico a nadie, la lista va vacía.
 14. "coloring_hints": 4 escenas de ESTE cuento, en inglés, que funcionen como dibujo para colorear (formas claras, poco fondo).
 
 # Forma EXACTA del JSON (nombres de campo literales; ni uno más, ni uno menos)
 {
   "title": "…",
   "dedication_hint": "…",
-  "character_sheet": { "appearance": "…", "outfit": "…", "companion": "…" o null },
+  "character_sheet": { "appearance": "…", "outfit": "…", "companion": "…" o null, "people": ["…"] },
   "pages": [
     { "n": 1, "beat": "setup", "text": "…", "image_hint": "…" }
     … doce objetos, con "n" de 1 a 12 …
@@ -94,7 +95,7 @@ Un cuento de 12 páginas para leer en voz alta a un niño de 3 a 8 años. Cada p
   "coloring_hints": ["…", "…", "…", "…"],
   "moral": "…"
 }
-El número de página se llama "n" (no "page", no "number"). NO añadas campos que no estén en esta lista: nada de "word_count", "age", "name_token" ni "protagonist_token". El campo "companion" describe a la mascota en inglés; si no hay ninguna, vale null (nunca lo omitas).
+El número de página se llama "n" (no "page", no "number"). NO añadas campos que no estén en esta lista: nada de "word_count", "age", "name_token" ni "protagonist_token". El campo "companion" describe a la mascota en inglés; si no hay ninguna, vale null (nunca lo omitas). El campo "people" es una lista de strings: tantas como personas te indique, o [] si no hay ninguna (nunca lo omitas).
 
 # Formato de salida
 Devuelve ÚNICAMENTE el objeto JSON, sin markdown, sin comentarios, sin texto antes ni después.`;

@@ -219,6 +219,20 @@ function checkPlaceholders(story, errors, options) {
       errors.push(`${marker} was declared and must appear on at least ${PERSON_MIN_PAGES} pages with a real role, found on ${pagesWith[marker]}`);
     }
   }
+
+  // Everyone who appears must be pinned to a look. The protagonist was
+  // consistent across pages because the sheet described them; the grandmother
+  // was re-invented in every scene because nothing described her.
+  const declared = Number(options.people) || 0;
+  const described = (story.character_sheet && Array.isArray(story.character_sheet.people))
+    ? story.character_sheet.people.filter((d) => typeof d === "string" && d.trim())
+    : [];
+  if (described.length !== declared) {
+    errors.push(
+      `character_sheet.people must describe exactly the ${declared} declared person(s), got ${described.length} — ` +
+      `without a description nobody can draw them the same way twice`
+    );
+  }
 }
 
 function checkStructure(story, errors) {

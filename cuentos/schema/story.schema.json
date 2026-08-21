@@ -30,7 +30,8 @@
       "required": [
         "appearance",
         "outfit",
-        "companion"
+        "companion",
+        "people"
       ],
       "properties": {
         "appearance": {
@@ -52,6 +53,16 @@
           ],
           "maxLength": 200,
           "description": "English description of the pet or friend, or null if there is none."
+        },
+        "people": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 200
+          },
+          "description": "English visual description of each declared person, in the same order they were given: age, build, hair, clothes. No names. Empty when nobody was declared."
         }
       }
     },

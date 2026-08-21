@@ -109,3 +109,41 @@ test("mapLimit never runs more than the limit at once and preserves order", asyn
   assert.deepStrictEqual(out, [50, 10, 30, 20, 40]);
   assert.ok(peak <= 2, `peak concurrency ${peak}`);
 });
+
+// The protagonist stayed the same across pages because the sheet described
+// them. A grandmother with no sheet was re-invented in every scene.
+test("with people declared, a second reference sheet pins their look too", async () => {
+  const calls = [];
+  const generateImage = async (args) => { calls.push(args); return { buffer: PNG, costUsd: 0.034, model: "m" }; };
+  const sheet = {
+    appearance: "a 6-year-old girl with curly brown hair",
+    outfit: "a yellow raincoat",
+    companion: "a grey cat",
+    people: ["a woman in her seventies, short white hair, blue cardigan"],
+  };
+  const out = await buildSheet(sheet, { generateImage });
+  assert.strictEqual(calls.length, 2, "one sheet for the child, one for the people");
+  assert.match(calls[1].prompt, /short white hair/);
+  assert.strictEqual(out.refs.length, 2, "both sheets travel as references to every page");
+  assert.ok(Math.abs(out.costUsd - 0.068) < 1e-9);
+});
+
+test("with nobody declared there is no second sheet and no second cost", async () => {
+  const calls = [];
+  const generateImage = async (args) => { calls.push(args); return { buffer: PNG, costUsd: 0.034, model: "m" }; };
+  const out = await buildSheet({ appearance: "a child", outfit: "a coat", companion: null, people: [] }, { generateImage });
+  assert.strictEqual(calls.length, 1);
+  assert.strictEqual(out.refs.length, 1);
+});
+
+test("the page prompt names the people by their sheet description, not by relation", async () => {
+  const seen = [];
+  const generateImage = async (args) => { seen.push(args.prompt); return { buffer: PNG, costUsd: 0.03, model: "m" }; };
+  const story = {
+    character_sheet: { appearance: "a child", outfit: "a coat", companion: null, people: ["a woman in her seventies, short white hair, blue cardigan"] },
+    pages: [{ image_hint: "the kitchen at dawn" }],
+  };
+  await renderPages(story, [PNG, PNG], { indices: [0], verify: false }, { generateImage });
+  assert.match(seen[0], /short white hair/, "the look must travel with every page");
+  assert.match(seen[0], /identical/i);
+});

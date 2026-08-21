@@ -3,6 +3,14 @@ const assert = require("node:assert");
 const { validateStory } = require("../lib/validate-story.js");
 const valid = require("./fixtures/story-valid.json");
 
+/** The fixture, with {{PERSONA1}} given a real role on two pages. */
+function withPeople(story, n) {
+  const s = JSON.parse(JSON.stringify(story));
+  if (n >= 1) for (const i of [3, 6]) s.pages[i].text = s.pages[i].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
+  return s;
+}
+
+
 const clone = () => JSON.parse(JSON.stringify(valid));
 const joined = (story) => validateStory(story).errors.join(" | ");
 
@@ -228,6 +236,7 @@ test("a declared person must appear on at least 2 pages", () => {
   s.pages[3].text = s.pages[3].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
   assert.match(validateStory(s, { people: 1 }).errors.join(" | "), /found on 1/);
   s.pages[6].text = s.pages[6].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
+  s.character_sheet.people = ["a woman in her seventies, short white hair, round glasses, blue cardigan"];
   assert.deepStrictEqual(validateStory(s, { people: 1 }).errors, []);
 });
 
@@ -236,6 +245,10 @@ test("two people: both are required, a third is unknown", () => {
   // pages 5 and 11 of the fixture have no {{NOMBRE}}; pick pages that do
   for (const i of [3, 6]) s.pages[i].text = s.pages[i].text.replace("{{NOMBRE}}", "{{PERSONA1}}");
   for (const i of [7, 8]) s.pages[i].text = s.pages[i].text.replace("{{NOMBRE}}", "{{PERSONA2}}");
+  s.character_sheet.people = [
+    "a woman in her seventies, short white hair, round glasses, blue cardigan",
+    "a boy of about four, straight dark hair, striped green jumper",
+  ];
   assert.deepStrictEqual(validateStory(s, { people: 2 }).errors, []);
   s.pages[9].text = s.pages[9].text.replace("{{NOMBRE}}", "{{PERSONA3}}");
   assert.match(validateStory(s, { people: 2 }).errors.join(" | "), /unknown placeholder \{\{PERSONA3\}\}/);
@@ -245,4 +258,26 @@ test("{{AMIGO}} is no longer a valid placeholder", () => {
   const s = clone();
   s.pages[2].text = s.pages[2].text.replace("{{NOMBRE}}", "{{AMIGO}}");
   assert.match(validateStory(s, { people: 1 }).errors.join(" | "), /unknown placeholder \{\{AMIGO\}\}/);
+});
+
+// The protagonist was consistent across pages because a character sheet fixed
+// them. The grandmother was not: she was re-invented in every scene. The sheet
+// has to cover everyone who appears.
+test("a declared person needs a description on the sheet, or nobody can draw them twice", () => {
+  const s = JSON.parse(JSON.stringify(valid));
+  s.character_sheet.people = [];
+  const one = validateStory(withPeople(s, 1), { people: 1 });
+  assert.ok(!one.ok);
+  assert.ok(one.errors.some((e) => /character_sheet\.people/.test(e)), one.errors.join(" | "));
+
+  s.character_sheet.people = ["a woman in her seventies, short white hair, round glasses, blue cardigan"];
+  assert.deepStrictEqual(validateStory(withPeople(s, 1), { people: 1 }).errors, []);
+});
+
+test("the sheet must not describe people who were never declared", () => {
+  const s = JSON.parse(JSON.stringify(valid));
+  s.character_sheet.people = ["a woman in her seventies with short white hair and a blue cardigan"];
+  const v = validateStory(s, { people: 0 });
+  assert.ok(!v.ok);
+  assert.ok(v.errors.some((e) => /character_sheet\.people/.test(e)));
 });

@@ -136,3 +136,12 @@ test("the finished book stays well under Etsy's 20 MB limit", async () => {
   const mb = pdf.length / 1024 / 1024;
   assert.ok(mb < 12, `the book is ${mb.toFixed(1)} MB`);
 });
+
+// The illustration bled to the top edge with no air above it, and the page
+// read as unbalanced. It sits inside a margin now, like a plate on a page.
+test("the illustration is inset from the page edges, not bled to the top", async () => {
+  const { ART_BOX } = require("../lib/pdf.js");
+  assert.ok(ART_BOX.top > 0, "there must be air above the illustration");
+  assert.ok(ART_BOX.x > 0, "and a margin at the sides");
+  assert.ok(ART_BOX.top + ART_BOX.height < PAGE_PT, "the art must not reach the bottom either");
+});

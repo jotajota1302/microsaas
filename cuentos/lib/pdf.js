@@ -25,7 +25,19 @@ const C = require("./collection.js");
 const MM = 72 / 25.4;
 const PAGE_PT = 200 * MM; // 20 cm
 const SAFE_PT = 10 * MM; // text margin
-const ART_RATIO = 0.58; // share of the page the illustration takes
+const ART_RATIO = 0.58; // share of the page height the illustration takes
+
+/**
+ * Where the illustration sits on a scene page. Inset on all four sides: the
+ * art used to bleed to the top edge, which read as unbalanced against the
+ * text resting on a margin below.
+ */
+const ART_BOX = {
+  x: SAFE_PT,
+  top: SAFE_PT,
+  width: PAGE_PT - 2 * SAFE_PT,
+  height: PAGE_PT * ART_RATIO - SAFE_PT,
+};
 
 const FONT_DIR = path.join(__dirname, "..", "assets", "fonts");
 const ROOT = path.join(__dirname, "..");
@@ -35,6 +47,7 @@ const INK = rgb(0.16, 0.15, 0.19);
 const PAPER = rgb(0.99, 0.98, 0.95);
 const MUTED = rgb(0.45, 0.44, 0.48);
 const TINT = rgb(0.89, 0.93, 0.91);
+const HAIR = rgb(0.886, 0.863, 0.812); // the same hairline as the web
 
 const PLACEHOLDERS = {
   "{{NOMBRE}}": (p) => {
@@ -183,9 +196,12 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
 
   const margin = SAFE_PT;
   const textWidth = PAGE_PT - 2 * margin;
-  const artBox = { x: 0, y: PAGE_PT * (1 - ART_RATIO), width: PAGE_PT, height: PAGE_PT * ART_RATIO };
-  const textTop = artBox.y - 22;
-  const textBoxHeight = artBox.y - margin - 30;
+  // The illustration sits inside a margin, like a plate on a page, instead of
+  // bleeding to the top edge: bled, the page read as if the art had slipped
+  // upwards and the whole spread felt off balance.
+  const artBox = { x: ART_BOX.x, y: PAGE_PT - ART_BOX.top - ART_BOX.height, width: ART_BOX.width, height: ART_BOX.height };
+  const textTop = artBox.y - 24;
+  const textBoxHeight = artBox.y - margin - 26;
 
   // --- 1. title page ---------------------------------------------------------
   {
@@ -218,6 +234,8 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
     const buffer = illustrationBuffer(images[i]);
     if (buffer) {
       drawCover(page, await embedImage(doc, await cropToBox(buffer, artBox)), artBox);
+      // A hairline keeps the plate from floating loose on the paper.
+      page.drawRectangle({ ...artBox, borderColor: HAIR, borderWidth: 0.5, opacity: 0 });
     } else {
       page.drawRectangle({ ...artBox, color: TINT });
     }
@@ -278,4 +296,4 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   return Buffer.from(await doc.save());
 }
 
-module.exports = { renderPdf, substitute, wrap, fitSize, MM, PAGE_PT, SAFE_PT, ART_RATIO, MODES };
+module.exports = { renderPdf, substitute, wrap, fitSize, MM, PAGE_PT, SAFE_PT, ART_RATIO, ART_BOX, MODES };
