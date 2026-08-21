@@ -98,7 +98,7 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="${home}">cuentos<small>${t.brand}</small></a>
+    <a class="brand-mark" href="${home}"><b>Cuentos</b><i></i><span>${t.brand}</span></a>
     <a class="lang" href="${alternate}">${t.otherLabel}</a>
   </header>
 

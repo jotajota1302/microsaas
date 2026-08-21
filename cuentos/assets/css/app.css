@@ -12,6 +12,8 @@
   --sea-soft: #E2EDE9;
   --ochre: #8A6410;
   --ochre-soft: #F2EBD8;
+  --gold: #C6A96A;
+  --ink-soft: #57524B;
   --alarm: #8C3B3B;
   --alarm-soft: #F4E3E1;
   --shadow: 0 1px 2px rgba(42, 39, 34, .06), 0 10px 28px -18px rgba(42, 39, 34, .3);
@@ -95,7 +97,7 @@ legend { font-family: Fraunces, Georgia, serif; font-weight: 600; padding: 0 .4r
 
 /* landing */
 .hero { display: grid; gap: 1.6rem; padding: 1rem 0 2rem; }
-@media (min-width: 52rem) { .hero { grid-template-columns: 1.1fr .9fr; align-items: center; gap: 3rem; } }
+@media (min-width: 52rem) { .hero { grid-template-columns: 1.05fr .95fr; align-items: center; gap: 3rem; } }
 .hero .lede { font-size: 1.2rem; color: var(--muted); max-width: 42ch; }
 .hero .lede b { color: var(--ink); font-weight: 500; }
 .price { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; }
@@ -119,7 +121,12 @@ legend { font-family: Fraunces, Georgia, serif; font-weight: 600; padding: 0 .4r
 .pg .txt p { font-size: 1.08rem; line-height: 1.7; max-width: 60ch; }
 .pg .n { position: absolute; right: 1rem; bottom: .55rem; font-size: .75rem; color: var(--muted); }
 .sheet { background: var(--surface); border: 1px solid var(--hair); border-radius: 14px; padding: .9rem; }
-.sheet img { width: 100%; border-radius: 10px; display: block; }
+.sheet img {
+  /* height:auto is not optional: without it the browser uses the literal
+     height attribute, and a 1100x614 illustration rendered at 329 wide was
+     stretched to 768 tall — object-fit:fill, the child at double height. */
+  width: 100%; height: auto; border-radius: 10px; display: block;
+}
 .sheet figcaption { font-size: .82rem; color: var(--muted); margin-top: .4rem; }
 
 /* viewer bar */
@@ -148,3 +155,116 @@ footer a { color: var(--muted); }
 .tile:hover img, .tile:focus-visible img { box-shadow: var(--shadow); transform: translateY(-2px); }
 .tile span { font-size: .92rem; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .tile img { transition: none; } }
+
+/* ── landing ─────────────────────────────────────────────────────────────
+   Only the marketing pages use these. The hero shows real book pages
+   (illustration over text) rather than a loose image: it is what the product
+   actually looks like, and it cannot be stretched by a wrong height attribute. */
+
+.wrap.wide { max-width: 68rem; }
+
+/* brand lockup: the name has to read as a name, not as a stray lowercase word */
+.brand-mark { display: flex; align-items: baseline; gap: .7rem; text-decoration: none; color: var(--ink); }
+.brand-mark b { font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 1.6rem; letter-spacing: -.02em; }
+.brand-mark i { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); align-self: center; flex: none; }
+.brand-mark span { font-family: Andika, sans-serif; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-style: normal; }
+/* .top sets a shorthand padding with zero sides, which wins over .wrap's when
+   the header is the wrap itself — put the gutters back. */
+.top.wrap { padding-left: clamp(1rem, 4vw, 2.5rem); padding-right: clamp(1rem, 4vw, 2.5rem); }
+.topnav { display: flex; align-items: center; gap: 1.5rem; font-size: .95rem; }
+.topnav a { color: var(--ink-soft); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.topnav .lang { color: var(--muted); border-left: 1px solid var(--hair); padding-left: 1.5rem; }
+
+.hero-lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 46ch; }
+.hero h1 { font-size: clamp(2.3rem, 5.2vw, 3.75rem); }
+.hero h1 em { font-style: normal; color: var(--sea); }
+.hero-buy { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+.hero-buy .price { display: flex; flex-direction: column; line-height: 1.25; }
+.hero-buy .price b { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; font-weight: 600; }
+.hero-buy .price span { font-size: .85rem; color: var(--muted); }
+
+.reassure { display: flex; gap: .7rem; align-items: flex-start; background: var(--sea-soft); border-radius: 12px; padding: .9rem 1.1rem; max-width: 32rem; font-size: .95rem; color: var(--sea-dark); }
+.reassure svg { flex: none; margin-top: .15rem; }
+
+/* the fanned stack of real book pages */
+.fan { position: relative; min-height: 27rem; }
+.fan .leaf { position: absolute; background: var(--surface); border: 1px solid var(--hair); border-radius: 16px; overflow: hidden; box-shadow: 0 22px 44px -26px rgba(42,39,34,.5); }
+.fan .leaf img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.fan .leaf p { font-family: Andika, ui-sans-serif, sans-serif; padding: .8rem 1rem 1.1rem; font-size: .74rem; line-height: 1.65; color: var(--ink-soft); }
+/* the leaves behind show illustration only: their text would be half-covered
+   by the front leaf, which reads as broken rather than as a stack */
+.fan .a p, .fan .b p { display: none; }
+.fan .a { left: 0; top: 1.8rem; width: 12.5rem; transform: rotate(-7deg); }
+.fan .b { right: 0; top: 0; width: 12.5rem; transform: rotate(6deg); }
+/* the front leaf spans the middle so the two behind it peek out on both
+   sides instead of burying one of them */
+.fan .c { left: 3.2rem; right: 3.2rem; top: 8.4rem; box-shadow: 0 34px 60px -30px rgba(42,39,34,.62); }
+.fan .c p { font-size: .82rem; padding: .95rem 1.15rem 1.2rem; }
+.fan figcaption { position: absolute; left: 3.2rem; right: 3.2rem; bottom: -.2rem; text-align: center; font-size: .8rem; color: var(--muted); }
+
+/* full-bleed band, for the section that has to stop the scroll */
+.band { background: var(--surface); border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); padding: 3.6rem 0 3.8rem; }
+.split { display: grid; gap: 2.4rem; align-items: center; }
+@media (min-width: 52rem) { .split { grid-template-columns: 1fr 1fr; gap: 3.4rem; } }
+
+/* the watercolour -> line-art pair */
+.pair { display: grid; grid-template-columns: 1fr 2rem 1fr; align-items: center; }
+.pair figure { margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+.pair img { width: 100%; height: 15rem; object-fit: cover; display: block; border-radius: 14px; border: 1px solid var(--hair); background: #fff; }
+.pair img.line { object-fit: contain; padding: .5rem; }
+.pair figcaption { font-size: .78rem; color: var(--muted); text-align: center; }
+.pair .arrow { display: grid; place-items: center; color: var(--gold); }
+
+.ticks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+.ticks li { display: flex; gap: .7rem; align-items: flex-start; font-size: .97rem; color: var(--ink-soft); }
+.ticks svg { flex: none; margin-top: .25rem; }
+
+/* numbered steps: the gold numeral is the only ornament */
+.step::before { color: var(--gold); }
+.step.last { background: #F3F8F6; border-color: #C9D9D4; }
+.step.last::before { color: var(--sea); }
+
+.tiles.strip { grid-template-columns: repeat(4, 1fr); }
+.tiles.strip img { aspect-ratio: 1 / 1; object-position: top; }
+
+.includes { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 2rem; }
+.includes div { display: flex; gap: .8rem; align-items: flex-start; }
+.includes b { font-family: Fraunces, Georgia, serif; color: var(--gold); font-size: 1.05rem; font-weight: 600; line-height: 1.55; }
+.includes p { font-size: .97rem; color: var(--ink-soft); }
+
+.dark { background: var(--ink); border-color: var(--ink); color: #EDE9DF; }
+.dark .eyebrow { color: #B9B2A6; }
+.dark p { color: #EDE9DF; }
+.dark .btn { background: var(--paper); color: var(--ink); justify-content: center; }
+.dark .btn:hover { background: #fff; }
+.dark small { color: #9A9285; text-align: center; font-size: .82rem; }
+
+.qa { display: grid; gap: 1rem 2.4rem; }
+@media (min-width: 46rem) { .qa { grid-template-columns: 1fr 1fr; } }
+.qa div { display: flex; flex-direction: column; gap: .35rem; border-top: 1px solid var(--hair); padding-top: 1.1rem; }
+.qa p { font-size: .95rem; color: var(--ink-soft); }
+
+@media (max-width: 51.99rem) {
+  .fan { min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .fan .leaf { position: static; width: auto; transform: none; }
+  .fan .a, .fan .b { display: none; }
+  .fan figcaption { position: static; width: auto; }
+  .pair { grid-template-columns: 1fr 1.6rem 1fr; }
+  .pair img { height: 11rem; }
+  .includes { grid-template-columns: 1fr; }
+  .tiles.strip { grid-template-columns: repeat(2, 1fr); }
+  .topnav { gap: 1rem; font-size: .9rem; }
+  .topnav .hide-s { display: none; }
+  .topnav .lang { border: 0; padding-left: 0; }
+}
+
+/* the landing's sample: three pages side by side instead of one column of
+   very wide ones — the wide wrapper made each page enormous */
+.book.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; }
+.book.trio > h3, .book.trio > p { grid-column: 1 / -1; margin: 0; }
+.book.trio > h3 { font-size: 1.2rem; }
+.book.trio .art.wide { aspect-ratio: 4 / 3; }
+.book.trio .txt { padding: .9rem 1.05rem 1rem; }
+.book.trio .txt p { font-size: .92rem; line-height: 1.7; }
+@media (max-width: 51.99rem) { .book.trio { grid-template-columns: 1fr; } }
