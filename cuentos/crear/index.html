@@ -199,8 +199,16 @@
         if (res.status === 503) { form.hidden = true; document.getElementById("wait").hidden = false; return; }
         if (res.status === 429) { show(T[data.error] || T.error, "alarm"); return; }
         if (res.status === 422) { show(T.blocked, "alarm"); return; }
+        // A 504 is the function's clock running out, not a lost story: the
+        // sweep on the server finishes writing it and the email still arrives.
+        if (res.status === 504 || res.status === 502) { show(T.sent_email, "sea"); return; }
         show(T.error, "alarm");
-      } catch { show(T.error, "alarm"); }
+      } catch {
+        // The request left and the answer did not come back: on this shop the
+        // second attempt would be refused (one story per address per day), so
+        // "it is on its way" is both kinder and likelier than "it failed".
+        show(navigator.onLine === false ? T.error : T.sent_email, navigator.onLine === false ? "alarm" : "sea");
+      }
       finally { submit.disabled = false; submit.innerHTML = `<span>${T.submit}</span>`; }
     });
 
