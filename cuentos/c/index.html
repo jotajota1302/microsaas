@@ -232,7 +232,20 @@
           <a href="/crear/${view.locale === "en" ? "?lang=en" : ""}">${T.other_story}</a>
         </p>`;
 
-      main.innerHTML = `
+      // While the book is being made there is nothing to decide and nothing to
+      // read: showing the twelve pages under a progress bar is just something
+      // to get lost in. The page holds still until it is finished.
+      main.innerHTML = making()
+        ? `
+        ${railHtml()}
+        <div class="stack">
+          <h1>${esc(view.title)}</h1>
+          <p class="muted story-text"><em>${esc(view.dedication)}</em></p>
+        </div>
+        ${actions}
+        ${sheet}
+        ${escape}`
+        : `
         ${railHtml()}
         <div class="stack">
           <h1>${esc(view.title)}</h1>
