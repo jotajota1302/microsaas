@@ -22,6 +22,9 @@ const CLOSED = {
   tone: ids(C.TONES),
 };
 const RELATION_IDS = ids(C.RELATIONS);
+const PERSON_AGE_IDS = ids(C.PERSON_AGES);
+const ADULT_RELATIONS = new Set(C.RELATIONS.filter((r) => r.adult).map((r) => r.id));
+const MAX_NOTES = 300;
 const REQUIRED = ["gender", "ageBand", "hairColor", "hairType", "skin", "hobby", "theme", "moment", "tone"];
 
 function validateOrderInput(body) {
@@ -51,13 +54,22 @@ function validateOrderInput(body) {
         const pname = String((x && x.name) || "").trim();
         if (!pname) errors.push(`people[${i}].name: required`);
         if (!x || !RELATION_IDS.has(x.relation)) errors.push(`people[${i}].relation: not one of the allowed options`);
-        if (x && x.ageBand != null && !CLOSED.ageBand.has(x.ageBand)) errors.push(`people[${i}].ageBand: not one of the allowed options`);
-        people.push({ name: pname, relation: x && x.relation, ageBand: (x && x.ageBand) || null });
+        // An adult has no age band: offering one is the form contradicting
+        // itself, and the prompt would repeat the contradiction.
+        const age = (x && x.ageBand) || null;
+        if (age != null && ADULT_RELATIONS.has(x.relation)) errors.push(`people[${i}].ageBand: adults are not given an age`);
+        else if (age != null && !PERSON_AGE_IDS.has(age)) errors.push(`people[${i}].ageBand: not one of the allowed options`);
+        people.push({ name: pname, relation: x && x.relation, ageBand: ADULT_RELATIONS.has(x && x.relation) ? null : age });
       });
     }
   }
 
   const dedication = p.dedication == null ? "" : String(p.dedication).trim();
+
+  // One free line for whatever the closed lists could not hold ("le da miedo
+  // el ascensor"). Bounded here, moderated like the dedication afterwards.
+  const notes = p.notes == null ? "" : String(p.notes).trim();
+  if (notes.length > MAX_NOTES) errors.push(`notes: at most ${MAX_NOTES} characters`);
 
   return {
     ok: errors.length === 0,
@@ -78,6 +90,7 @@ function validateOrderInput(body) {
       moment: p.moment,
       tone: p.tone,
       people,
+      notes,
       dedication,
       locale,
     },

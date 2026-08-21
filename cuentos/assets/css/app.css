@@ -268,3 +268,115 @@ footer a { color: var(--muted); }
 .book.trio .txt { padding: .9rem 1.05rem 1rem; }
 .book.trio .txt p { font-size: .92rem; line-height: 1.7; }
 @media (max-width: 51.99rem) { .book.trio { grid-template-columns: 1fr; } }
+
+/* ── the viewer's funnel ─────────────────────────────────────────────────
+   Three steps, always visible: what you already have, where you are, and what
+   the next one gives you. The stage pill in the bar was too quiet to answer
+   "why has nothing been drawn yet?". */
+
+.rail { list-style: none; margin: 0 0 .5rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; counter-reset: none; }
+.rail li {
+  display: flex; flex-direction: column; gap: .18rem; position: relative;
+  background: var(--surface); border: 1px solid var(--hair); border-radius: 14px;
+  padding: .85rem 1rem .95rem 2.6rem;
+}
+.rail .rail-n {
+  position: absolute; left: .85rem; top: .9rem;
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  display: grid; place-items: center; font-size: .78rem; font-weight: 700;
+  background: var(--sunken); color: var(--muted);
+}
+.rail .rail-b { font-family: Andika, sans-serif; font-size: .64rem; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); }
+.rail b { font-family: Fraunces, Georgia, serif; font-size: 1rem; font-weight: 600; }
+.rail .rail-note { font-size: .8rem; color: var(--muted); }
+
+.rail li.now { border-color: var(--sea); background: var(--sea-soft); }
+.rail li.now .rail-n { background: var(--sea); color: #fff; }
+.rail li.now .rail-b { color: var(--sea-dark); }
+.rail li.done .rail-n { background: var(--gold); color: #fff; }
+.rail li.done b, .rail li.done .rail-note { color: var(--muted); }
+.rail li.next { opacity: .72; }
+
+/* a drawn page should look different from one that is still waiting */
+.pg.drawn { border-color: #C9D9D4; box-shadow: var(--shadow); }
+.book.showcase { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+
+.nodraw { border-style: dashed; background: transparent; box-shadow: none; }
+.nodraw h2 { font-size: 1.15rem; }
+
+/* the offer, right under the pages it is selling */
+.buy { border-color: var(--sea); box-shadow: 0 18px 40px -28px rgba(46,110,99,.7); }
+.buy-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.buy-price { font-family: Fraunces, Georgia, serif; font-size: 1.7rem; font-weight: 600; color: var(--sea-dark); }
+.buy .ticks { font-size: .95rem; }
+.buy .ticks svg { color: var(--sea); }
+
+@media (max-width: 46rem) {
+  .rail { grid-template-columns: 1fr; gap: .5rem; }
+  .rail li { padding: .7rem .9rem .75rem 2.5rem; }
+  .rail .rail-n { top: .75rem; }
+  .book.showcase { grid-template-columns: 1fr; }
+}
+
+.escape { font-size: .85rem; text-align: center; border-top: 1px solid var(--hair); padding-top: 1.2rem; margin-top: .5rem; }
+
+/* ── operations panel ────────────────────────────────────────────────────
+   Not customer-facing, but it is the tool the shop is run from: what is
+   connected, how the funnel converts, what it cost. */
+
+#panel { display: flex; flex-direction: column; gap: 2.6rem; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .7rem; }
+.check { display: flex; gap: .7rem; align-items: flex-start; background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: .8rem .95rem; }
+.check .dot { width: .6rem; height: .6rem; border-radius: 50%; margin-top: .45rem; flex: none; background: var(--muted); }
+.check.ok .dot { background: #2E8B57; }
+.check.bad .dot { background: var(--alarm); }
+.check.bad { border-color: #E4CFCC; background: var(--alarm-soft); }
+.check.off { opacity: .65; }
+.check div { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+.check b { font-size: .95rem; }
+.check span { font-size: .82rem; color: var(--muted); }
+.check code { font-size: .72rem; margin-top: .25rem; background: rgba(255,255,255,.6); padding: .12rem .35rem; border-radius: 4px; word-break: break-word; }
+
+.tabs { display: inline-flex; gap: .2rem; background: var(--sunken); border-radius: 999px; padding: .2rem; }
+.tabs button { border: 0; background: transparent; font: inherit; font-size: .88rem; color: var(--muted); padding: .35rem .9rem; border-radius: 999px; cursor: pointer; }
+.tabs button.on { background: var(--sea); color: #fff; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .7rem; }
+.kpi { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: .85rem 1rem; display: flex; flex-direction: column; gap: .1rem; }
+.kpi span { font-size: .78rem; color: var(--muted); }
+.kpi b { font-family: Fraunces, Georgia, serif; font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi small { font-size: .74rem; color: var(--muted); }
+
+.funnel { display: flex; flex-direction: column; gap: .45rem; }
+.fbar { display: grid; grid-template-columns: 11rem 1fr 2.5rem; gap: .8rem; align-items: center; font-size: .9rem; }
+.fbar .track { background: var(--sunken); border-radius: 999px; height: .8rem; overflow: hidden; }
+.fbar .track i { display: block; height: 100%; background: var(--sea); border-radius: 999px; }
+.fbar b { text-align: right; font-variant-numeric: tabular-nums; }
+
+.pill { background: var(--sunken); color: var(--muted); border-radius: 999px; padding: .1rem .55rem; font-size: .78rem; font-family: Karla, sans-serif; font-weight: 400; vertical-align: middle; }
+.tag { font-size: .78rem; border-radius: 999px; padding: .15rem .55rem; white-space: nowrap; }
+.tag.good { background: #E3F0E8; color: #245C3A; }
+.tag.warn { background: var(--ochre-soft); color: var(--ochre); }
+.tag.bad { background: var(--alarm-soft); color: var(--alarm); }
+.tag.wait { background: var(--sea-soft); color: var(--sea-dark); }
+.tag.off { background: var(--sunken); color: var(--muted); }
+
+.tablewrap { overflow-x: auto; }
+#recent { width: 100%; border-collapse: collapse; font-size: .88rem; }
+#recent td { border-bottom: 1px solid var(--hair); padding: .55rem .7rem; vertical-align: top; white-space: nowrap; }
+#recent tr:last-child td { border-bottom: 0; }
+#recent code { font-size: .74rem; }
+
+.item .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .5rem; }
+.item .thumbs figure { margin: 0; }
+.item .thumbs img { width: 100%; border-radius: 8px; border: 1px solid var(--hair); display: block; }
+.item .thumbs figcaption { font-size: .7rem; color: var(--muted); }
+.item pre { white-space: pre-wrap; font-size: .78rem; background: var(--sunken); padding: .7rem; border-radius: 8px; max-height: 14rem; overflow: auto; }
+.item summary { cursor: pointer; font-size: .9rem; color: var(--sea); }
+
+dialog { border: 1px solid var(--hair); border-radius: 16px; padding: 1.4rem 1.5rem; background: var(--surface); color: var(--ink); box-shadow: 0 30px 60px -30px rgba(42,39,34,.6); }
+dialog::backdrop { background: rgba(42,39,34,.35); }
+dialog h3 { font-size: 1.15rem; }
+dialog input { font: inherit; padding: .6rem .7rem; border: 1px solid var(--hair); border-radius: 8px; background: var(--paper); }
+
+@media (max-width: 46rem) { .fbar { grid-template-columns: 8rem 1fr 2rem; font-size: .82rem; } }

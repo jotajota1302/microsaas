@@ -142,3 +142,42 @@ test("clean people names pass without a model call", async () => {
   const r = await checkInput({ name: "Ana", people: [{ relation: "abuela", name: "Carmen" }] }, { completeJson: never });
   assert.strictEqual(r.ok, true);
 });
+
+// The free note is free text a stranger typed: it gets the same treatment as
+// the dedication, or it becomes the way round the filter.
+test("checkInput holds the free note to the same rules as the dedication", async () => {
+  const never = async () => { throw new Error("the model must not be reached for an obvious refusal"); };
+  const base = { name: "Ana" };
+
+  const phone = await checkInput({ ...base, notes: "llamame al 600 123 456" }, { completeJson: never });
+  assert.strictEqual(phone.ok, false);
+  assert.match(phone.reason, /notes/);
+
+  const url = await checkInput({ ...base, notes: "mira en http://algo.com" }, { completeJson: never });
+  assert.strictEqual(url.ok, false);
+
+  const blocked = await checkInput({ ...base, notes: "le gusta jugar a matar bichos" }, { completeJson: never });
+  assert.strictEqual(blocked.ok, false);
+  assert.match(blocked.reason, /blocked word/);
+
+  const long = await checkInput({ ...base, notes: "x".repeat(400) }, { completeJson: never });
+  assert.strictEqual(long.ok, false);
+});
+
+test("a harmless note reaches the model together with the dedication", async () => {
+  let seen = null;
+  const spy = async (args) => { seen = args; return { data: { safe: true, reason: "" } }; };
+  const v = await checkInput({ name: "Ana", dedication: "Para Ana", notes: "le da miedo el ascensor" }, { completeJson: spy });
+  assert.strictEqual(v.ok, true);
+  const text = seen.messages.map((m) => m.content).join(" ");
+  assert.match(text, /Para Ana/);
+  assert.match(text, /ascensor/);
+});
+
+test("a note alone still gets judged when there is no dedication", async () => {
+  let called = 0;
+  const spy = async () => { called++; return { data: { safe: false, reason: "no" } }; };
+  const v = await checkInput({ name: "Ana", notes: "algo ambiguo" }, { completeJson: spy });
+  assert.strictEqual(called, 1);
+  assert.strictEqual(v.ok, false);
+});

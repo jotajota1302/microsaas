@@ -34,7 +34,8 @@ test("the prompt uses placeholders and never a real name", () => {
 test("people are described by relation and age, never by name", () => {
   const all = dump(INPUT);
   assert.match(all, /\{\{PERSONA1\}\}: su abuela/);
-  assert.match(all, /\{\{PERSONA2\}\}: su hermano \(niño de 3-5 años\)/);
+  // the age reads as words from the companion list, not as a raw band id
+  assert.match(all, /\{\{PERSONA2\}\}: su hermano \(3 a 5 años\)/);
 });
 
 test("a person is given as a name anyway? it is not accepted as input", () => {
@@ -102,7 +103,7 @@ test("gender rules: girl, boy, unstated", () => {
 });
 
 test("unknown options are rejected loudly instead of silently guessed", () => {
-  assert.throws(() => buildMessages({ ...INPUT, theme: "piratas" }), /unknown theme/);
+  assert.throws(() => buildMessages({ ...INPUT, theme: "no-existe" }), /unknown theme/);
   assert.throws(() => buildMessages({ ...INPUT, hobby: "esgrima" }), /unknown option/);
   assert.throws(() => buildMessages({ ...INPUT, moment: "boda" }), /unknown option/);
   assert.throws(() => buildMessages({ ...INPUT, tone: "triste" }), /unknown option/);

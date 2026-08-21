@@ -59,14 +59,37 @@
       return order.map((s) => `<span class="${s === stage ? "on" : ""}">${T["stage_" + s]}</span>`).join("");
     }
 
-    function pagesHtml() {
-      return view.pages.map((p) => `
-        <article class="pg">
+    function pageHtml(p) {
+      // The wait is different at each gate: saying "when you complete the story"
+      // during the script stage hides the free illustrated sample in between.
+      const waiting = view.stage === "script" ? T.later_script : T.later_sample;
+      return `
+        <article class="pg${p.image ? " drawn" : ""}">
           <div class="art ${p.image ? "" : "later"}">
-            ${p.image ? `<img src="${p.image}" alt="" loading="lazy">` : `<div class="veil"><span>${T.later}</span></div>`}
+            ${p.image ? `<img src="${p.image}" alt="" loading="lazy">` : `<div class="veil"><span>${waiting}</span></div>`}
           </div>
           <div class="txt story-text"><p>${esc(p.text)}</p><span class="n">${p.n}</span></div>
-        </article>`).join("");
+        </article>`;
+    }
+
+    function pagesHtml(pages) {
+      return (pages || view.pages).map(pageHtml).join("");
+    }
+
+    /** Where you are, what you already have, and what the next step gives you. */
+    function railHtml() {
+      const order = ["script", "sample", "full"];
+      const at = order.indexOf(view.stage);
+      return `<ol class="rail">` + order.map((s, i) => {
+        const state = i < at ? "done" : i === at ? "now" : "next";
+        const badge = i < at ? T.step_done : i === at ? T.step_now : T.step_next;
+        return `<li class="${state}">
+          <span class="rail-n">${i + 1}</span>
+          <span class="rail-b">${badge}</span>
+          <b>${T["rail_" + (i + 1) + "_title"]}</b>
+          <span class="rail-note">${T["rail_" + (i + 1) + "_note"]}</span>
+        </li>`;
+      }).join("") + `</ol>`;
     }
 
     function render() {
@@ -90,10 +113,15 @@
             <div id="amsg" class="note" hidden></div>
           </div>`;
       } else if (view.stage === "sample") {
+        const tick = (t) => `<li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>${t}</span></li>`;
         actions = `
-          <div class="card stack" id="actions">
-            <h2>${T.complete} — ${esc(view.price)}</h2>
+          <div class="card stack buy" id="actions">
+            <div class="buy-head">
+              <h2>${T.complete}</h2>
+              <span class="buy-price">${esc(view.price)}</span>
+            </div>
             <p class="muted">${T.complete_body}</p>
+            <ul class="ticks">${tick(T.complete_1)}${tick(T.complete_2)}${tick(T.complete_3)}${tick(T.complete_4)}</ul>
             ${view.etsyUrl
               ? `<div class="row"><a class="btn big" href="${view.etsyUrl}" target="_blank" rel="noopener">${T.buy_etsy}</a></div><p class="muted" style="font-size:.9rem">${T.etsy_code} <code>${view.token}</code></p>`
               : `<p class="note">${T.etsy_soon}</p>`}
@@ -115,17 +143,53 @@
         ? `<section class="stack"><h2>${T.coloring}</h2><div class="grid">${view.coloring.map((u) => `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="" style="width:100%;border:1px solid var(--hair);border-radius:10px;background:#fff"></a>`).join("")}</div></section>`
         : "";
 
+      // At the sample gate the two drawn pages lead and the offer sits right
+      // under them: that is the moment the buyer has just seen what they get.
+      const drawn = view.pages.filter((p) => p.image);
+      const showcase = view.stage === "sample" && drawn.length
+        ? `<section class="stack"><h2>${T.sample_here}</h2><div class="book showcase">${pagesHtml(drawn)}</div></section>`
+        : "";
+      const nodraw = view.stage === "script"
+        ? `<div class="card stack nodraw">
+             <h2>${T.script_nodraw_title}</h2>
+             <p class="muted">${T.script_nodraw_body}</p>
+           </div>`
+        : "";
+
+      // No step is a dead end. From the sample you can still spend a free
+      // rewrite and go back; from anywhere you can keep the link or start over.
+      const backOut = view.stage === "sample" && view.revisionsLeft
+        ? `<div class="card stack nodraw" id="backout">
+             <h3>${T.back_title}</h3>
+             <p class="muted">${T.back_body}</p>
+             <form id="changeForm" class="stack">
+               <textarea name="instruction" maxlength="200" minlength="3" required placeholder="${esc(T.change_placeholder)}"></textarea>
+               <div class="row"><button class="btn secondary">${T.back_btn}</button></div>
+             </form>
+             <div id="amsg" class="note" hidden></div>
+           </div>`
+        : "";
+      const escape = `<p class="muted escape">
+          ${T.keep_link} ${new Date(view.expiresAt).toLocaleDateString(view.locale === "en" ? "en-GB" : "es-ES", { day: "numeric", month: "long" })} ·
+          <a href="/crear/${view.locale === "en" ? "?lang=en" : ""}">${T.other_story}</a>
+        </p>`;
+
       main.innerHTML = `
+        ${railHtml()}
         <div class="stack">
           <h1>${esc(view.title)}</h1>
           <p class="muted story-text"><em>${esc(view.dedication)}</em></p>
           <p class="note sea">${intro}</p>
         </div>
-        ${actions}
         ${sheet}
+        ${showcase}
+        ${actions}
+        ${backOut}
+        ${nodraw}
         <div class="book">${pagesHtml()}</div>
         <p class="muted story-text"><b>${T.moral}:</b> ${esc(view.moral)}</p>
-        ${coloring}`;
+        ${coloring}
+        ${escape}`;
 
       bind();
     }
@@ -146,8 +210,13 @@
       };
       const changeBtn = document.getElementById("changeBtn");
       const changeForm = document.getElementById("changeForm");
+      // The toggle only exists at the script gate; at the sample gate the form
+      // is already open under the way-out card, so they bind separately.
       if (changeBtn && changeForm) {
         changeBtn.onclick = () => { changeForm.hidden = !changeForm.hidden; changeForm.querySelector("textarea").focus(); };
+      }
+      if (changeForm) {
+        const label = changeForm.querySelector("button").textContent;
         changeForm.onsubmit = async (e) => {
           e.preventDefault();
           const instruction = new FormData(changeForm).get("instruction");
@@ -155,7 +224,7 @@
           const res = await fetch("/api/revise", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, instruction }) });
           if (res.ok) return load();
           say(res.status === 422 ? T.blocked : T.error, "alarm");
-          b.disabled = false; b.textContent = T.change_send;
+          b.disabled = false; b.textContent = label;
         };
       }
       const printBtn = document.getElementById("printBtn");

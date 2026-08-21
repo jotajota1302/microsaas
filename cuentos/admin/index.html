@@ -3,99 +3,281 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cola de revisión — cuentos</title>
+<title>Panel — Cuentos</title>
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Karla:wght@400;500;700&family=Andika:wght@400;700&display=swap">
 <link rel="stylesheet" href="/assets/css/app.css">
-<style>
-  .item { border: 1px solid var(--hair); border-radius: 14px; background: #fff; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .8rem; }
-  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .5rem; }
-  .thumbs figure { margin: 0; }
-  .thumbs img { width: 100%; border-radius: 8px; border: 1px solid var(--hair); }
-  .thumbs figcaption { font-size: .7rem; color: var(--muted); }
-  pre { white-space: pre-wrap; font-size: .75rem; background: var(--sunken); padding: .6rem; border-radius: 8px; max-height: 12rem; overflow: auto; }
-  code { background: var(--sunken); padding: .05rem .3rem; border-radius: 4px; }
-</style>
 </head>
 <body>
-<div class="wrap stack-lg">
-  <header class="top"><a class="brand-mark" href="/"><b>Cuentos</b><i></i><span>cola de revisión</span></a></header>
-  <form id="auth" class="row">
-    <input type="password" id="tok" placeholder="ADMIN_TOKEN" style="max-width:22rem">
-    <button class="btn">Entrar</button>
-    <button type="button" class="btn secondary" id="reload">Recargar</button>
-  </form>
-  <form id="paid" class="card stack">
-    <h3>Marcar pagado (Etsy o manual)</h3>
+<div class="wrap wide stack-lg" style="padding-bottom:4rem">
+
+  <header class="top">
+    <a class="brand-mark" href="/"><b>Cuentos</b><i></i><span>panel de operaciones</span></a>
+    <nav class="topnav">
+      <span class="muted" id="clock"></span>
+      <button class="btn ghost" id="reload" type="button">Actualizar</button>
+    </nav>
+  </header>
+
+  <form id="auth" class="card stack" style="max-width:32rem">
+    <h2>Entrar</h2>
+    <p class="muted" style="font-size:.9rem">El token está en <code>ADMIN_TOKEN</code>, en el <code>.env</code> del proyecto (o en las variables de Vercel).</p>
     <div class="row">
-      <input type="text" id="paidToken" placeholder="token del cuento (22 caracteres)" style="max-width:22rem">
-      <input type="text" id="paidRef" placeholder="referencia del pedido" style="max-width:16rem">
-      <select id="paidProvider"><option value="etsy">etsy</option><option value="manual">manual</option><option value="stripe">stripe</option></select>
-      <button class="btn">Pagado → ilustrar el resto</button>
+      <input type="password" id="tok" placeholder="ADMIN_TOKEN" autocomplete="off" style="flex:1;min-width:14rem">
+      <button class="btn">Entrar</button>
     </div>
-    <p class="muted" style="font-size:.85rem" id="paidMsg"></p>
+    <p class="note alarm" id="authMsg" hidden></p>
   </form>
-  <div id="list" class="stack"></div>
+
+  <div id="panel" hidden>
+    <section class="stack">
+      <h2>Integraciones</h2>
+      <p class="muted" id="healthLine"></p>
+      <div class="checks" id="health"></div>
+    </section>
+
+    <section class="stack">
+      <h2>El embudo</h2>
+      <div class="tabs" id="range">
+        <button class="on" data-r="today" type="button">Hoy</button>
+        <button data-r="week" type="button">7 días</button>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="funnel" id="funnel"></div>
+    </section>
+
+    <section class="stack">
+      <h2>Registrar un cobro</h2>
+      <p class="muted" style="font-size:.92rem">Marca un cuento como pagado y dispara la generación del libro completo. Es lo que hará el webhook de Stripe cuando esté conectado.</p>
+      <form id="paid" class="card stack">
+        <div class="row">
+          <input type="text" id="paidToken" placeholder="token del cuento (22 caracteres)" style="flex:2 1 15rem">
+          <input type="text" id="paidRef" placeholder="referencia del pedido" style="flex:1 1 9rem">
+          <select id="paidProvider"><option value="etsy">Etsy</option><option value="stripe">Stripe</option><option value="manual">Manual</option></select>
+          <button class="btn">Pagado → generar el libro</button>
+        </div>
+        <p class="note" id="paidMsg" hidden></p>
+      </form>
+    </section>
+
+    <section class="stack">
+      <h2>Necesita tu revisión <span class="pill" id="queueCount">0</span></h2>
+      <div id="list" class="stack"></div>
+    </section>
+
+    <section class="stack">
+      <h2>Últimos pedidos</h2>
+      <div class="tablewrap"><table id="recent"><tbody></tbody></table></div>
+    </section>
+  </div>
 </div>
+
+<dialog id="dlg">
+  <form method="dialog" class="stack" style="min-width:min(26rem,88vw)">
+    <h3 id="dlgTitle">Retocar páginas</h3>
+    <p class="muted" style="font-size:.92rem" id="dlgBody"></p>
+    <input type="text" id="dlgInput" placeholder="1, 4, 9" style="width:100%">
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn secondary" value="cancel">Cancelar</button>
+      <button class="btn" value="ok" id="dlgOk">Aceptar</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const eur = (n) => (Number(n) || 0).toFixed(2).replace(".", ",") + " €";
+  const eur4 = (n) => (Number(n) || 0).toFixed(4).replace(".", ",") + " €";
+  const pct = (n) => String(Number(n) || 0).replace(".", ",") + " %";
+  const when = (iso) => new Date(iso).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
   const tok = () => localStorage.getItem("cuentos_admin") || "";
   const headers = () => ({ Authorization: "Bearer " + tok(), "Content-Type": "application/json" });
-  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let data = null, range = "today";
 
-  $("auth").onsubmit = (e) => { e.preventDefault(); localStorage.setItem("cuentos_admin", $("tok").value); load(); };
+  $("auth").onsubmit = (e) => { e.preventDefault(); localStorage.setItem("cuentos_admin", $("tok").value.trim()); load(); };
   $("reload").onclick = load;
+  $("range").onclick = (e) => {
+    const b = e.target.closest("button[data-r]");
+    if (!b) return;
+    range = b.dataset.r;
+    [...$("range").children].forEach((x) => x.classList.toggle("on", x === b));
+    if (data) renderStats();
+  };
+
+  const STATUS = {
+    script: ["Leyendo el guion", "wait"], sample: ["Vio la muestra", "wait"],
+    paid: ["Pagado", "good"], needs_review: ["Esperando revisión", "warn"],
+    delivered: ["Entregado", "good"], refunded: ["Devuelto", "bad"],
+    failed: ["Falló", "bad"], expired: ["Caducado", "off"],
+  };
+
+  function renderHealth() {
+    const h = data.overview.health;
+    $("healthLine").innerHTML = h.ready
+      ? "Todo lo necesario está conectado."
+      : `Faltan <b>${h.missing.length}</b> para poder vender. Cada una se activa poniendo su variable en el <code>.env</code> y en Vercel.`;
+    $("health").innerHTML = h.items.map((i) => `
+      <div class="check ${i.ok ? "ok" : i.required ? "bad" : "off"}">
+        <span class="dot"></span>
+        <div>
+          <b>${esc(i.name)}</b>
+          <span>${esc(i.detail)}</span>
+          ${i.ok ? "" : `<code>${esc(i.hint)}</code>`}
+        </div>
+      </div>`).join("");
+  }
+
+  function renderStats() {
+    const d = data.overview[range];
+    const f = d.funnel, e = d.economics;
+    const caps = data.overview.caps;
+    $("kpis").innerHTML = [
+      ["Cuentos empezados", f.scripts, `tope diario ${caps.scriptsPerDay}`],
+      ["Llegaron a la muestra", f.samples, pct(f.scriptToSample) + " de los guiones"],
+      ["Pagados", f.paid, pct(f.sampleToPaid) + " de las muestras"],
+      ["Gasto de IA", eur(e.costEur), e.costPerOrderEur ? eur4(e.costPerOrderEur) + " por cuento" : "—"],
+      ["Margen", eur(e.marginEur), e.sold ? `${e.sold} venta(s), comisión ${eur(e.feeEur)}` : "sin ventas todavía"],
+    ].map(([k, v, note]) => `<div class="kpi"><span>${k}</span><b>${v}</b><small>${esc(note)}</small></div>`).join("");
+
+    const max = Math.max(f.scripts, 1);
+    $("funnel").innerHTML = [
+      ["1 · Guion (gratis)", f.scripts], ["2 · Muestra (gratis)", f.samples], ["3 · Pagado", f.paid], ["Entregado", f.delivered],
+    ].map(([label, n]) => `
+      <div class="fbar">
+        <span>${label}</span>
+        <div class="track"><i style="width:${Math.round((n / max) * 100)}%"></i></div>
+        <b>${n}</b>
+      </div>`).join("") +
+      (f.expired + f.failed ? `<p class="muted" style="font-size:.88rem">${f.expired} caducados · ${f.failed} fallidos</p>` : "");
+  }
+
+  function renderQueue() {
+    const items = data.items || [];
+    $("queueCount").textContent = items.length;
+    $("list").innerHTML = items.length ? items.map(({ job, order, story }) => `
+      <div class="card stack item">
+        <div class="row" style="justify-content:space-between">
+          <div class="row" style="gap:.6rem">
+            <span class="pill">${esc(job.kind)}</span>
+            <b>${esc(story ? story.title : "(sin título)")}</b>
+            <span class="muted">${esc(order && order.email)}</span>
+          </div>
+          ${story ? `<a class="muted" href="/c/${story.token}" target="_blank" rel="noopener">ver como el cliente ↗</a>` : ""}
+        </div>
+        ${job.error ? `<p class="note ${/awaiting/.test(job.error) ? "sea" : "alarm"}" style="font-size:.88rem">${esc(job.error)}</p>` : ""}
+        ${story && story.sheet ? `<img src="${story.sheet}" alt="hoja de personaje" style="max-width:22rem;border-radius:10px;border:1px solid var(--hair)">` : ""}
+        ${story ? `<div class="thumbs">${story.pages.filter((p) => p.image).map((p) => `<figure><img src="${p.image}" alt=""><figcaption>${p.n}</figcaption></figure>`).join("")}${(story.coloring || []).map((u, i) => `<figure><img src="${u}" alt="" style="background:#fff"><figcaption>colorear ${i + 1}</figcaption></figure>`).join("")}</div>` : ""}
+        ${story ? `<details><summary>Leer el texto</summary><pre>${story.pages.map((p) => p.n + ". " + esc(p.text)).join("\n\n")}</pre></details>` : ""}
+        <details><summary>Pasos del trabajo (${(job.costCents || 0)} cts)</summary><pre>${esc(JSON.stringify(job.steps, null, 1))}</pre></details>
+        <div class="row">
+          <button class="btn" data-a="approve" data-j="${job.id}">Aprobar y entregar</button>
+          <button class="btn secondary" data-a="retry" data-j="${job.id}">Reintentar</button>
+          ${story && story.pdf ? `<a class="btn secondary" href="${story.pdf}" target="_blank" rel="noopener">Ver PDF</a>` : ""}
+          ${story ? `<button class="btn ghost" data-a="retouch" data-t="${story.token}">Retocar páginas…</button>` : ""}
+        </div>
+      </div>`).join("") : `<p class="muted">Nada esperando. Todo entregado.</p>`;
+
+    $("list").querySelectorAll("button[data-a]").forEach((b) => b.onclick = () => onAction(b));
+  }
+
+  function renderRecent() {
+    const rows = data.recent || [];
+    $("recent").querySelector("tbody").innerHTML = rows.length ? rows.map((o) => {
+      const [label, cls] = STATUS[o.status] || [o.status, "off"];
+      return `<tr>
+        <td class="muted">${when(o.createdAt)}</td>
+        <td>${esc(o.email)}</td>
+        <td><span class="tag ${cls}">${label}</span></td>
+        <td class="muted">${esc(o.channel || "web")} · ${esc(o.locale)}</td>
+        <td>${o.story ? `<a href="/c/${o.story.token}" target="_blank" rel="noopener">${esc(o.story.title || o.story.token)}</a>` : `<span class="muted">—</span>`}</td>
+        <td class="muted">${o.story ? o.story.revisions + " cambios" : ""}</td>
+        <td><code>${o.story ? o.story.token : ""}</code></td>
+      </tr>`;
+    }).join("") : `<tr><td class="muted">Todavía no hay pedidos.</td></tr>`;
+  }
+
+  async function onAction(b) {
+    const a = b.dataset.a;
+    if (a === "retouch") {
+      const pages = await ask("Retocar páginas", "Números del 1 al 12, separados por comas. Máximo tres: cada una vuelve a dibujarse.", "1, 4, 9");
+      if (!pages) return;
+      return act({ action: "retouch", token: b.dataset.t, pages: pages.split(",").map((n) => Number(n.trim()) - 1) });
+    }
+    if (a === "approve" && !(await confirmDlg("Aprobar y entregar", "Se marca como entregado y sale el correo con el enlace al libro."))) return;
+    act({ action: a, jobId: b.dataset.j });
+  }
+
+  function ask(title, body, placeholder) {
+    return new Promise((resolve) => {
+      const d = $("dlg");
+      $("dlgTitle").textContent = title; $("dlgBody").textContent = body;
+      $("dlgInput").hidden = false; $("dlgInput").value = ""; $("dlgInput").placeholder = placeholder || "";
+      d.returnValue = "";
+      d.showModal();
+      d.onclose = () => resolve(d.returnValue === "ok" ? $("dlgInput").value.trim() : null);
+    });
+  }
+  function confirmDlg(title, body) {
+    return new Promise((resolve) => {
+      const d = $("dlg");
+      $("dlgTitle").textContent = title; $("dlgBody").textContent = body;
+      $("dlgInput").hidden = true;
+      d.returnValue = "";
+      d.showModal();
+      d.onclose = () => resolve(d.returnValue === "ok");
+    });
+  }
+
+  function say(el, text, kind) {
+    el.hidden = false;
+    el.className = "note " + (kind || "");
+    el.textContent = text;
+  }
 
   async function act(body) {
-    const res = await fetch("/api/admin", { method: "POST", headers: headers(), body: JSON.stringify(body) });
-    const data = await res.json().catch(() => ({}));
-    alert(res.ok ? "OK: " + JSON.stringify(data) : "Error " + res.status + ": " + JSON.stringify(data));
+    const msg = $("paidMsg");
+    try {
+      const res = await fetch("/api/admin", { method: "POST", headers: headers(), body: JSON.stringify(body) });
+      const out = await res.json().catch(() => ({}));
+      say(msg, res.ok ? "Hecho: " + JSON.stringify(out) : `Error ${res.status}: ${JSON.stringify(out)}`, res.ok ? "sea" : "alarm");
+    } catch (e) {
+      say(msg, "No se pudo conectar: " + e.message, "alarm");
+    }
     load();
   }
 
   $("paid").onsubmit = (e) => {
     e.preventDefault();
-    act({ action: "mark_paid", token: $("paidToken").value.trim(), reference: $("paidRef").value.trim(), provider: $("paidProvider").value });
+    const token = $("paidToken").value.trim();
+    if (!/^[A-Za-z0-9_-]{22}$/.test(token)) return say($("paidMsg"), "Ese token no tiene la forma correcta (22 caracteres).", "alarm");
+    const b = $("paid").querySelector("button");
+    b.disabled = true; b.innerHTML = '<span class="spinner"></span> Generando el libro… un minuto';
+    act({ action: "mark_paid", token, reference: $("paidRef").value.trim(), provider: $("paidProvider").value })
+      .finally(() => { b.disabled = false; b.textContent = "Pagado → generar el libro"; });
   };
 
   async function load() {
-    const list = $("list");
-    list.innerHTML = "<p class='muted'>Cargando…</p>";
-    const res = await fetch("/api/admin", { headers: headers() });
-    if (!res.ok) { list.innerHTML = `<p class="note alarm">HTTP ${res.status}</p>`; return; }
-    const { items } = await res.json();
-    if (!items.length) { list.innerHTML = "<p class='muted'>Nada que revisar.</p>"; return; }
-    list.innerHTML = items.map(({ job, order, story }) => `
-      <div class="item">
-        <div class="row">
-          <b>${esc(job.kind)}</b> · <code>${esc(job.state)}</code> · ${(job.costCents || 0)} cts · ${esc(order && order.email)} · ${esc(order && order.status)}
-          ${story ? ` · <a href="/c/${story.token}" target="_blank">ver visor</a>` : ""}
-        </div>
-        ${job.error ? `<p class="note ${/awaiting/.test(job.error) ? "sea" : "alarm"}" style="font-size:.85rem">${esc(job.error)}</p>` : ""}
-        ${story ? `<p class="story-text"><b>${esc(story.title)}</b> — ${esc(story.dedication)}</p>` : ""}
-        ${story && story.sheet ? `<img src="${story.sheet}" style="max-width:24rem;border-radius:8px;border:1px solid var(--hair)">` : ""}
-        ${story ? `<div class="thumbs">${story.pages.map((p) => p.image ? `<figure><img src="${p.image}"><figcaption>${p.n}</figcaption></figure>` : "").join("")}${(story.coloring || []).map((u, i) => `<figure><img src="${u}"><figcaption>colorear ${i + 1}</figcaption></figure>`).join("")}</div>` : ""}
-        ${story ? `<details><summary>Texto</summary><pre>${story.pages.map((p) => p.n + ". " + esc(p.text)).join("\n\n")}</pre></details>` : ""}
-        <details><summary>Pasos</summary><pre>${esc(JSON.stringify(job.steps, null, 1))}</pre></details>
-        <div class="row">
-          <button class="btn" data-a="approve" data-j="${job.id}">Aprobar y entregar</button>
-          <button class="btn secondary" data-a="retry" data-j="${job.id}">Reintentar</button>
-          ${story && story.pdf ? `<a class="btn secondary" href="${story.pdf}" target="_blank">PDF</a>` : ""}
-          ${story ? `<button class="btn ghost" data-a="retouch" data-t="${story.token}">Retocar páginas…</button>` : ""}
-        </div>
-      </div>`).join("");
-    list.querySelectorAll("button[data-a]").forEach((b) => b.onclick = () => {
-      const a = b.dataset.a;
-      if (a === "retouch") {
-        const pages = prompt("Páginas a regenerar (números 1-12 separados por comas, máx. 3):");
-        if (!pages) return;
-        return act({ action: "retouch", token: b.dataset.t, pages: pages.split(",").map((n) => Number(n.trim()) - 1) });
+    if (!tok()) return;
+    try {
+      const res = await fetch("/api/admin", { headers: headers() });
+      if (!res.ok) {
+        $("panel").hidden = true; $("auth").hidden = false;
+        return say($("authMsg"), res.status === 401 ? "Ese token no es correcto." : res.status === 503 ? "Falta configurar el servidor (ADMIN_TOKEN o la base de datos)." : "Error " + res.status, "alarm");
       }
-      if (a === "approve" && !confirm("¿Aprobar y enviar el email de entrega?")) return;
-      act({ action: a, jobId: b.dataset.j });
-    });
+      data = await res.json();
+      $("auth").hidden = true; $("panel").hidden = false;
+      $("clock").textContent = "Actualizado a las " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+      renderHealth(); renderStats(); renderQueue(); renderRecent();
+    } catch (e) {
+      say($("authMsg"), "No se pudo conectar: " + e.message, "alarm");
+    }
   }
+
   if (tok()) load();
 })();
 </script>

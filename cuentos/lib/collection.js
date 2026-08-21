@@ -26,6 +26,16 @@ const THEMES = [
   { id: "dinosaurios", es: "Dinosaurios", en: "Dinosaurs", seed_idea: "a valley of gentle dinosaurs, a hatchling separated from its herd" },
   { id: "castillos", es: "Princesas y caballeros", en: "Princesses and knights", seed_idea: "a castle where nobody remembers how to be brave, a dragon who is simply cold" },
   { id: "futbol", es: "Fútbol", en: "Football", seed_idea: "a neighbourhood pitch, a match that cannot start because something is missing" },
+  { id: "montana", es: "La montaña", en: "The mountain", seed_idea: "a stone refuge above the clouds, a path that changes shape, a goat that knows the way" },
+  { id: "granja", es: "La granja", en: "The farm", seed_idea: "a farm at dawn, an animal that will not come out of the barn, a job nobody wants to do" },
+  { id: "ciudad", es: "Su barrio", en: "Their neighbourhood", seed_idea: "rooftops and balconies, a shopkeeper who knows everyone, something lost between two streets" },
+  { id: "circo", es: "El circo", en: "The circus", seed_idea: "a small travelling circus, a number that keeps going wrong, an act that needs one more pair of hands" },
+  { id: "piratas", es: "Piratas e islas", en: "Pirates and islands", seed_idea: "a crooked map, an island with two names, a crew that has forgotten how to agree" },
+  { id: "hielo", es: "El hielo", en: "The ice", seed_idea: "a white plain that creaks, a lamp in the long night, an animal following at a distance" },
+  { id: "jungla", es: "La selva", en: "The jungle", seed_idea: "green light under the canopy, a river that hums, a creature that copies every sound" },
+  { id: "fondomar", es: "El fondo del mar", en: "The deep sea", seed_idea: "a city of coral, a light that goes out every night, a shy creature that guards something" },
+  { id: "tren", es: "Un tren de noche", en: "A night train", seed_idea: "a sleeper train crossing the dark, a carriage that was not on the plan, a stop nobody announced" },
+  { id: "casa", es: "Dentro de su casa", en: "Inside their house", seed_idea: "the ordinary house turned enormous, under the beds and behind the wardrobes, something that only appears at night" },
 ];
 
 const PETS = [
@@ -88,16 +98,27 @@ const GENDERS = [
 // People the child can bring into the story. Only the relation travels to
 // the model; the name stays home as {{PERSONA1}} / {{PERSONA2}}.
 const RELATIONS = [
-  { id: "hermano", es: "Su hermano", en: "Brother", role: "su hermano" },
-  { id: "hermana", es: "Su hermana", en: "Sister", role: "su hermana" },
-  { id: "padre", es: "Su padre", en: "Father", role: "su padre" },
-  { id: "madre", es: "Su madre", en: "Mother", role: "su madre" },
-  { id: "abuelo", es: "Su abuelo", en: "Grandfather", role: "su abuelo" },
-  { id: "abuela", es: "Su abuela", en: "Grandmother", role: "su abuela" },
-  { id: "amigo", es: "Un amigo", en: "Friend (boy)", role: "su amigo" },
-  { id: "amiga", es: "Una amiga", en: "Friend (girl)", role: "su amiga" },
-  { id: "primo", es: "Su primo", en: "Cousin (boy)", role: "su primo" },
-  { id: "prima", es: "Su prima", en: "Cousin (girl)", role: "su prima" },
+  { id: "hermano", es: "Su hermano", en: "Brother", role: "su hermano", adult: false },
+  { id: "hermana", es: "Su hermana", en: "Sister", role: "su hermana", adult: false },
+  { id: "padre", es: "Su padre", en: "Father", role: "su padre", adult: true },
+  { id: "madre", es: "Su madre", en: "Mother", role: "su madre", adult: true },
+  { id: "abuelo", es: "Su abuelo", en: "Grandfather", role: "su abuelo", adult: true },
+  { id: "abuela", es: "Su abuela", en: "Grandmother", role: "su abuela", adult: true },
+  { id: "amigo", es: "Un amigo", en: "Friend (boy)", role: "su amigo", adult: false },
+  { id: "amiga", es: "Una amiga", en: "Friend (girl)", role: "su amiga", adult: false },
+  { id: "primo", es: "Su primo", en: "Cousin (boy)", role: "su primo", adult: false },
+  { id: "prima", es: "Su prima", en: "Cousin (girl)", role: "su prima", adult: false },
+];
+
+// Ages offered for a COMPANION, which is not the same question as the reader's
+// age band: a form that offers "3 to 5" for a father contradicts itself, so
+// adults are never asked. AGE_BANDS stays what the book is written for.
+const PERSON_AGES = [
+  { id: "bebe", es: "Un bebé", en: "A baby", visual: "a baby" },
+  { id: "3-5", es: "3 a 5 años", en: "3 to 5", visual: "a 4-year-old child" },
+  { id: "6-8", es: "6 a 8 años", en: "6 to 8", visual: "a 7-year-old child" },
+  { id: "9-12", es: "9 a 12 años", en: "9 to 12", visual: "a 10-year-old child" },
+  { id: "adolescente", es: "Adolescente", en: "A teenager", visual: "a teenager" },
 ];
 const MAX_PEOPLE = 2;
 
@@ -217,6 +238,7 @@ module.exports = Object.freeze({
   SKIN_TONES,
   GENDERS,
   RELATIONS,
+  PERSON_AGES,
   MAX_PEOPLE,
   MOMENTS,
   TONES,

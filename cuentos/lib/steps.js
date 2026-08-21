@@ -51,6 +51,9 @@ function anonymise(personalization) {
     tone: p.tone || "divertido",
     people: (Array.isArray(p.people) ? p.people : []).slice(0, C.MAX_PEOPLE).map((x) => ({ relation: x.relation, ageBand: x.ageBand || null })),
     instructions: Array.isArray(p.instructions) ? p.instructions : [],
+    // The one free line the parent wrote. It has passed moderation and it
+    // holds no name: the form asks for a trait, not for who anyone is.
+    notes: typeof p.notes === "string" ? p.notes.trim() : "",
     locale: p.locale || "es",
   };
 }

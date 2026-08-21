@@ -22,7 +22,10 @@ const options = {
   themes: pick(C.THEMES),
   moments: pick(C.MOMENTS),
   tones: pick(C.TONES),
-  relations: pick(C.RELATIONS),
+  // relations carry `adult` so the form can stop offering a child's age
+  // band to a father — the option list and the validator must agree.
+  relations: C.RELATIONS.map(({ id, es, en, adult }) => ({ id, es, en, adult })),
+  personAges: pick(C.PERSON_AGES),
   maxPeople: C.MAX_PEOPLE,
 };
 

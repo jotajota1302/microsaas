@@ -151,3 +151,18 @@ test("storage helpers hit the right bucket and return signed urls", async () => 
   assert.deepStrictEqual(client.storageLog.map((s) => s[0]), ["upload", "sign", "remove"]);
   assert.strictEqual(client.storageLog[0][4].contentType, "image/png");
 });
+
+test("recentOrders and recentJobs read the newest first, capped", async () => {
+  const client = fakeClient({ data: [{ id: "o1" }], error: null });
+  const db = createDb(client);
+  await db.recentOrders(25);
+  assert.deepStrictEqual(ops(client), ["select", "order", "limit"]);
+  const order = client.log[0].calls.find((c) => c[0] === "order");
+  assert.strictEqual(order[1], "created_at");
+  assert.deepStrictEqual(order[2], { ascending: false });
+  assert.strictEqual(client.log[0].calls.find((c) => c[0] === "limit")[1], 25);
+
+  const c2 = fakeClient({ data: [], error: null });
+  await createDb(c2).recentJobs(10);
+  assert.strictEqual(c2.log[0].table, "jobs");
+});

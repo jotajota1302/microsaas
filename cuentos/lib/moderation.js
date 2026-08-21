@@ -16,6 +16,7 @@ const { normalise } = require("./validate-story.js");
 
 const MAX_NAME_LENGTH = 30;
 const MAX_DEDICATION_LENGTH = 140;
+const MAX_NOTES_LENGTH = 300;
 
 const URL_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|es|io|ai|co)\b)/i;
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
@@ -67,7 +68,7 @@ function blocklisted(text) {
  * Runs before charging. Returns { ok, reason, needsReview }.
  * needsReview is true when we let it through without a model verdict.
  */
-async function checkInput({ name, companionName, people, dedication }, deps = {}) {
+async function checkInput({ name, companionName, people, dedication, notes }, deps = {}) {
   const complete = deps.completeJson || completeJson;
 
   if (!name || !String(name).trim()) {
@@ -81,23 +82,31 @@ async function checkInput({ name, companionName, people, dedication }, deps = {}
     if (problem) return { ok: false, reason: problem, needsReview: false };
   }
 
-  if (dedication) {
-    const text = String(dedication).trim();
-    if (text.length > MAX_DEDICATION_LENGTH) {
-      return { ok: false, reason: `dedication is longer than ${MAX_DEDICATION_LENGTH} characters`, needsReview: false };
+  // Every free-text field gets the same cheap rules. The note is as free as
+  // the dedication, so treating it more gently would just be the way round
+  // the filter.
+  const free = [
+    { field: "dedication", value: dedication, max: MAX_DEDICATION_LENGTH },
+    { field: "notes", value: notes, max: MAX_NOTES_LENGTH },
+  ].filter((f) => f.value && String(f.value).trim());
+
+  for (const { field, value, max } of free) {
+    const text = String(value).trim();
+    if (text.length > max) {
+      return { ok: false, reason: `${field} is longer than ${max} characters`, needsReview: false };
     }
     if (URL_RE.test(text) || EMAIL_RE.test(text) || PHONE_RE.test(text)) {
-      return { ok: false, reason: "dedication contains contact details", needsReview: false };
+      return { ok: false, reason: `${field} contains contact details`, needsReview: false };
     }
     const hits = blocklisted(text);
     if (hits.length) {
-      return { ok: false, reason: `dedication contains a blocked word: ${hits[0]}`, needsReview: false };
+      return { ok: false, reason: `${field} contains a blocked word: ${hits[0]}`, needsReview: false };
     }
   }
 
-  // Nothing obvious. Only a free-text dedication is worth a model call:
-  // names alone have already passed every cheap rule.
-  if (!dedication || !String(dedication).trim()) {
+  // Nothing obvious. Only free text is worth a model call: names alone have
+  // already passed every cheap rule.
+  if (!free.length) {
     return { ok: true, needsReview: false };
   }
 
@@ -109,13 +118,13 @@ async function checkInput({ name, companionName, people, dedication }, deps = {}
         {
           role: "system",
           content:
-            "Eres un filtro de contenido para un producto infantil. Recibes una dedicatoria escrita por un adulto " +
-            "que va impresa en la primera página de un cuento para un niño de 3 a 8 años. " +
+            "Eres un filtro de contenido para un producto infantil. Recibes texto escrito por un adulto (una dedicatoria " +
+            "y/o una nota sobre el niño) que se usará en un cuento para un niño de 3 a 8 años. " +
             "Responde safe:false si contiene insultos, contenido sexual, odio, violencia, drogas, política, religión, " +
             "publicidad, datos de contacto, o cualquier cosa que no querrías ver impresa en un libro infantil. " +
-            "Una dedicatoria cariñosa, familiar o graciosa es safe:true. Ante la duda razonable, safe:true.",
+            "Un texto cariñoso, familiar, gracioso o un rasgo del niño («le da miedo el ascensor») es safe:true. Ante la duda razonable, safe:true.",
         },
-        { role: "user", content: `Dedicatoria: «${String(dedication).trim()}»` },
+        { role: "user", content: free.map((f) => `${f.field === "notes" ? "Nota del adulto sobre el niño" : "Dedicatoria"}: «${String(f.value).trim()}»`).join("\n") },
       ],
     });
     if (data && data.safe === false) {

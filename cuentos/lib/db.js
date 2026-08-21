@@ -152,6 +152,17 @@ function createDb(client) {
     async saveJob(id, patch) {
       return unwrap(await t("jobs").update(patch).eq("id", id).select().single());
     },
+    /**
+     * The admin dashboard reads the recent rows and works the funnel out in
+     * one place. Two plain queries beat a dozen counting round trips at this
+     * size, and they keep the arithmetic somewhere it can be tested.
+     */
+    async recentOrders(limit = 100) {
+      return unwrap(await t("orders").select("*").order("created_at", { ascending: false }).limit(limit));
+    },
+    async recentJobs(limit = 200) {
+      return unwrap(await t("jobs").select("id,order_id,kind,state,cost_cents,error,created_at").order("created_at", { ascending: false }).limit(limit));
+    },
     async jobsNeedingReview(limit = 50) {
       return unwrap(await t("jobs").select("*").eq("state", "needs_review").order("created_at", { ascending: true }).limit(limit));
     },

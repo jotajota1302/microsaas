@@ -60,6 +60,7 @@
       <fieldset class="stack">
         <legend data-i18n="dedication"></legend>
         <label><span class="visually-hidden" data-i18n="dedication"></span><textarea name="dedication" maxlength="140"></textarea><span class="hint" data-i18n="dedication_hint"></span></label>
+        <label><span data-i18n="notes"></span><textarea name="notes" maxlength="300" rows="3"></textarea><span class="hint" data-i18n="notes_hint"></span></label>
       </fieldset>
 
       <fieldset class="stack">
@@ -120,8 +121,22 @@
         <label><span>${T.person_name}</span><input type="text" data-p="name" maxlength="30" required></label>
         <label><span>${T.person_age}</span><select data-p="ageBand"></select></label>
         <div style="align-self:end"><button type="button" class="btn ghost" data-remove>${T.remove}</button></div>`;
-      fill(row.querySelector("[data-p=relation]"), "relations");
-      const age = row.querySelector("[data-p=ageBand]"); fill(age, "ageBands", "—"); age.querySelector("option").disabled = false; age.value = "";
+      const rel = row.querySelector("[data-p=relation]");
+      fill(rel, "relations");
+      const age = row.querySelector("[data-p=ageBand]");
+      fill(age, "personAges", "—"); age.querySelector("option").disabled = false; age.value = "";
+
+      // A father is not "3 to 5 years old". Adults are simply not asked, and
+      // the field is cleared so a stale choice cannot be submitted.
+      const ageField = age.closest("label");
+      const syncAge = () => {
+        const chosen = O.relations.find((r) => r.id === rel.value);
+        const adult = Boolean(chosen && chosen.adult);
+        ageField.hidden = adult;
+        if (adult) age.value = "";
+      };
+      rel.onchange = syncAge;
+      syncAge();
       row.querySelector("[data-remove]").onclick = () => { row.remove(); addBtn.hidden = false; };
       people.appendChild(row);
       addBtn.hidden = people.children.length >= O.maxPeople;
@@ -142,7 +157,7 @@
         personalization: {
           name: fd.get("name"), gender: fd.get("gender"), ageBand: fd.get("ageBand"), hairColor: fd.get("hairColor"), hairType: fd.get("hairType"),
           skin: fd.get("skin"), glasses: fd.get("glasses") === "on", pet: fd.get("pet") || "ninguna", hobby: fd.get("hobby"),
-          theme: fd.get("theme"), moment: fd.get("moment"), tone: fd.get("tone"), dedication: fd.get("dedication"),
+          theme: fd.get("theme"), moment: fd.get("moment"), tone: fd.get("tone"), dedication: fd.get("dedication"), notes: fd.get("notes"),
           people: [...people.children].map((row) => ({
             relation: row.querySelector("[data-p=relation]").value,
             name: row.querySelector("[data-p=name]").value,

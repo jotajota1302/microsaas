@@ -74,7 +74,7 @@ test("validateOrderInput accepts a complete form and normalises the email", () =
 });
 
 test("validateOrderInput rejects values outside the closed lists, one error per field", () => {
-  const v = validateOrderInput({ ...GOOD, personalization: { ...GOOD.personalization, theme: "piratas", tone: "triste", people: [{ name: "X", relation: "vecino" }] } });
+  const v = validateOrderInput({ ...GOOD, personalization: { ...GOOD.personalization, theme: "no-existe", tone: "triste", people: [{ name: "X", relation: "vecino" }] } });
   assert.ok(v.errors.some((e) => e.startsWith("theme")));
   assert.ok(v.errors.some((e) => e.startsWith("tone")));
   assert.ok(v.errors.some((e) => e.includes("people[0].relation")));
@@ -220,7 +220,7 @@ test("revise: two rounds allowed, the third is refused", async () => {
   assert.deepStrictEqual(job.input, { revision: true });
 });
 
-test("revise: the instruction is moderated and bounded, and refused outside the script stage", async () => {
+test("revise: the instruction is moderated and bounded, and refused on a finished book", async () => {
   const db = fakeDb();
   let r = res();
   await H.reviseHandler({ db, moderation: { checkInput: async () => ({ ok: false, reason: "contact details" }) }, runJob: runDone })(req({ body: { token: db.story.token, instruction: "llama al 600123456" } }), r);
@@ -228,7 +228,8 @@ test("revise: the instruction is moderated and bounded, and refused outside the 
   r = res();
   await H.reviseHandler({ db, moderation: okMod, runJob: runDone })(req({ body: { token: db.story.token, instruction: "x".repeat(201) } }), r);
   assert.strictEqual(r.statusCode, 400);
-  db.story.stage = "sample";
+  // sample is allowed now (see the dead-end tests below); a paid book is not
+  db.story.stage = "full";
   r = res();
   await H.reviseHandler({ db, moderation: okMod, runJob: runDone })(req({ body: { token: db.story.token, instruction: "algo razonable" } }), r);
   assert.strictEqual(r.statusCode, 409);
@@ -401,4 +402,89 @@ test("waitlist falls back to the daily-cap reason when it is not one we know", a
   const r = res();
   await H.waitlistHandler({ db })(req({ body: { email: "a@b.co", reason: "whatever" } }), r);
   assert.deepStrictEqual(db.calls.at(-1), ["waitlist", "a@b.co", "es", "cap"]);
+});
+
+// Step 2 was a dead end: once the sample was drawn there was no way back, no
+// matter how many free rewrites were still on the table. The way out is the one
+// that is already capped — a revision — and it must throw the drawn pages away,
+// because they no longer match the text.
+test("revise works from the sample stage while rewrites remain, and clears the drawings", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  db.story.revisions = 0;
+  db.story.sheet_path = "tok/sheet.png";
+  db.story.page_paths = { 0: "tok/p01.png", 5: "tok/p06.png" };
+  const r = res();
+  await H.reviseHandler({ db, moderation: { checkInput: async () => ({ ok: true }) }, runJob: runDone })(
+    req({ body: { token: db.story.token, instruction: "que la abuela salga mas" } }), r
+  );
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(db.story.stage, "script", "it must go back to the script gate");
+  assert.strictEqual(db.story.sheet_path, null);
+  assert.deepStrictEqual(db.story.page_paths, {});
+  const removed = db.calls.find((c) => c[0] === "remove");
+  assert.ok(removed, "the orphaned images must be deleted from storage");
+  assert.deepStrictEqual(removed[2].sort(), ["tok/p01.png", "tok/p06.png", "tok/sheet.png"]);
+});
+
+test("revise from the sample stage is refused once the rewrites are used up", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  db.story.revisions = 2;
+  const r = res();
+  await H.reviseHandler({ db, moderation: { checkInput: async () => ({ ok: true }) }, runJob: runDone })(
+    req({ body: { token: db.story.token, instruction: "otro cambio" } }), r
+  );
+  assert.strictEqual(r.statusCode, 409);
+  assert.strictEqual(r.body.error, "no_revisions_left");
+});
+
+test("revise is still refused on a finished book", async () => {
+  const db = fakeDb();
+  db.story.stage = "full";
+  const r = res();
+  await H.reviseHandler({ db, moderation: { checkInput: async () => ({ ok: true }) }, runJob: runDone })(
+    req({ body: { token: db.story.token, instruction: "un cambio" } }), r
+  );
+  assert.strictEqual(r.statusCode, 409);
+  assert.strictEqual(r.body.error, "wrong_stage");
+});
+
+// A father with an age band of "6 to 8" is the form contradicting itself.
+test("validateOrderInput takes an age only for companions who are children", () => {
+  const withPeople = (people) => validateOrderInput({ ...GOOD, personalization: { ...GOOD.personalization, people } });
+
+  const child = withPeople([{ name: "Leo", relation: "hermano", ageBand: "3-5" }]);
+  assert.deepStrictEqual(child.errors, []);
+  assert.strictEqual(child.personalization.people[0].ageBand, "3-5");
+
+  const teen = withPeople([{ name: "Sara", relation: "prima", ageBand: "adolescente" }]);
+  assert.deepStrictEqual(teen.errors, []);
+
+  const adult = withPeople([{ name: "Papá", relation: "padre", ageBand: "6-8" }]);
+  assert.ok(adult.errors.some((e) => e.includes("people[0].ageBand")), "an adult cannot be 6 to 8");
+
+  // an adult with no age is the normal case and must pass untouched
+  const fine = withPeople([{ name: "Papá", relation: "padre" }]);
+  assert.deepStrictEqual(fine.errors, []);
+  assert.strictEqual(fine.personalization.people[0].ageBand, null);
+});
+
+test("validateOrderInput carries a bounded free-text note", () => {
+  const withNote = (notes) => validateOrderInput({ ...GOOD, personalization: { ...GOOD.personalization, notes } });
+  assert.strictEqual(withNote("Le encanta el color rojo").personalization.notes, "Le encanta el color rojo");
+  assert.strictEqual(withNote("   ").personalization.notes, "");
+  assert.strictEqual(withNote(undefined).personalization.notes, "");
+  assert.ok(withNote("x".repeat(301)).errors.some((e) => e.startsWith("notes")), "a note must not be a novel");
+});
+
+test("order sends the free note to moderation, not just the dedication", async () => {
+  let seen = null;
+  const db = fakeDb();
+  await H.orderHandler({
+    db,
+    moderation: { checkInput: async (a) => { seen = a; return { ok: true }; } },
+    runJob: runDone,
+  })(req({ body: { ...GOOD, personalization: { ...GOOD.personalization, notes: "le da miedo el ascensor" } } }), res());
+  assert.strictEqual(seen.notes, "le da miedo el ascensor");
 });

@@ -13,6 +13,7 @@ const money = require("./money.js");
 const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
 const { send, readJson, query, clientIp, requireMethod, requireSecret } = require("./http.js");
+const dashboard = require("./dashboard.js");
 
 const CAPS = () => ({
   scriptsPerDay: Number(process.env.MAX_SCRIPTS_PER_DAY || 200),
@@ -44,6 +45,7 @@ function orderHandler(deps) {
       name: input.personalization.name,
       people: input.personalization.people,
       dedication: input.personalization.dedication,
+      notes: input.personalization.notes,
     });
     if (!verdict.ok) {
       await deps.db.recordBlockedInput(verdict.reason, JSON.stringify(input.personalization)).catch(() => {});
@@ -158,7 +160,10 @@ function reviseHandler(deps) {
     const story = await deps.db.getStoryByToken(body.token);
     if (!story) return send(res, 404, { error: "not_found" });
     if (new Date(story.expires_at) < new Date()) return send(res, 410, { error: "expired" });
-    if (story.stage !== "script") return send(res, 409, { error: "wrong_stage" });
+    // The sample gate is a way in, not a dead end: while free rewrites remain
+    // the customer can still change the text. A paid book cannot: it has its
+    // own retouch.
+    if (story.stage !== "script" && story.stage !== "sample") return send(res, 409, { error: "wrong_stage" });
     if ((story.revisions || 0) >= CAPS().revisions) return send(res, 409, { error: "no_revisions_left" });
 
     const verdict = await deps.moderation.checkInput({ name: "x", dedication: instruction });
@@ -167,7 +172,18 @@ function reviseHandler(deps) {
     const order = await deps.db.getOrder(story.order_id);
     const instructions = [...(story.instructions || []), instruction];
     await deps.db.updateOrder(order.id, { personalization: { ...order.personalization, instructions } });
-    const updated = await deps.db.updateStory(story.id, { instructions, revisions: (story.revisions || 0) + 1 });
+
+    // Coming back from the sample: the drawings illustrate a text that is about
+    // to change, so they are thrown away rather than left to mislead.
+    const undo = story.stage === "sample"
+      ? { stage: "script", sheet_path: null, page_paths: {}, coloring_paths: [] }
+      : {};
+    if (story.stage === "sample") {
+      const orphans = [story.sheet_path, ...Object.values(story.page_paths || {})].filter(Boolean);
+      if (orphans.length) await deps.db.remove(BUCKET, orphans);
+    }
+
+    const updated = await deps.db.updateStory(story.id, { instructions, revisions: (story.revisions || 0) + 1, ...undo });
     const job = await deps.db.createJob({ orderId: order.id, storyId: story.id, kind: "script", input: { revision: true } });
     const result = await deps.runJob(job.id);
     return send(res, result.state === "done" ? 200 : 202, { token: story.token, state: result.state, revisionsLeft: Math.max(0, CAPS().revisions - (updated.revisions || 0)) });
@@ -304,7 +320,20 @@ function adminHandler(deps) {
           story: story && storyView(story, order, urls),
         });
       }
-      return send(res, 200, { items });
+      // The queue alone does not say whether the shop can trade: the panel also
+      // reports which integrations are wired and how the funnel is converting.
+      const [orders, allJobs] = await Promise.all([deps.db.recentOrders(150), deps.db.recentJobs(300)]);
+      const stories = new Map();
+      for (const o of orders.slice(0, 25)) {
+        const s = await deps.db.getStoryByOrder(o.id);
+        if (s) stories.set(o.id, { token: s.token, stage: s.stage, title: s.story && s.story.title, revisions: s.revisions, expiresAt: s.expires_at });
+      }
+      const recent = orders.slice(0, 25).map((o) => ({
+        id: o.id, email: o.email, status: o.status, channel: o.channel, locale: o.locale,
+        priceCents: o.price_cents, createdAt: o.created_at, needsReview: o.needs_review,
+        story: stories.get(o.id) || null,
+      }));
+      return send(res, 200, { items, recent, overview: dashboard.overview({ orders, jobs: allJobs, env: process.env }) });
     }
 
     if (req.method !== "POST") return send(res, 405, { error: "method_not_allowed" });

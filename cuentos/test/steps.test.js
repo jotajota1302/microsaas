@@ -220,3 +220,24 @@ test("a revision job does not touch the revision counter", async () => {
   await runJob("j1", okDeps(db));
   assert.strictEqual(db.state.story.revisions, 1, "the counter belongs to the handler alone");
 });
+
+// The free note is the one place a parent can say something the closed lists
+// cannot hold. It must reach the model — and it must never carry a name.
+test("anonymise passes the free note through and still strips every name", () => {
+  const out = anonymise({
+    name: "Ana", theme: "mar", ageBand: "6-8", gender: "nina",
+    people: [{ name: "Carmen", relation: "abuela", ageBand: null }],
+    dedication: "Para Ana, de la abuela",
+    notes: "Le da miedo el ascensor y le encanta el color rojo",
+  });
+  assert.strictEqual(out.notes, "Le da miedo el ascensor y le encanta el color rojo");
+  const json = JSON.stringify(out);
+  assert.ok(!json.includes("Ana"), "the child's name must not travel");
+  assert.ok(!json.includes("Carmen"), "a companion's name must not travel");
+  assert.ok(!("dedication" in out), "the dedication is written into the PDF, not sent to the model");
+});
+
+test("anonymise drops a note that would carry a name straight through", () => {
+  const out = anonymise({ theme: "mar", people: [], notes: "" });
+  assert.strictEqual(out.notes, "");
+});

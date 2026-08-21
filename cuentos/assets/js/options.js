@@ -234,6 +234,56 @@ window.CUENTOS_OPTIONS = {
       "id": "futbol",
       "es": "Fútbol",
       "en": "Football"
+    },
+    {
+      "id": "montana",
+      "es": "La montaña",
+      "en": "The mountain"
+    },
+    {
+      "id": "granja",
+      "es": "La granja",
+      "en": "The farm"
+    },
+    {
+      "id": "ciudad",
+      "es": "Su barrio",
+      "en": "Their neighbourhood"
+    },
+    {
+      "id": "circo",
+      "es": "El circo",
+      "en": "The circus"
+    },
+    {
+      "id": "piratas",
+      "es": "Piratas e islas",
+      "en": "Pirates and islands"
+    },
+    {
+      "id": "hielo",
+      "es": "El hielo",
+      "en": "The ice"
+    },
+    {
+      "id": "jungla",
+      "es": "La selva",
+      "en": "The jungle"
+    },
+    {
+      "id": "fondomar",
+      "es": "El fondo del mar",
+      "en": "The deep sea"
+    },
+    {
+      "id": "tren",
+      "es": "Un tren de noche",
+      "en": "A night train"
+    },
+    {
+      "id": "casa",
+      "es": "Dentro de su casa",
+      "en": "Inside their house"
     }
   ],
   "moments": [
@@ -294,52 +344,89 @@ window.CUENTOS_OPTIONS = {
     {
       "id": "hermano",
       "es": "Su hermano",
-      "en": "Brother"
+      "en": "Brother",
+      "adult": false
     },
     {
       "id": "hermana",
       "es": "Su hermana",
-      "en": "Sister"
+      "en": "Sister",
+      "adult": false
     },
     {
       "id": "padre",
       "es": "Su padre",
-      "en": "Father"
+      "en": "Father",
+      "adult": true
     },
     {
       "id": "madre",
       "es": "Su madre",
-      "en": "Mother"
+      "en": "Mother",
+      "adult": true
     },
     {
       "id": "abuelo",
       "es": "Su abuelo",
-      "en": "Grandfather"
+      "en": "Grandfather",
+      "adult": true
     },
     {
       "id": "abuela",
       "es": "Su abuela",
-      "en": "Grandmother"
+      "en": "Grandmother",
+      "adult": true
     },
     {
       "id": "amigo",
       "es": "Un amigo",
-      "en": "Friend (boy)"
+      "en": "Friend (boy)",
+      "adult": false
     },
     {
       "id": "amiga",
       "es": "Una amiga",
-      "en": "Friend (girl)"
+      "en": "Friend (girl)",
+      "adult": false
     },
     {
       "id": "primo",
       "es": "Su primo",
-      "en": "Cousin (boy)"
+      "en": "Cousin (boy)",
+      "adult": false
     },
     {
       "id": "prima",
       "es": "Su prima",
-      "en": "Cousin (girl)"
+      "en": "Cousin (girl)",
+      "adult": false
+    }
+  ],
+  "personAges": [
+    {
+      "id": "bebe",
+      "es": "Un bebé",
+      "en": "A baby"
+    },
+    {
+      "id": "3-5",
+      "es": "3 a 5 años",
+      "en": "3 to 5"
+    },
+    {
+      "id": "6-8",
+      "es": "6 a 8 años",
+      "en": "6 to 8"
+    },
+    {
+      "id": "9-12",
+      "es": "9 a 12 años",
+      "en": "9 to 12"
+    },
+    {
+      "id": "adolescente",
+      "es": "Adolescente",
+      "en": "A teenager"
     }
   ],
   "maxPeople": 2
