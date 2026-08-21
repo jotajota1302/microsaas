@@ -1,4 +1,6 @@
-# Proyecto: Cuentos personalizados en PDF
+# Proyecto: Familia de cuento — cuentos personalizados en PDF
+
+**Marca (decidida 2026-08-21)**: «Familia de cuento» en español, «Storybook Family» en inglés — el juego de palabras se conserva en los dos idiomas («de cuento» = idílico y a la vez hecho cuento; «storybook» significa lo mismo). «Fairytale» queda descartado: promete hadas y fantasía, que es justo lo que este producto no es. Eslogan: «el cuento de su vida» / «the story of their life». Una marca, dos idiomas, **un solo dominio** (`familiadecuento.com`, pendiente de comprar): el inglés vive en `/en/` con su `hreflang`. Todo en `lib/brand.js`; el logotipo (un libro cuyas páginas abiertas son el tejado de una casa) en `assets/img/logo.svg`. La carpeta del repo sigue llamándose `cuentos/`.
 
 Micro-SaaS B2C, español primero (y en inglés): cuentos infantiles personalizados **en PDF**, generados como JSON validado + ilustraciones de estilo fijo. El diferencial no es el aspecto del niño sino **su vida**: su familia y amigos como personajes, el momento que está viviendo y el tono. El gancho es una **vista previa personalizada en una URL temporal** generada antes de cobrar. Sin imprenta ni envíos en el MVP (decisión 2026-08-21). Reutiliza el motor del RPG (`../../rpg-narrativo/`): IA que genera datos bajo schema, validador como única puerta, catálogo de estilo fijo.
 

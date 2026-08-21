@@ -21,6 +21,7 @@ const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fontkit = require("@pdf-lib/fontkit");
 const sharp = require("sharp");
 const C = require("./collection.js");
+const brand = require("./brand.js");
 
 const MM = 72 / 25.4;
 const PAGE_PT = 200 * MM; // 20 cm
@@ -191,8 +192,9 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
 
   const title = substitute(story.title, personalization);
   doc.setTitle(title);
-  doc.setCreator("cuentos");
-  doc.setProducer("cuentos");
+  doc.setCreator(brand.name(personalization && personalization.locale));
+  doc.setProducer(brand.name(personalization && personalization.locale));
+  doc.setAuthor(brand.name(personalization && personalization.locale));
 
   const margin = SAFE_PT;
   const textWidth = PAGE_PT - 2 * margin;
@@ -289,7 +291,12 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
     drawParagraph(page, {
       text: "Texto e ilustraciones generados con inteligencia artificial a partir de lo que nos contaste, y revisados a mano antes de entregarlos.",
       font: regular, size: 8.5, lineHeight: 13,
-      x: margin, top: margin + 34, maxWidth: textWidth, color: MUTED, align: "center",
+      x: margin, top: margin + 46, maxWidth: textWidth, color: MUTED, align: "center",
+    });
+    drawParagraph(page, {
+      text: `${brand.name(personalization && personalization.locale)} · ${brand.DOMAIN}`,
+      font: bold, size: 8.5, lineHeight: 12,
+      x: margin, top: margin + 16, maxWidth: textWidth, color: MUTED, align: "center",
     });
   }
 

@@ -164,10 +164,20 @@ footer a { color: var(--muted); }
 .wrap.wide { max-width: 68rem; }
 
 /* brand lockup: the name has to read as a name, not as a stray lowercase word */
-.brand-mark { display: flex; align-items: baseline; gap: .7rem; text-decoration: none; color: var(--ink); }
-.brand-mark b { font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 1.6rem; letter-spacing: -.02em; }
-.brand-mark i { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); align-self: center; flex: none; }
-.brand-mark span { font-family: Andika, sans-serif; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-style: normal; }
+/* The lockup: a book whose open pages are the roof of a house — the two halves
+   of "Familia de cuento" in one shape. The accent falls on "cuento". */
+.brand-mark { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); }
+.brand-mark .mark { width: 2rem; height: 2rem; flex: none; color: var(--sea); }
+.brand-mark .wordmark { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 1.35rem; letter-spacing: -.02em; line-height: 1.1; }
+.brand-mark .wordmark b { font-weight: 700; }
+.brand-mark .tag { font-family: Andika, sans-serif; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-left: 1px solid var(--hair); padding-left: .6rem; }
+@media (max-width: 40rem) {
+  .brand-mark .tag { display: none; }
+  .brand-mark .wordmark { font-size: 1.15rem; }
+  .brand-mark .mark { width: 1.7rem; height: 1.7rem; }
+}
+.dark .brand-mark, .dark .brand-mark .wordmark { color: var(--paper); }
+.dark .brand-mark .mark { color: var(--gold); }
 /* .top sets a shorthand padding with zero sides, which wins over .wrap's when
    the header is the wrap itself — put the gutters back. */
 .top.wrap { padding-left: clamp(1rem, 4vw, 2.5rem); padding-right: clamp(1rem, 4vw, 2.5rem); }

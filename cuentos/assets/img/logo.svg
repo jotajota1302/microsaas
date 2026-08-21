@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="Familia de cuento">
+  <!--
+    A book whose open pages are also the roof of a house: the two halves of the
+    name in one shape. Stroke-based so it recolours and scales; the spine is
+    the only closed form, which keeps it readable at 20px.
+  -->
+  <g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- roof / open pages -->
+    <path d="M20 6 L33 16" />
+    <path d="M20 6 L7 16" />
+    <!-- walls -->
+    <path d="M9.5 17.5 V32 h21 V17.5" />
+    <!-- the spine: where the two pages meet, and the door of the house -->
+    <path d="M20 6 V32" />
+  </g>
+  <!-- the small window: a light on in the house, the dot over the story -->
+  <circle cx="14.5" cy="23" r="1.8" fill="currentColor" />
+  <circle cx="25.5" cy="23" r="1.8" fill="currentColor" />
+</svg>

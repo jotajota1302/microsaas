@@ -20,8 +20,8 @@ const LANGS = ["es", "en"];
 const T = {
   es: {
     lang: "es", dir: "colorear", other: "/en/coloring/", otherLabel: "English",
-    brand: "un cuento sobre su vida",
-    indexTitle: "20 dibujos para colorear gratis (imprimir en PDF) — Cuentos",
+    brand: "el cuento de su vida",
+    indexTitle: "20 dibujos para colorear gratis (imprimir en PDF) — Familia de cuento",
     indexDesc: "Veinte páginas para colorear listas para imprimir en A4: dinosaurios, unicornios, dragones, sirenas, espacio y más. Descarga gratis en PDF, sin registro.",
     h1: "Dibujos para colorear gratis",
     lede: "Veinte páginas en A4, listas para imprimir. Sin registro y sin marcas de agua: eliges el dibujo, lo descargas en PDF y a por los lápices.",
@@ -46,8 +46,8 @@ const T = {
   },
   en: {
     lang: "en", dir: "en/coloring", other: "/colorear/", otherLabel: "Español",
-    brand: "a story about their life",
-    indexTitle: "20 free colouring pages to print (PDF) — Cuentos",
+    brand: "the story of their life",
+    indexTitle: "20 free colouring pages to print (PDF) — Familia de cuento",
     indexDesc: "Twenty A4 colouring pages ready to print: dinosaurs, unicorns, dragons, mermaids, space and more. Free PDF download, no sign-up.",
     h1: "Free colouring pages",
     lede: "Twenty A4 pages, ready to print. No sign-up and no watermarks: pick a drawing, download the PDF and get the pencils out.",
@@ -92,13 +92,14 @@ function shell({ t, title, desc, canonical, alternate, body, jsonLd }) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/app.css">
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="brand-mark" href="${home}"><b>Cuentos</b><i></i><span>${t.brand}</span></a>
+    <a class="brand-mark" href="${home}"><svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L33 16"/><path d="M20 6 L7 16"/><path d="M9.5 17.5 V32 h21 V17.5"/><path d="M20 6 V32"/></g><circle cx="14.5" cy="23" r="1.8" fill="currentColor"/><circle cx="25.5" cy="23" r="1.8" fill="currentColor"/></svg>${t.lang === "en" ? '<span class="wordmark">Storybook <b>Family</b></span>' : '<span class="wordmark">Familia de <b>cuento</b></span>'}<span class="tag">${t.brand}</span></a>
     <a class="lang" href="${alternate}">${t.otherLabel}</a>
   </header>
 
@@ -198,8 +199,8 @@ function themePage(t, theme) {
   const a = G.assetPaths(theme);
   const name = theme.title[t.lang];
   const title = t.lang === "es"
-    ? `Dibujo de ${name.toLowerCase()} para colorear (PDF gratis) — Cuentos`
-    : `${name} colouring page (free PDF) — Cuentos`;
+    ? `Dibujo de ${name.toLowerCase()} para colorear (PDF gratis) — Familia de cuento`
+    : `${name} colouring page (free PDF) — Storybook Family`;
   const desc = `${theme.intro[t.lang]} ${t.lang === "es" ? "Descarga gratis en A4, lista para imprimir." : "Free A4 download, ready to print."}`;
   const others = G.THEMES.filter((x) => x.slug !== theme.slug).slice(0, 6);
 
@@ -246,7 +247,7 @@ ${mailForm(t)}
     contentUrl: `${BASE}${a.png}`,
     thumbnailUrl: `${BASE}${a.thumb}`,
     license: `${BASE}/legal/#condiciones`,
-    creditText: "cuentos",
+    creditText: "Familia de cuento",
     isAccessibleForFree: true,
   };
   return { canonical, html: shell({ t, title, desc, canonical, alternate, body, jsonLd }) };

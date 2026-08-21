@@ -7,8 +7,9 @@
  */
 
 const { env } = require("./env.js");
+const brand = require("./brand.js");
 
-const FROM = () => env.EMAIL_FROM || "Cuentos <cuentos@resend.dev>";
+const FROM = () => env.EMAIL_FROM || `${brand.name("es")} <cuentos@resend.dev>`;
 const BASE = () => (env.PUBLIC_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 
 const T = {
