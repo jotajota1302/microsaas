@@ -51,8 +51,32 @@ const BASE_URL = process.env.BASE_URL || "https://cuentos-jose-juan-jimenezs-pro
 const TARGET = "production";
 const apply = process.argv.includes("--apply");
 
+/*
+ * The CLI is run as a script through node, not as the `vercel` command. On
+ * Windows that command is a .cmd, and since the 2024 spawn hardening Node
+ * refuses to execFile a .cmd without a shell — and going through a shell would
+ * mean quoting secrets on a command line. This spawns node directly.
+ */
+const CLI = (() => {
+  const bin = path.dirname(process.execPath);
+  const candidates = [
+    process.env.VERCEL_CLI,
+    path.join(process.env.APPDATA || "", "npm", "node_modules", "vercel", "dist", "index.js"),
+    path.join(bin, "node_modules", "vercel", "dist", "index.js"),
+    path.join(bin, "..", "lib", "node_modules", "vercel", "dist", "index.js"),
+    "/usr/local/lib/node_modules/vercel/dist/index.js",
+    "/usr/lib/node_modules/vercel/dist/index.js",
+  ].filter(Boolean);
+  const found = candidates.find((c) => require("fs").existsSync(c));
+  if (!found) {
+    console.error("\n  No encuentro la CLI de Vercel. Instálala con `npm i -g vercel`, o pasa la ruta en VERCEL_CLI.\n");
+    process.exit(1);
+  }
+  return found;
+})();
+
 const vercel = (args, input) =>
-  execFileSync(process.platform === "win32" ? "vercel.cmd" : "vercel", args, {
+  execFileSync(process.execPath, [CLI, ...args], {
     input: input === undefined ? "" : input,
     encoding: "utf8",
     stdio: ["pipe", "pipe", "pipe"],

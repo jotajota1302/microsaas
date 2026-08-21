@@ -1,2 +1,5 @@
 # generated artefacts: images, PDFs, spike output
 out/
+
+.vercel
+.env*.local
