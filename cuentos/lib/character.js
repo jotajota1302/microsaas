@@ -38,7 +38,7 @@ const MAX_FALLBACKS = 2; // 3+ means review, never silent delivery
 
 async function buildSheet(characterSheet, deps = {}) {
   const generate = deps.generateImage || images.generateImage;
-  const out = await generate({ prompt: SHEET_PROMPT(characterSheet), refs: [], size: "16:9" }, deps);
+  const out = await generate({ prompt: SHEET_PROMPT(characterSheet), refs: [], size: "16:9", label: "sheet" }, deps);
   return { sheet: out.buffer, refs: [out.buffer], costUsd: out.costUsd, model: out.model };
 }
 
@@ -67,7 +67,7 @@ async function renderOne({ story, sheetBuffer, refs, index, verify }, deps) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     let out;
     try {
-      out = await generate({ prompt, refs, size: "1:1" }, deps);
+      out = await generate({ prompt, refs, size: "1:1", label: `page-${index + 1}` }, deps);
     } catch (e) {
       issues.push(`attempt ${attempt}: ${e.name}: ${e.message.slice(0, 120)}`);
       if (e instanceof images.ImageBlockedError) break; // a verdict, not a glitch

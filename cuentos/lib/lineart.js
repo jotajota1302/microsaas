@@ -18,7 +18,7 @@ const MARGIN = Math.round(10 / 25.4 * 300); // 10 mm
 async function toLineArt(pageBuffer, hint, deps = {}) {
   const generate = deps.generateImage || images.generateImage;
   const out = await generate(
-    { prompt: `${C.LINEART_STYLE} The scene: ${hint || "the same scene as the reference"}.`, refs: [pageBuffer], size: "3:4", style: false },
+    { prompt: `${C.LINEART_STYLE} The scene: ${hint || "the same scene as the reference"}.`, refs: [pageBuffer], size: "3:4", style: false, label: "lineart" },
     deps
   );
 

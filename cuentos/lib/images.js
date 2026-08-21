@@ -20,6 +20,7 @@ const path = require("path");
 const { env } = require("./env.js");
 const C = require("./collection.js");
 const llm = require("./llm.js");
+const meter = require("./meter.js");
 
 class ImageBlockedError extends Error {
   constructor(message) { super(message); this.name = "ImageBlockedError"; }
@@ -172,9 +173,16 @@ function writeCache(args, out) {
  * catalogue and flag the order.
  */
 async function generateImage(args, deps = {}) {
+  const startedAt = Date.now();
   const cached = readCache(args);
-  if (cached) return cached;
+  if (cached) {
+    meter.record("image", 0, { model: "cache", ms: Date.now() - startedAt, label: args.label || "", cached: true });
+    return cached;
+  }
   const out = await generateImageUncached(args, deps);
+  // The vision judge goes through completeJson, which llm.js already meters as
+  // text — recording it here as well would count it twice.
+  meter.record("image", out.costUsd || 0, { model: out.model || "", ms: Date.now() - startedAt, label: args.label || "" });
   writeCache(args, out);
   return out;
 }
