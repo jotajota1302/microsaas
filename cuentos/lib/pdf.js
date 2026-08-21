@@ -155,6 +155,42 @@ async function cropToBox(buffer, box) {
   return sharp(buffer).resize({ width, height, fit: "cover", position: "attention" }).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
 }
 
+/*
+ * How a scene page is divided.
+ *
+ * The illustrations are square and the art box was a fixed 1.70:1 letterbox,
+ * so 41 % of every picture was thrown away — and the crop chose the band with
+ * the most detail, which on these watercolours is the middle: it cut the
+ * parents' heads off. Reported on a delivered book.
+ *
+ * The picture now takes as much height as the text can spare, up to a full
+ * square (no crop at all), and the text gets the rest. A short page for a
+ * three-year-old gets an uncropped illustration; a long one for a ten-year-old
+ * gets a slightly shallower picture instead of unreadable type.
+ */
+const GAP_PT = 16;
+
+function sceneLayout(text, font) {
+  const width = PAGE_PT - 2 * SAFE_PT;
+  const maxArt = width; // square
+  const minArt = PAGE_PT * 0.44;
+  for (let art = maxArt; art >= minArt; art -= 6) {
+    const top = SAFE_PT + art + GAP_PT;
+    const height = PAGE_PT - SAFE_PT - top;
+    if (height < 24) continue;
+    const size = fitSize(text, font, width, height, { max: 14, min: 11 });
+    if (wrap(text, font, size, width).length * size * 1.55 <= height) {
+      return { art: { x: SAFE_PT, y: PAGE_PT - SAFE_PT - art, width, height: art }, size, textTop: PAGE_PT - top, textHeight: height };
+    }
+  }
+  // Nothing fits comfortably: give the text the floor size and the art what is
+  // left, rather than letting a paragraph run off the page.
+  const art = minArt;
+  const top = SAFE_PT + art + GAP_PT;
+  const height = PAGE_PT - SAFE_PT - top;
+  return { art: { x: SAFE_PT, y: PAGE_PT - SAFE_PT - art, width, height: art }, size: fitSize(text, font, width, height, { max: 12, min: 9 }), textTop: PAGE_PT - top, textHeight: height };
+}
+
 function drawCover(page, image, box) {
   const scale = Math.max(box.width / image.width, box.height / image.height);
   const w = image.width * scale;
@@ -209,8 +245,6 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   // bleeding to the top edge: bled, the page read as if the art had slipped
   // upwards and the whole spread felt off balance.
   const artBox = { x: ART_BOX.x, y: PAGE_PT - ART_BOX.top - ART_BOX.height, width: ART_BOX.width, height: ART_BOX.height };
-  const textTop = artBox.y - 24;
-  const textBoxHeight = artBox.y - margin - 26;
 
   // --- 1. title page ---------------------------------------------------------
   {
@@ -241,16 +275,16 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   for (let i = 0; i < C.PAGE_COUNT; i++) {
     const page = newPage(doc);
     const buffer = illustrationBuffer(images[i]);
-    if (buffer) {
-      drawCover(page, await embedImage(doc, await cropToBox(buffer, artBox)), artBox);
-      // A hairline keeps the plate from floating loose on the paper.
-      page.drawRectangle({ ...artBox, borderColor: HAIR, borderWidth: 0.5, opacity: 0 });
-    } else {
-      page.drawRectangle({ ...artBox, color: TINT });
-    }
     const text = substitute(story.pages[i].text, personalization);
-    const size = fitSize(text, regular, textWidth, textBoxHeight);
-    drawParagraph(page, { text, font: regular, size, lineHeight: size * 1.55, x: margin, top: textTop, maxWidth: textWidth });
+    const L = sceneLayout(text, regular);
+    if (buffer) {
+      drawCover(page, await embedImage(doc, await cropToBox(buffer, L.art)), L.art);
+      // A hairline keeps the plate from floating loose on the paper.
+      page.drawRectangle({ ...L.art, borderColor: HAIR, borderWidth: 0.5, opacity: 0 });
+    } else {
+      page.drawRectangle({ ...L.art, color: TINT });
+    }
+    drawParagraph(page, { text, font: regular, size: L.size, lineHeight: L.size * 1.55, x: margin, top: L.textTop, maxWidth: textWidth });
     page.drawText(String(i + 1), { x: PAGE_PT / 2 - 3, y: margin - 4, size: 8, font: regular, color: MUTED });
     if (mode === "preview") stampWatermark(page, bold);
   }

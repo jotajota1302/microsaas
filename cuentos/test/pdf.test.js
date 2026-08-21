@@ -102,14 +102,15 @@ test("the font is embedded whole, not subset — a subset loses the glyphs", asy
 // cover and drawn WITHOUT clipping, so it spilled over the text underneath.
 // The fix crops before embedding, so the embedded image carries the box's
 // aspect ratio rather than its own.
-test("a square illustration is cropped to the art box before it is embedded", async () => {
+test("a square illustration keeps its head: the crop is shallow, never a letterbox", async () => {
+  // It used to be cropped to a fixed 1.70:1 band, throwing away 41 % of every
+  // picture — and "attention" chose the middle, so a delivered book had the
+  // parents' heads cut off. The picture now takes what the text can spare.
   const sharp = require("sharp");
-  const { ART_RATIO } = require("../lib/pdf.js");
   const square = await sharp({ create: { width: 600, height: 600, channels: 3, background: "#4a7" } }).png().toBuffer();
   const pdf = await renderPdf(base({ images: Array.from({ length: 12 }, () => ({ buffer: square, fallback: false })) }));
   const doc = await PDFDocument.load(pdf);
 
-  const boxRatio = 1 / ART_RATIO;
   const sizes = [];
   for (const page of doc.getPages()) {
     const xo = page.node.Resources()?.lookup(require("pdf-lib").PDFName.of("XObject"));
@@ -122,8 +123,10 @@ test("a square illustration is cropped to the art box before it is embedded", as
     }
   }
   assert.ok(sizes.length >= 12, `found ${sizes.length} embedded images, expected at least 12`);
-  const scenes = sizes.filter((r) => Math.abs(r - boxRatio) < 0.05);
-  assert.ok(scenes.length >= 12, `no illustration carries the art box ratio ${boxRatio.toFixed(2)}: got ${sizes.map((r) => r.toFixed(2)).join(", ")}`);
+  const scenes = sizes.filter((r) => r > 1.05); // the sheet and the colouring pages are square
+  assert.ok(scenes.length >= 12, "the scenes are cropped at all");
+  const worst = Math.max(...scenes);
+  assert.ok(worst <= 1.32, `a scene was cut to ${worst.toFixed(2)}:1 — that is a letterbox, and heads live at the top`);
 });
 
 // Etsy refuses a digital file over 20 MB, and the crop step used to re-encode
