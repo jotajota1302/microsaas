@@ -88,3 +88,51 @@ test("the rendered file is a real PDF", async () => {
   assert.strictEqual(buffer.subarray(0, 5).toString(), "%PDF-");
   assert.ok(buffer.length > 20_000);
 });
+
+// Measured on a real delivered book: with subset:true the embedded font lost
+// almost every glyph and the pages came out as scattered letters. The font
+// goes in whole. The size of the output is the cheapest reliable signal:
+// a subset of this text is a few kB, the full face is a couple of hundred.
+test("the font is embedded whole, not subset — a subset loses the glyphs", async () => {
+  const pdf = await renderPdf(base());
+  assert.ok(pdf.length > 300 * 1024, `the PDF is ${Math.round(pdf.length / 1024)} kB: the font looks subset`);
+});
+
+// Also measured there: a square illustration in a landscape box was scaled to
+// cover and drawn WITHOUT clipping, so it spilled over the text underneath.
+// The fix crops before embedding, so the embedded image carries the box's
+// aspect ratio rather than its own.
+test("a square illustration is cropped to the art box before it is embedded", async () => {
+  const sharp = require("sharp");
+  const { ART_RATIO } = require("../lib/pdf.js");
+  const square = await sharp({ create: { width: 600, height: 600, channels: 3, background: "#4a7" } }).png().toBuffer();
+  const pdf = await renderPdf(base({ images: Array.from({ length: 12 }, () => ({ buffer: square, fallback: false })) }));
+  const doc = await PDFDocument.load(pdf);
+
+  const boxRatio = 1 / ART_RATIO;
+  const sizes = [];
+  for (const page of doc.getPages()) {
+    const xo = page.node.Resources()?.lookup(require("pdf-lib").PDFName.of("XObject"));
+    if (!xo) continue;
+    for (const key of xo.keys()) {
+      const img = xo.lookup(key);
+      const w = img?.dict?.get(require("pdf-lib").PDFName.of("Width"))?.asNumber?.();
+      const h = img?.dict?.get(require("pdf-lib").PDFName.of("Height"))?.asNumber?.();
+      if (w && h) sizes.push(w / h);
+    }
+  }
+  assert.ok(sizes.length >= 12, `found ${sizes.length} embedded images, expected at least 12`);
+  const scenes = sizes.filter((r) => Math.abs(r - boxRatio) < 0.05);
+  assert.ok(scenes.length >= 12, `no illustration carries the art box ratio ${boxRatio.toFixed(2)}: got ${sizes.map((r) => r.toFixed(2)).join(", ")}`);
+});
+
+// Etsy refuses a digital file over 20 MB, and the crop step used to re-encode
+// every watercolour as PNG, which took a 7 MB book to nearly 17.
+test("the finished book stays well under Etsy's 20 MB limit", async () => {
+  const sharp = require("sharp");
+  const photo = await sharp({ create: { width: 1024, height: 1024, channels: 3, background: "#c8a06a" } })
+    .png().toBuffer();
+  const pdf = await renderPdf(base({ images: Array.from({ length: 12 }, () => ({ buffer: photo, fallback: false })) }));
+  const mb = pdf.length / 1024 / 1024;
+  assert.ok(mb < 12, `the book is ${mb.toFixed(1)} MB`);
+});

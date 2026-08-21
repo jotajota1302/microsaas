@@ -19,6 +19,7 @@ const fs = require("fs");
 const path = require("path");
 const { PDFDocument, rgb, degrees } = require("pdf-lib");
 const fontkit = require("@pdf-lib/fontkit");
+const sharp = require("sharp");
 const C = require("./collection.js");
 
 const MM = 72 / 25.4;
@@ -96,7 +97,9 @@ function fitSize(text, font, maxWidth, maxHeight, { max = 15, min = 10, ratio = 
 }
 
 async function embedImage(doc, buffer) {
-  try { return await doc.embedPng(buffer); } catch { return doc.embedJpg(buffer); }
+  // JPEG first: the illustrations are cropped to JPEG and the colouring
+  // pages stay PNG, so try both rather than assuming either.
+  try { return await doc.embedJpg(buffer); } catch { return doc.embedPng(buffer); }
 }
 
 /** Resolves a page's illustration: its buffer, the catalogue fallback, or nothing. */
@@ -117,6 +120,27 @@ function newPage(doc) {
 }
 
 /** Draws an image covering a box, cropping to fill rather than squashing. */
+/**
+ * Fills the box exactly. The image is cropped to the box's aspect ratio BEFORE
+ * it is embedded, because pdf-lib has no clipping: scaling a square to cover a
+ * landscape box drew it at full height over the story text underneath
+ * (measured on a delivered book).
+ */
+async function cropToBox(buffer, box) {
+  const target = box.width / box.height;
+  const meta = await sharp(buffer).metadata();
+  if (!meta.width || !meta.height) return buffer;
+  if (Math.abs(meta.width / meta.height - target) < 0.01) return buffer;
+
+  const height = meta.width / target <= meta.height ? Math.round(meta.width / target) : meta.height;
+  const width = height === meta.height ? Math.round(meta.height * target) : meta.width;
+  // "attention" keeps the subject rather than the geometric middle: a centred
+  // crop of a portrait scene beheads the child.
+  // JPEG, not PNG: these are watercolours, and re-encoding twelve of them as
+  // PNG took a 7 MB book to nearly 17, close to the 20 MB Etsy refuses.
+  return sharp(buffer).resize({ width, height, fit: "cover", position: "attention" }).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+}
+
 function drawCover(page, image, box) {
   const scale = Math.max(box.width / image.width, box.height / image.height);
   const w = image.width * scale;
@@ -145,8 +169,12 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
 
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
-  const regular = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Regular.ttf")), { subset: true });
-  const bold = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Bold.ttf")), { subset: true });
+  // NOT subset. Measured on a delivered book: subsetting this face dropped
+  // almost every glyph and the pages came out as scattered single letters.
+  // The whole face costs about 500 kB across the two weights, which is
+  // nothing next to fourteen illustrations, and it always renders.
+  const regular = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Regular.ttf")), { subset: false });
+  const bold = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Bold.ttf")), { subset: false });
 
   const title = substitute(story.title, personalization);
   doc.setTitle(title);
@@ -189,7 +217,7 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
     const page = newPage(doc);
     const buffer = illustrationBuffer(images[i]);
     if (buffer) {
-      drawCover(page, await embedImage(doc, buffer), artBox);
+      drawCover(page, await embedImage(doc, await cropToBox(buffer, artBox)), artBox);
     } else {
       page.drawRectangle({ ...artBox, color: TINT });
     }
