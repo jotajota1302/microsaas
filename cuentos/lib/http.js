@@ -17,6 +17,29 @@ async function readJson(req) {
   return raw ? JSON.parse(raw) : {};
 }
 
+/**
+ * The body exactly as it arrived. A webhook signature is computed over these
+ * bytes, so a re-serialised JSON object will not match: Stripe's signature
+ * check is the whole security of the payment path.
+ *
+ * Vercel parses JSON bodies for us and exposes the original on req.rawBody
+ * when it does. Falling back to a re-serialisation is deliberately NOT done:
+ * a silently wrong signature would be worse than an obvious failure.
+ */
+async function rawBody(req) {
+  if (req.rawBody) return Buffer.isBuffer(req.rawBody) ? req.rawBody.toString("utf8") : String(req.rawBody);
+  if (typeof req.body === "string") return req.body;
+  if (typeof req[Symbol.asyncIterator] !== "function") {
+    // Loud on purpose. Re-serialising req.body would produce bytes that do not
+    // match the signature, and the failure would look like "Stripe is sending
+    // bad signatures" rather than "the platform ate the body".
+    throw new Error("[cuentos] the raw body is gone: the platform parsed it and exposed no rawBody");
+  }
+  let raw = "";
+  for await (const chunk of req) raw += chunk;
+  return raw;
+}
+
 function query(req) {
   if (req.query && typeof req.query === "object") return req.query;
   const url = new URL(req.url || "/", "http://localhost");
@@ -66,4 +89,4 @@ function bearer(req) {
   return String(h).replace(/^Bearer\s+/i, "").trim();
 }
 
-module.exports = { send, readJson, query, clientIp, requireMethod, requireSecret, secretsMatch, bearer };
+module.exports = { send, readJson, rawBody, query, clientIp, requireMethod, requireSecret, secretsMatch, bearer };

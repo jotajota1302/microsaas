@@ -19,16 +19,28 @@ test("health lists what is missing and refuses to call itself ready", () => {
   const h = D.health({ SUPABASE_URL: "u", SUPABASE_SERVICE_ROLE_KEY: "k", OPENROUTER_API_KEY: "o", ADMIN_TOKEN: "a" });
   assert.strictEqual(h.ready, false);
   assert.deepStrictEqual(h.missing.sort(), ["email", "pay"]);
-  const ready = D.health({ SUPABASE_URL: "u", SUPABASE_SERVICE_ROLE_KEY: "k", OPENROUTER_API_KEY: "o", ADMIN_TOKEN: "a", RESEND_API_KEY: "r", STRIPE_SECRET_KEY: "s" });
+  // Stripe without its webhook secret is worse than no Stripe: it takes the
+  // money and never hears that it was paid, so no book is ever delivered.
+  const half = D.health({ SUPABASE_URL: "u", SUPABASE_SERVICE_ROLE_KEY: "k", OPENROUTER_API_KEY: "o", ADMIN_TOKEN: "a", RESEND_API_KEY: "r", STRIPE_SECRET_KEY: "s" });
+  assert.strictEqual(half.ready, false);
+  assert.deepStrictEqual(half.missing, ["pay"]);
+
+  const ready = D.health({ SUPABASE_URL: "u", SUPABASE_SERVICE_ROLE_KEY: "k", OPENROUTER_API_KEY: "o", ADMIN_TOKEN: "a", RESEND_API_KEY: "r", STRIPE_SECRET_KEY: "s", STRIPE_WEBHOOK_SECRET: "w" });
   assert.strictEqual(ready.ready, true);
 });
 
-test("any of the three payment routes counts as cobro configured", () => {
-  for (const k of ["STRIPE_SECRET_KEY", "PAYMENT_URL", "ETSY_LISTING_URL"]) {
-    const h = D.health({ [k]: "x" });
-    assert.strictEqual(h.items.find((i) => i.id === "pay").ok, true, k);
-  }
-  assert.strictEqual(D.health({}).items.find((i) => i.id === "pay").detail, "sin configurar");
+test("cobro needs a complete route, and says so when Stripe is only half wired", () => {
+  const pay = (env) => D.health(env).items.find((i) => i.id === "pay");
+  assert.strictEqual(pay({ ETSY_LISTING_URL: "x" }).ok, true);
+  assert.strictEqual(pay({ STRIPE_SECRET_KEY: "sk_live_x", STRIPE_WEBHOOK_SECRET: "w" }).ok, true);
+
+  const half = pay({ STRIPE_SECRET_KEY: "sk_live_x" });
+  assert.strictEqual(half.ok, false, "money in, no book out");
+  assert.match(half.detail, /webhook/);
+
+  // Test keys must never look like a shop that can trade.
+  assert.match(pay({ STRIPE_SECRET_KEY: "sk_test_x", STRIPE_WEBHOOK_SECRET: "w" }).detail, /PRUEBA/);
+  assert.strictEqual(pay({}).detail, "sin configurar");
 });
 
 // A sale must still count as having read the script, or the conversion rate

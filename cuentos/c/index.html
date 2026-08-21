@@ -122,9 +122,12 @@
             </div>
             <p class="muted">${T.complete_body}</p>
             <ul class="ticks">${tick(T.complete_1)}${tick(T.complete_2)}${tick(T.complete_3)}${tick(T.complete_4)}</ul>
-            ${view.etsyUrl
-              ? `<div class="row"><a class="btn big" href="${view.etsyUrl}" target="_blank" rel="noopener">${T.buy_etsy}</a></div><p class="muted" style="font-size:.9rem">${T.etsy_code} <code>${view.token}</code></p>`
-              : `<p class="note">${T.etsy_soon}</p>`}
+            ${view.canPayByCard
+              ? `<div class="row"><button class="btn big" id="payBtn">${T.buy_card}</button></div>`
+              : view.etsyUrl
+                ? `<div class="row"><a class="btn big" href="${view.etsyUrl}" target="_blank" rel="noopener">${T.buy_etsy}</a></div><p class="muted" style="font-size:.9rem">${T.etsy_code} <code>${view.token}</code></p>`
+                : `<p class="note">${T.etsy_soon}</p>`}
+            <div id="amsg" class="note" hidden></div>
           </div>`;
       } else {
         actions = `
@@ -227,6 +230,19 @@
           b.disabled = false; b.textContent = label;
         };
       }
+      const payBtn = document.getElementById("payBtn");
+      if (payBtn) payBtn.onclick = async () => {
+        busy(payBtn, T.paying);
+        try {
+          const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+          const data = await res.json();
+          if (res.ok && data.url) return location.assign(data.url);
+          say(T.error, "alarm");
+        } catch (e) {
+          say(T.error, "alarm");
+        }
+        payBtn.disabled = false; payBtn.textContent = T.buy_card;
+      };
       const printBtn = document.getElementById("printBtn");
       if (printBtn) printBtn.onclick = async () => {
         busy(printBtn, "…");

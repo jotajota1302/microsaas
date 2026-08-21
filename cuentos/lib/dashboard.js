@@ -25,7 +25,17 @@ function health(env = {}) {
     { id: "text", name: "Texto", detail: env.TEXT_MODEL || "OpenRouter", ok: has("OPENROUTER_API_KEY"), required: true, hint: "OPENROUTER_API_KEY" },
     { id: "image", name: "Ilustración", detail: env.OPENROUTER_IMAGE_MODEL || "OpenRouter", ok: has("OPENROUTER_API_KEY"), required: true, hint: "OPENROUTER_API_KEY" },
     { id: "email", name: "Correo", detail: env.EMAIL_FROM || "Resend", ok: has("RESEND_API_KEY"), required: true, hint: "RESEND_API_KEY · sin esto nadie recibe su libro" },
-    { id: "pay", name: "Cobro", detail: has("STRIPE_SECRET_KEY") ? "Stripe" : has("PAYMENT_URL") ? "enlace de pago" : has("ETSY_LISTING_URL") ? "Etsy" : "sin configurar", ok: has("STRIPE_SECRET_KEY") || has("PAYMENT_URL") || has("ETSY_LISTING_URL"), required: true, hint: "STRIPE_SECRET_KEY, PAYMENT_URL o ETSY_LISTING_URL" },
+    {
+      id: "pay", name: "Cobro", required: true,
+      detail: has("STRIPE_SECRET_KEY")
+        ? (has("STRIPE_WEBHOOK_SECRET")
+            ? (String(env.STRIPE_SECRET_KEY).startsWith("sk_test_") ? "Stripe en modo PRUEBA: no cobra dinero real" : "Stripe")
+            : "Stripe a medias: falta el secreto del webhook, nadie recibiría su libro")
+        : has("ETSY_LISTING_URL") ? "Etsy" : "sin configurar",
+      // Stripe without its webhook secret takes the money and never delivers.
+      ok: (has("STRIPE_SECRET_KEY") && has("STRIPE_WEBHOOK_SECRET")) || has("ETSY_LISTING_URL"),
+      hint: "STRIPE_SECRET_KEY y STRIPE_WEBHOOK_SECRET, o ETSY_LISTING_URL",
+    },
     { id: "admin", name: "Acceso al panel", detail: "ADMIN_TOKEN", ok: has("ADMIN_TOKEN"), required: true, hint: "ADMIN_TOKEN" },
     { id: "bots", name: "Filtro de bots", detail: has("TURNSTILE_SECRET_KEY") ? "Cloudflare Turnstile" : "sin filtro: los topes son la única defensa", ok: has("TURNSTILE_SECRET_KEY") && has("TURNSTILE_SITE_KEY"), required: false, hint: "TURNSTILE_SITE_KEY y TURNSTILE_SECRET_KEY" },
     { id: "cron", name: "Reanudar trabajos", detail: "CRON_SECRET", ok: has("CRON_SECRET"), required: false, hint: "CRON_SECRET" },

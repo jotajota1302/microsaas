@@ -14,6 +14,7 @@ const { toLineArt } = require("./lineart.js");
 const { renderPdf } = require("./pdf.js");
 const { sendEmail } = require("./email.js");
 const turnstile = require("./turnstile.js");
+const stripe = require("./stripe.js");
 const { send } = require("./http.js");
 
 let cached;
@@ -22,7 +23,7 @@ function deps() {
   try {
     const db = getDb();
     const jobDeps = { db, generateStory, reviewStory: moderation.reviewStory, buildSheet, renderPages, toLineArt, renderPdf, sendEmail };
-    cached = { db, moderation, sendEmail, turnstile: (token, ip) => turnstile.verify(token, ip), runJob: (id) => runJob(id, jobDeps) };
+    cached = { db, moderation, sendEmail, stripe, turnstile: (token, ip) => turnstile.verify(token, ip), runJob: (id) => runJob(id, jobDeps) };
   } catch (e) {
     console.error(`[cuentos] not configured: ${e.message}`);
     cached = null;

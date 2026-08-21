@@ -12,7 +12,7 @@ const C = require("./collection.js");
 const money = require("./money.js");
 const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
-const { send, readJson, query, clientIp, requireMethod, requireSecret } = require("./http.js");
+const { send, readJson, rawBody, query, clientIp, requireMethod, requireSecret } = require("./http.js");
 const dashboard = require("./dashboard.js");
 
 const CAPS = () => ({
@@ -117,6 +117,10 @@ function storyView(story, order, urls) {
     priceCents: order.price_cents,
     status: order.status,
     etsyUrl: process.env.ETSY_LISTING_URL || null,
+    // Whether the card route is live. Half-wired Stripe (no webhook secret)
+    // deliberately reads as not live: it would take the money and deliver
+    // nothing.
+    canPayByCard: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET),
   };
 }
 
@@ -225,6 +229,83 @@ function waitlistHandler(deps) {
     const reason = ["print", "gallery"].includes(body.reason) ? body.reason : "cap";
     await deps.db.addWaitlist(email, body.locale === "en" ? "en" : "es", reason);
     return send(res, 201, { ok: true });
+  };
+}
+
+// --- payment: POST /api/checkout { token } and POST /api/webhook-stripe -----------
+
+function checkoutHandler(deps) {
+  return async (req, res) => {
+    if (!requireMethod(req, res, "POST")) return;
+    const body = await readJson(req).catch(() => null);
+    if (!body || !body.token) return send(res, 400, { error: "bad_request" });
+
+    const story = await deps.db.getStoryByToken(body.token);
+    if (!story) return send(res, 404, { error: "not_found" });
+    if (new Date(story.expires_at) < new Date()) return send(res, 410, { error: "expired" });
+    // Only from the sample gate: paying before seeing a page would be selling
+    // blind, and paying again for a finished book would be taking money twice.
+    if (story.stage !== "sample") return send(res, 409, { error: "wrong_stage" });
+
+    const order = await deps.db.getOrder(story.order_id);
+    const session = await deps.stripe.createCheckout({ story, order });
+    return send(res, 200, { url: session.url });
+  };
+}
+
+/**
+ * Stripe tells us a payment happened. Nothing here is believed until the
+ * signature checks out: without that, this endpoint is "give me a free book"
+ * for anyone who knows the URL.
+ */
+function stripeWebhookHandler(deps) {
+  return async (req, res) => {
+    if (!requireMethod(req, res, "POST")) return;
+
+    let event;
+    try {
+      event = deps.stripe.readEvent(await rawBody(req), req.headers["stripe-signature"]);
+    } catch (e) {
+      console.warn(`[cuentos] stripe webhook refused: ${e.message}`);
+      return send(res, 400, { error: "bad_signature" });
+    }
+
+    // Anything else is acknowledged: a 4xx would make Stripe retry an event we
+    // simply do not want.
+    if (event.type !== "checkout.session.completed") return send(res, 200, { ignored: event.type });
+
+    const session = event.data.object || {};
+    if (session.payment_status && session.payment_status !== "paid") {
+      return send(res, 200, { ignored: "unpaid" });
+    }
+
+    const token = session.client_reference_id || (session.metadata && session.metadata.token);
+    const story = token && (await deps.db.getStoryByToken(token));
+    if (!story) return send(res, 200, { ignored: "unknown_story" });
+
+    const order = await deps.db.getOrder(story.order_id);
+
+    // The unique index on provider_id makes a retried webhook a no-op rather
+    // than a second book. Stripe retries; this must be safe when it does.
+    await deps.db.recordBilling({
+      order_id: order.id,
+      provider: "stripe",
+      provider_id: session.id,
+      amount_cents: session.amount_total != null ? session.amount_total : order.price_cents,
+      currency: session.currency || "eur",
+      vat_rate: order.vat_rate,
+      status: "paid",
+    });
+
+    if (order.status === "paid" || order.status === "needs_review" || order.status === "delivered") {
+      return send(res, 200, { already: order.status });
+    }
+
+    await deps.db.updateOrder(order.id, { status: "paid", channel: "web", external_ref: session.id });
+    await deps.db.markPaid(story.id);
+    const job = await deps.db.createJob({ orderId: order.id, storyId: story.id, kind: "full" });
+    const result = await deps.runJob(job.id);
+    return send(res, 200, { state: result.state });
   };
 }
 
@@ -418,5 +499,5 @@ function adminHandler(deps) {
 
 module.exports = {
   orderHandler, storyHandler, reviseHandler, approveHandler, waitlistHandler,
-  printInterestHandler, recoverHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
+  printInterestHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
 };

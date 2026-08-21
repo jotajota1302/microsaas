@@ -8,7 +8,7 @@ const valid = require("./fixtures/story-valid.json");
 // --- fakes ---------------------------------------------------------------------
 
 function req({ method = "POST", body = {}, query = {}, headers = {} } = {}) {
-  return { method, body, query, headers: { "x-forwarded-for": "9.9.9.9", ...headers }, url: "/" };
+  return { method, body, rawBody: typeof body === "string" ? body : JSON.stringify(body), query, headers: { "x-forwarded-for": "9.9.9.9", ...headers }, url: "/" };
 }
 function res() {
   const r = { statusCode: 0, headers: {}, body: null };
@@ -532,4 +532,101 @@ test("recover skips an expired story rather than sending a dead link", async () 
   await H.recoverHandler({ db, sendEmail: async (m) => { sent.push(m); return {}; } })(req({ body: { email: "a@b.co" } }), r);
   assert.strictEqual(r.statusCode, 200);
   assert.strictEqual(sent.length, 0);
+});
+
+// --- payment ---------------------------------------------------------------------
+
+test("checkout opens a session for a story that has seen its sample", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  let seen = null;
+  const r = res();
+  await H.checkoutHandler({ db, stripe: { createCheckout: async (a) => { seen = a; return { id: "cs_1", url: "https://checkout/x" }; } } })(
+    req({ body: { token: db.story.token } }), r
+  );
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(r.body.url, "https://checkout/x");
+  assert.strictEqual(seen.story.token, db.story.token);
+});
+
+test("checkout refuses a story that has not reached the sample, or is already paid", async () => {
+  for (const [stage, code] of [["script", 409], ["full", 409]]) {
+    const db = fakeDb();
+    db.story.stage = stage;
+    const r = res();
+    await H.checkoutHandler({ db, stripe: { createCheckout: async () => ({ url: "x" }) } })(req({ body: { token: db.story.token } }), r);
+    assert.strictEqual(r.statusCode, code, stage);
+  }
+});
+
+// Without the signature check, "I paid" is an HTTP request anyone can send.
+test("the webhook refuses anything it cannot verify, and never looks at the body first", async () => {
+  const db = fakeDb();
+  let ran = false;
+  const r = res();
+  await H.stripeWebhookHandler({
+    db,
+    runJob: async () => { ran = true; return { state: "done" }; },
+    stripe: { readEvent: () => { throw Object.assign(new Error("signature mismatch"), { name: "StripeError" }); } },
+  })(req({ body: { type: "checkout.session.completed", data: { object: { client_reference_id: db.story.token } } } }), r);
+  assert.strictEqual(r.statusCode, 400);
+  assert.strictEqual(ran, false, "no book may be generated from an unverified claim");
+});
+
+test("a verified payment records the billing, marks the order paid and starts the book", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  const jobs = [];
+  const r = res();
+  await H.stripeWebhookHandler({
+    db,
+    runJob: async (id) => { jobs.push(id); return { state: "done" }; },
+    stripe: {
+      readEvent: () => ({
+        type: "checkout.session.completed",
+        data: { object: { id: "cs_9", client_reference_id: db.story.token, amount_total: 1290, currency: "eur", payment_status: "paid" } },
+      }),
+    },
+  })(req({ body: {} }), r);
+
+  assert.strictEqual(r.statusCode, 200);
+  const billing = db.calls.find((c) => c[0] === "billing");
+  assert.strictEqual(billing[1].provider, "stripe");
+  assert.strictEqual(billing[1].provider_id, "cs_9");
+  assert.strictEqual(billing[1].amount_cents, 1290);
+  assert.strictEqual(db.order.status, "paid");
+  assert.strictEqual(db.order.channel, "web");
+  assert.strictEqual(jobs.length, 1, "the book is generated once");
+});
+
+test("an event that is not a completed payment is acknowledged and ignored", async () => {
+  const db = fakeDb();
+  let ran = false;
+  const r = res();
+  await H.stripeWebhookHandler({
+    db,
+    runJob: async () => { ran = true; return {}; },
+    stripe: { readEvent: () => ({ type: "payment_intent.created", data: { object: {} } }) },
+  })(req({ body: {} }), r);
+  assert.strictEqual(r.statusCode, 200, "Stripe must not be told to retry an event we simply do not want");
+  assert.strictEqual(ran, false);
+});
+
+test("a completed session that is not actually paid does not deliver a book", async () => {
+  const db = fakeDb();
+  db.story.stage = "sample";
+  let ran = false;
+  const r = res();
+  await H.stripeWebhookHandler({
+    db,
+    runJob: async () => { ran = true; return {}; },
+    stripe: {
+      readEvent: () => ({
+        type: "checkout.session.completed",
+        data: { object: { id: "cs_x", client_reference_id: db.story.token, payment_status: "unpaid" } },
+      }),
+    },
+  })(req({ body: {} }), r);
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(ran, false);
 });
