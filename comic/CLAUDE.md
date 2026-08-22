@@ -228,7 +228,8 @@ retratos a partir de fotos: otro producto y, además, uno que nosotros no podemo
 `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_MANAGED_PAYMENTS`, `PUBLIC_BASE_URL`,
 `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `CRON_SECRET`, `BLOBS`, `BLOB_DIR`,
 `ADMIN_TOKEN`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `SUPABASE_BUCKET`, `PDF_DPI`, `PDF_QUALITY`,
-`LEGAL_NAME`, `LEGAL_NIF`, `LEGAL_ADDRESS`, `LEGAL_EMAIL`, `KEEP_UNPAID_DAYS`, `KEEP_PAID_DAYS`.
+`LEGAL_NAME`, `LEGAL_NIF`, `LEGAL_ADDRESS`, `LEGAL_EMAIL`, `KEEP_UNPAID_DAYS`, `KEEP_PAID_DAYS`,
+`TRUST_PROXY_HOPS` (solo si hay más de un proxy delante; en Vercel se deduce).
 Sin `RESEND_API_KEY` el correo sale por consola, que es lo que permite recorrer el flujo entero
 en el portátil.
 
@@ -448,6 +449,49 @@ borrado y un borrador que no coinciden es exactamente el fallo que esto sustituy
 sondea y el cron barre, así que dos llamantes ejecutaban el mismo paso dos veces — dos llamadas al
 guionista, dos al editor, dos portadas dibujadas. Más barato por colisión que en la mitad de pago,
 pero el mismo fallo y el mismo arreglo.
+
+## La IP falseable: el mismo fallo, dos veces, en la misma función (2026-08-22)
+
+Lo encontró la revisión de seguridad del push, no yo. Y es aleccionador porque **la segunda versión
+la escribí arreglando la primera**:
+
+1. La original leía `x-forwarded-for[0]` — la primera entrada es la que manda el CLIENTE.
+2. La «corregida» leía `x-real-ip` **sin comprobar nada**, una línea por encima del razonamiento
+   cuidadoso sobre la cadena. Sin cadena, sin proxy, sin verificación: mandas un valor distinto en
+   cada petición y el tope por visitante desaparece.
+
+Y encima con un comentario afirmando que el problema estaba resuelto, que es lo que hace que nadie
+vuelva a mirarlo.
+
+**Impacto real**: un atacante se comía las 120 vistas previas del día (unos 1,20 € de imagen) y los
+clientes de verdad se encontraban «vuelve mañana». El techo global —el que puse esta misma tarde—
+acotaba el gasto; lo que no acotaba era la denegación de servicio.
+
+### La forma correcta
+
+Ninguna de esas cabeceras vale nada salvo que un proxy nuestro las **sobrescriba**, y el código no
+puede saber si hay uno delante: hay que decírselo. `TRUST_PROXY_HOPS` cuenta los saltos, por defecto
+**1 en Vercel y 0 en todo lo demás**. Con 0, las cabeceras se ignoran enteras y se usa el socket.
+
+El 1 de Vercel es seguro y está **verificado en su documentación**, no supuesto: Vercel *sobrescribe*
+`x-forwarded-for` y no reenvía IPs externas, expresamente para impedir el falseo
+(`vercel.com/docs/headers/request-headers`).
+
+Y se cuenta desde el FINAL, no se coge la última sin más: con dos proxies, la última entrada es el
+proxy interno y entonces todos los visitantes comparten una «IP» y el tope se vuelve global sin que
+nadie se entere.
+
+Probado en vivo: tres peticiones con tres `X-Real-IP` falsas distintas y el tope muerde tras la
+primera.
+
+### Y de paso, `baseUrlOf`
+
+Construía la URL de vuelta de Stripe y los enlaces del correo desde la cabecera `Host`, que también
+la pone el cliente. El daño estaba acotado —solo puedes envenenar tu propio pedido, porque el correo
+va a la dirección que tú has dado— pero es la misma clase de error. Ahora el orden es:
+`PUBLIC_BASE_URL` → `VERCEL_PROJECT_PRODUCTION_URL` → `VERCEL_URL` → la cabecera, y esta última solo
+cuando no hay proxy declarado (el caso de desarrollo). Si falta `PUBLIC_BASE_URL` detrás de un proxy,
+lo avisa por consola.
 
 ## Estado
 
