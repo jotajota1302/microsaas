@@ -374,7 +374,7 @@ footer a { color: var(--muted); }
 .kpi small { font-size: .74rem; color: var(--muted); }
 
 .funnel { display: flex; flex-direction: column; gap: .45rem; }
-.fbar { display: grid; grid-template-columns: 11rem 1fr 2.5rem; gap: .8rem; align-items: center; font-size: .9rem; }
+.fbar { display: grid; grid-template-columns: 12rem 1fr 2.5rem auto; gap: .8rem; align-items: center; font-size: .9rem; }
 .fbar .track { background: var(--sunken); border-radius: 999px; height: .8rem; overflow: hidden; }
 .fbar .track i { display: block; height: 100%; background: var(--sea); border-radius: 999px; }
 .fbar b { text-align: right; font-variant-numeric: tabular-nums; }

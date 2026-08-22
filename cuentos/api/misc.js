@@ -34,5 +34,6 @@ module.exports = mountRouter({
   "print-interest": "printInterestHandler",
   recover: "recoverHandler",
   contact: "contactHandler",
+  track: "trackHandler",
   job: "jobHandler",
 });

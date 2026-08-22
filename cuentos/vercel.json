@@ -26,6 +26,7 @@
     { "source": "/api/print-interest", "destination": "/api/misc?fn=print-interest" },
     { "source": "/api/recover", "destination": "/api/misc?fn=recover" },
     { "source": "/api/contact", "destination": "/api/misc?fn=contact" },
+    { "source": "/api/track", "destination": "/api/misc?fn=track" },
     { "source": "/api/job", "destination": "/api/misc?fn=job" }
   ],
   "regions": ["fra1"],

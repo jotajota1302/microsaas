@@ -225,6 +225,20 @@ function createDb(client) {
       return unwrap(await t("jobs").select("*").eq("state", "needs_review").order("created_at", { ascending: true }).limit(limit));
     },
 
+    // --- audience measurement --------------------------------------------------
+    async recordEvent(row) {
+      return unwrap(await t("events").insert(row));
+    },
+    async recentEvents(sinceIso, limit = 5000) {
+      return unwrap(
+        await t("events")
+          .select("id,at,name,path,ref,utm,locale,device,visit")
+          .gte("at", sinceIso)
+          .order("at", { ascending: false })
+          .limit(limit)
+      );
+    },
+
     // --- money and signals ----------------------------------------------------
     async recordBilling(row) {
       return unwrap(await t("billing").upsert(row, { onConflict: "provider_id", ignoreDuplicates: true }).select().maybeSingle());

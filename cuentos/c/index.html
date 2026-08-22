@@ -11,6 +11,7 @@
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/app.css">
 <script src="/assets/js/i18n.js" defer></script>
+<script src="/assets/js/track.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -340,6 +341,9 @@
       }
       const payBtn = document.getElementById("payBtn");
       if (payBtn) payBtn.onclick = async () => {
+        // The only step the database cannot see: it tells "saw the price and
+        // left" apart from "left at the payment page".
+        if (window.cuentosTrack) window.cuentosTrack("checkout_click", true);
         busy(payBtn, T.paying);
         try {
           const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });

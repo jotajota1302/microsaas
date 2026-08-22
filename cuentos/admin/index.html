@@ -35,6 +35,7 @@
   <div id="panel" hidden>
     <nav class="adminnav" id="nav">
       <button type="button" data-s="hoy" class="on">Hoy <span class="pill" id="navQueue">0</span></button>
+      <button type="button" data-s="trafico">Tráfico</button>
       <button type="button" data-s="cuentos">Cuentos</button>
       <button type="button" data-s="dinero">Dinero</button>
       <button type="button" data-s="sistema">Sistema</button>
@@ -73,6 +74,24 @@
     <section class="stack" data-s="hoy">
       <h2>Necesita tu revisión <span class="pill" id="queueCount">0</span></h2>
       <div id="list" class="stack"></div>
+    </section>
+
+    <section class="stack" data-s="trafico" hidden>
+      <div class="row" style="justify-content:space-between">
+        <h2>De desconocido a libro</h2>
+        <div class="tabs" id="trange">
+          <button class="on" data-t="today" type="button">Hoy</button>
+          <button data-t="week" type="button">7 días</button>
+          <button data-t="month" type="button">30 días</button>
+        </div>
+      </div>
+      <p class="muted" id="trafficLine"></p>
+      <div class="funnel" id="tfunnel"></div>
+      <div class="grid" style="margin-top:.6rem">
+        <div class="card stack"><h3>De dónde vienen</h3><div id="tsources"></div></div>
+        <div class="card stack"><h3>Qué páginas leen</h3><div id="tpages"></div></div>
+        <div class="card stack"><h3>Con qué lo miran</h3><div id="tdevices"></div></div>
+      </div>
     </section>
 
     <section class="stack" data-s="cuentos" hidden>
@@ -226,6 +245,47 @@
       </div>`).join("") : `<p class="muted">Nada esperando. Todo entregado.</p>`;
 
     $("list").querySelectorAll("button[data-a]").forEach((b) => b.onclick = () => onAction(b));
+  }
+
+  let trange = "today";
+  document.querySelectorAll("#trange button").forEach((b) => {
+    b.onclick = () => {
+      trange = b.dataset.t;
+      document.querySelectorAll("#trange button").forEach((x) => x.classList.toggle("on", x === b));
+      renderTraffic();
+    };
+  });
+
+  /*
+   * The funnel from a stranger to a book. The first three steps are clicks,
+   * the rest are facts in the database — so a step that reads zero with
+   * traffic above it is a page to fix, not a tracker to debug.
+   */
+  function renderTraffic() {
+    const t = (data.traffic || {})[trange];
+    if (!t) { $("trafficLine").textContent = "Todavía no hay visitas registradas."; $("tfunnel").innerHTML = ""; return; }
+    const f = t.funnel;
+    const top = f.steps[0].n;
+    $("trafficLine").innerHTML = top
+      ? `De cada <b>100 visitas</b>, <b>${f.visitToPaid}</b> acaban en un libro pagado. ${t.events} eventos registrados.`
+      : "Todavía no hay visitas en este periodo.";
+    $("tfunnel").innerHTML = f.steps.map((s) => `
+      <div class="fbar">
+        <span>${s.label}</span>
+        <div class="track"><i style="width:${top ? Math.round((s.n / top) * 100) : 0}%"></i></div>
+        <b>${s.n}</b>
+        <span class="muted" style="width:4rem;text-align:right">${s.rate === null ? "" : s.rate + " %"}</span>
+      </div>`).join("");
+
+    const list = (rows, key, val) => rows.length
+      ? `<table style="width:100%;font-size:.9rem">${rows.map((r) => `<tr><td>${esc(String(r[key]))}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${r[val]}</td></tr>`).join("")}</table>`
+      : `<p class="muted" style="font-size:.9rem">Nada todavía.</p>`;
+    $("tsources").innerHTML = list(t.sources, "source", "visits");
+    $("tpages").innerHTML = list(t.pages, "path", "views");
+    const d = t.devices || {};
+    $("tdevices").innerHTML = list([
+      { k: "Móvil", v: d.movil || 0 }, { k: "Tableta", v: d.tableta || 0 }, { k: "Escritorio", v: d.escritorio || 0 },
+    ], "k", "v");
   }
 
   function renderRecent() {
@@ -465,7 +525,7 @@
       data = await res.json();
       $("auth").hidden = true; $("panel").hidden = false;
       $("clock").textContent = "Actualizado a las " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-      renderHealth(); renderStats(); renderQueue(); renderRecent();
+      renderHealth(); renderStats(); renderQueue(); renderRecent(); renderTraffic();
       $("navQueue").textContent = (data.items || []).length;
       if (!started) {
         started = true;

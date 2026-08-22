@@ -13,7 +13,9 @@ function req({ method = "POST", body = {}, query = {}, headers = {} } = {}) {
 function res() {
   const r = { statusCode: 0, headers: {}, body: null };
   r.setHeader = (k, v) => { r.headers[k] = v; };
-  r.end = (s) => { r.body = JSON.parse(s); };
+  // A 204 ends with no body at all, which is correct HTTP and used to make
+  // this helper throw.
+  r.end = (s) => { r.body = s === undefined || s === "" ? null : JSON.parse(s); };
   return r;
 }
 
@@ -874,4 +876,40 @@ test("a relay that fails is our problem, not the customer's", async () => {
     req({ body: { email: "a@b.co", message: "el libro no llega" } }), r
   );
   assert.strictEqual(r.statusCode, 200, "the customer is told it was received; the failure goes to our logs");
+});
+
+// --- measurement must never be something a customer can feel ------------------------
+
+test("track answers 204 and never argues, whatever it is sent", async () => {
+  const stored = [];
+  const db = fakeDb({ recordEvent: async (r) => stored.push(r) });
+  for (const body of [{ name: "view", path: "/" }, { name: "basura" }, {}]) {
+    const r = res();
+    await H.trackHandler({ db })(req({ body }), r);
+    assert.strictEqual(r.statusCode, 204);
+  }
+  assert.strictEqual(stored.length, 1, "only the event we asked for is stored");
+});
+
+test("a database that will not take the event does not break the page", async () => {
+  const db = fakeDb({ recordEvent: async () => { throw new Error("db down"); } });
+  const r = res();
+  await H.trackHandler({ db })(req({ body: { name: "view", path: "/" } }), r);
+  assert.strictEqual(r.statusCode, 204);
+});
+
+test("the panel shows the titles a person can read, not the placeholders", async () => {
+  // "El Gran Viaje de {{NOMBRE}}" is how the story is stored, because the
+  // child's name never travels to a model. The panel is not a model.
+  const db = fakeDb({
+    recentOrders: async () => [{ id: "o1", email: "a@b.c", status: "sample", created_at: new Date().toISOString(), price_cents: 1199, personalization: { name: "Alejandro", people: [] } }],
+    recentJobs: async () => [],
+    storiesForOrders: async () => [{ order_id: "o1", token: "abcdefghijklmnopqrstuv", stage: "sample", story: { title: "El Gran Viaje de {{NOMBRE}}", pages: [] }, revisions: 0, page_paths: {} }],
+    recentEvents: async () => [],
+  });
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(req({ method: "GET", headers: { authorization: "Bearer adm" } }), r);
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.body.recent[0].story.title, "El Gran Viaje de Alejandro");
 });

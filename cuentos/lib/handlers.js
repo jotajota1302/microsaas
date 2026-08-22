@@ -14,6 +14,7 @@ const { validateOrderInput } = require("./order-input.js");
 const { substitute } = require("./pdf.js");
 const { send, readJson, rawBody, query, clientIp, requireMethod, requireSecret } = require("./http.js");
 const dashboard = require("./dashboard.js");
+const analytics = require("./analytics.js");
 const { recipientsOf } = require("./email.js");
 const { SAMPLE_PAGES } = require("./steps.js");
 
@@ -390,6 +391,27 @@ function recoverHandler(deps) {
 
 // --- POST /api/print-interest { token } --------------------------------------------
 
+// --- POST /api/track ---------------------------------------------------------------
+//
+// One row per thing that happened before an order exists. Everything after
+// that is already in the database and is not guessed from a click.
+//
+// It answers 204 whatever happens: measurement must never be something the
+// customer can feel, and a failure here is ours to find in the logs.
+
+function trackHandler(deps) {
+  return async (req, res) => {
+    if (!requireMethod(req, res, "POST")) return;
+    const body = await readJson(req).catch(() => null);
+    const row = analytics.toRow(body, { ipHash: deps.db.hashIp(clientIp(req)) });
+    if (row) {
+      await deps.db.recordEvent(row).catch((e) => console.warn(`[cuentos] track dropped: ${e.message}`));
+    }
+    res.statusCode = 204;
+    return res.end();
+  };
+}
+
 // --- POST /api/contact { email, message, token? } ------------------------------
 //
 // The last resort when nothing else worked: the address was wrong, the link is
@@ -538,10 +560,17 @@ function adminHandler(deps) {
       // looked at. One query for all of them, and the cost comes from the jobs
       // already fetched for the economics rather than from more round trips.
       const rows = await deps.db.storiesForOrders(orders.map((o) => o.id));
+      const byId = new Map(orders.map((o) => [o.id, o]));
       const stories = new Map();
       for (const s of rows || []) {
+        // The stored title keeps the placeholder, because the child's name
+        // never travels to a model. The panel is not a model: showing
+        // "El Gran Viaje de {{NOMBRE}}" to the person running the shop is just
+        // a leak of how the sausage is made.
+        const person = (byId.get(s.order_id) || {}).personalization || {};
         stories.set(s.order_id, {
-          token: s.token, stage: s.stage, title: s.story && s.story.title,
+          token: s.token, stage: s.stage,
+          title: substitute((s.story && s.story.title) || "", { name: person.name, people: person.people || [] }),
           revisions: s.revisions, retouched: s.retouched, expiresAt: s.expires_at,
           illustrated: Object.keys(s.page_paths || {}).length,
           hasPdf: Boolean(s.pdf_path),
@@ -556,7 +585,26 @@ function adminHandler(deps) {
         costCents: spent.get(o.id) || 0,
         story: stories.get(o.id) || null,
       }));
-      return send(res, 200, { items, recent, overview: dashboard.overview({ orders, jobs: allJobs, env: process.env }) });
+      // The half of the funnel the database cannot see. Best effort: a shop
+      // must open even if its statistics do not.
+      const sinceIso = new Date(Date.now() - 30 * 86400000).toISOString();
+      const events = await deps.db.recentEvents(sinceIso).catch((e) => {
+        console.warn(`[cuentos] events unavailable: ${e.message}`);
+        return [];
+      });
+      const inRange = (days) => {
+        const from = Date.now() - days * 86400000;
+        const ev = (events || []).filter((e) => new Date(e.at).getTime() >= from);
+        const od = orders.filter((o) => new Date(o.created_at).getTime() >= from);
+        return { funnel: analytics.funnel(ev, od), sources: analytics.sources(ev), devices: analytics.devices(ev), pages: analytics.pages(ev), events: ev.length };
+      };
+
+      return send(res, 200, {
+        items,
+        recent,
+        overview: dashboard.overview({ orders, jobs: allJobs, env: process.env }),
+        traffic: { today: inRange(1), week: inRange(7), month: inRange(30) },
+      });
     }
 
     if (req.method !== "POST") return send(res, 405, { error: "method_not_allowed" });
@@ -672,5 +720,5 @@ function adminHandler(deps) {
 
 module.exports = {
   orderHandler, storyHandler, reviseHandler, approveHandler, waitlistHandler,
-  printInterestHandler, contactHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, resumeHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
+  printInterestHandler, contactHandler, trackHandler, recoverHandler, checkoutHandler, stripeWebhookHandler, resumeHandler, cronHandler, jobHandler, adminHandler, storyView, CAPS,
 };

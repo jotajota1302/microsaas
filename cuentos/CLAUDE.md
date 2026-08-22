@@ -75,6 +75,15 @@ Un cliente que teclea mal su correo se perdía entero: ni libro, ni enlace, ni r
 
 **El panel** (`/admin/`) tiene menú de secciones: **Hoy** (cola de revisión, con contador), **Cuentos** (todos, con filtro y ficha por pedido), **Dinero** (embudo y márgenes) y **Sistema** (integraciones y cobro manual). La sección elegida se recuerda en localStorage.
 
+## Medición de audiencia (22-08)
+
+El embudo se conocía **solo desde que existe un pedido**. Faltaba la mitad de arriba: si 300 visitas dan 3 cuentos, el problema es la landing y nada en la base de datos lo diría.
+
+- **Propia, no Vercel Analytics**: ya hay base de datos y panel, y así los clics se **cruzan con los pedidos reales** en la misma tabla de conversión. Tabla `cuentos.events` (migración `0003`… en realidad `cuentos_events`), `POST /api/track`, `assets/js/track.js` en las páginas públicas (nunca en `/admin`).
+- **Sin cookies, primera parte**: id de visita aleatorio en `sessionStorage` (muere con la pestaña), IP solo cifrada con `IP_SALT` y para frenar abusos, **referente reducido al dominio** (la búsqueda que trajo a alguien es texto que escribió), UTM limitado a source/medium/campaign, y `/c/<token>` se guarda como `/c` — el token es la llave del libro de alguien. Está descrito en la página legal.
+- **Cuatro eventos y solo cuatro**: `view`, `cta`, `form_start`, `checkout_click`. El resto del embudo (piden guion → aprueban → pagan) sale de `orders`, que es un hecho y no un clic que ojalá se disparase.
+- `lib/analytics.js` tiene la aritmética como funciones puras y testeadas; el panel lo pinta en la sección **Tráfico** (hoy / 7 / 30 días) con fuentes, páginas y dispositivos. `/api/track` responde **204 siempre**: medir no puede ser algo que el cliente note.
+
 ## Supabase (aplicado 2026-08-21)
 
 - Proyecto compartido `rgpzrbwpyaewughahpgo` (el mismo del RPG y de otras apps). **Todo vive en el schema `cuentos`**: 9 tablas con RLS activo en todas y sin políticas salvo `coloring_pages`, que es la única de lectura pública. Migraciones aplicadas: `0001_cuentos_schema` y `0002_claim_job`.
