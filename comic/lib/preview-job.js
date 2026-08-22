@@ -8,10 +8,15 @@
  * Whoever looks pushes — the viewer polls, and a cron sweeps the ones nobody
  * is watching. Same shape as cuentos/lib/steps.js.
  *
- *   outline -> critique -> rewrite -> breakdown -> dialogue -> cover -> done
+ *   outline -> critique -> rewrite -> breakdown -> cover -> done
  *
  * The steps deliberately stop at the cover: the free preview is one image plus
- * the whole script. The other 78 panels only get drawn after somebody pays.
+ * the whole script. The other ninety panels only get drawn after somebody pays.
+ *
+ * EL PULIDO DE DIÁLOGO YA NO ESTÁ AQUÍ (2026-08-22). Estaba, y medido costaba
+ * 0,076 $ y 7,6 minutos: el 68 % del tiempo de la vista previa y el 83 % de su
+ * coste de texto — pagado también por los diecinueve de cada veinte que miran
+ * y no compran. Se ha ido a la máquina de pago, que es quien puede permitírselo.
  */
 
 const C = require("./catalog.js");
@@ -22,7 +27,7 @@ const { validateStory, judgeCritique, pageProblems } = require("./validate-story
 const { store } = require("./store.js");
 const { unmask } = require("./names.js");
 
-const STEPS = ["outline", "critique", "rewrite", "breakdown", "dialogue", "cover", "done"];
+const STEPS = ["outline", "critique", "rewrite", "breakdown", "cover", "done"];
 
 /** How many breakdown pages one invocation will attempt before yielding. */
 const PAGES_PER_CALL = Number(process.env.PAGES_PER_CALL || 4);
@@ -72,12 +77,12 @@ async function buildPage(order, outline, i, problems) {
 
 /** Percentage for the viewer's progress bar. Rough on purpose; it only reassures. */
 function progressOf(job) {
-  const base = { outline: 5, critique: 20, rewrite: 35, breakdown: 45, dialogue: 80, cover: 90, done: 100 };
+  const base = { outline: 5, critique: 20, rewrite: 35, breakdown: 45, cover: 92, done: 100 };
   let pct = base[job.step] || 0;
   if (job.step === "breakdown" && job.data && job.data.outline) {
     const total = job.data.outline.pages.length || 1;
     const built = (job.data.pages || []).filter(Boolean).length;
-    pct = 45 + Math.round((built / total) * 35);
+    pct = 45 + Math.round((built / total) * 45);
   }
   return pct;
 }
@@ -174,35 +179,7 @@ async function runStep(token, job) {
           }
         }
         const left = d.pages.filter((p) => !p).length;
-        patch = { step: left ? "breakdown" : "dialogue", data: d };
-        break;
-      }
-
-      case "dialogue": {
-        const pages = d.pages.filter(Boolean);
-        d.dialogueBefore = (await completeJson({ ...P.dialogueCriticPrompt(order, pages), provider: "critic" })).json;
-        for (let i = 0; i < pages.length; i++) {
-          const page = pages[i];
-          if (!page.panels.some((x) => (x.bubbles || []).length)) continue;
-          try {
-            const { json } = await completeJson({
-              ...P.dialoguePolishPrompt(order, page, i, pages.length, d.dialogueBefore),
-              provider: "critic",
-            });
-            const byIndex = new Map((json.panels || []).map((x) => [Number(x.index), x.bubbles || []]));
-            const sameShape = page.panels.every((panel, q) =>
-              (panel.bubbles || []).length === ((byIndex.get(q) || []).length));
-            if (!sameShape) continue;
-            page.panels.forEach((panel, q) => {
-              const fresh = byIndex.get(q) || [];
-              (panel.bubbles || []).forEach((b, bi) => {
-                const text = fresh[bi] && String(fresh[bi].text || "").trim();
-                if (text) b.text = text;
-              });
-            });
-          } catch { /* a page that will not polish keeps its original lines */ }
-        }
-        patch = { step: "cover", data: d };
+        patch = { step: left ? "breakdown" : "cover", data: d };
         break;
       }
 

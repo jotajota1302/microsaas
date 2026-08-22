@@ -229,7 +229,8 @@ retratos a partir de fotos: otro producto y, además, uno que nosotros no podemo
 `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `CRON_SECRET`, `BLOBS`, `BLOB_DIR`,
 `ADMIN_TOKEN`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `SUPABASE_BUCKET`, `PDF_DPI`, `PDF_QUALITY`,
 `LEGAL_NAME`, `LEGAL_NIF`, `LEGAL_ADDRESS`, `LEGAL_EMAIL`, `KEEP_UNPAID_DAYS`, `KEEP_PAID_DAYS`,
-`TRUST_PROXY_HOPS` (solo si hay más de un proxy delante; en Vercel se deduce).
+`TRUST_PROXY_HOPS` (solo si hay más de un proxy delante; en Vercel se deduce), `COST_LOG` (si se
+quiere el registro de coste en disco).
 Sin `RESEND_API_KEY` el correo sale por consola, que es lo que permite recorrer el flujo entero
 en el portátil.
 
@@ -493,6 +494,79 @@ va a la dirección que tú has dado— pero es la misma clase de error. Ahora el
 cuando no hay proxy declarado (el caso de desarrollo). Si falta `PUBLIC_BASE_URL` detrás de un proxy,
 lo avisa por consola.
 
+## Lo que cuesta de verdad, medido (2026-08-22)
+
+Un cómic entero por el camino de producción, con un medidor (`lib/meter.js`) al que reportan
+`llm.js` e `images.js`. Ya no hay estimaciones: los proveedores dicen los tokens y las tarifas están
+escritas con su fuente. Reproducible con `node scripts/measure-comic.js`.
+
+«No contesta» — Bruno, 16-17, cazadores, oscuro, manga B/N. **16 páginas, 90 viñetas, 94 imágenes.**
+
+| | Llamadas | Tiempo | Coste |
+|---|---|---|---|
+| Imágenes `image-01` | 94 | mediana 20,4 s | **0,3290 $** |
+| Texto MiniMax M3 | 22 | 146 s | 0,0193 $ |
+| Texto GPT-5 mini | 19 | 547 s | **0,0917 $** |
+| | | **24 min** | **0,4399 $ = 0,405 €** |
+
+### Lo que la medición desmintió
+
+**La vista previa gratis costaba 0,105 €, no 0,01 €.** Diez veces lo escrito. Y como se REGALA, a una
+conversión de 1 de cada 20 eso eran **2,10 € por venta**: el coste dominante del negocio no era el
+cómic vendido, era el que se enseña gratis. La cifra del crítico llevaba dos correcciones al alza en
+un solo día (de «menos de un céntimo» a ~0,02 $ estimados, y de ahí a **0,09 $ medidos**). Dos veces
+me equivoqué por estimar en vez de medir; de ahí el medidor.
+
+### El arreglo: el pulido de diálogo se paga cuando alguien paga
+
+Los 16 pases de pulido eran **0,076 $ y 7,6 minutos**, el 83 % del coste de texto y el 68 % del
+tiempo de la vista previa. Se han movido a `render-job` como primer paso de la máquina de pago.
+
+Medido antes y después sobre la mitad gratis:
+
+| | Antes | Después |
+|---|---|---|
+| Tiempo | 11 min 53 s | **3 min 2 s** |
+| Coste | 0,114 $ | **0,030 $** |
+
+Y por venta, con las 20 previas que hacen falta para una: **2,40 € → 0,92 €, un 62 % menos**, del
+16 % del precio al 6,1 %.
+
+Dos detalles del paso movido que no son obvios y están comentados en el código: trabaja sobre
+`d.pages` (el desglose ENMASCARADO), no sobre `d.story`, porque la historia ya lleva los nombres
+reales y esto es una llamada a un modelo; y rehace la historia con `assemble()` al terminar, así que
+todo lo que viene después dibuja lo pulido.
+
+### Lo que se probó y NO se cambió
+
+Tres candidatos a optimización; solo pagó el primero. Los otros dos quedan escritos para que nadie
+los vuelva a intentar a ciegas:
+
+- **Pulir con MiniMax en vez de OpenRouter.** Deja el pulido en 0,008 $ en vez de 0,076 $, y MiniMax
+  pule de verdad (cambia réplicas, algunas a mejor: *«El protocolo 7-C otra vez no cuadra»* →
+  *«El 7-C no cuadra. Otra vez no.»*). Pero **el juez daba 2 antes y 2 después**, y con GPT-5 mini
+  la nota subía de 2 a 3. Lo que abarató el pulido fue MOVERLO, no cambiar de proveedor: eso último
+  ahorra 6,8 céntimos por venta y se lleva el único punto de calidad que teníamos en el diálogo.
+  Descartado por decisión de JJ con el dato delante.
+  · De paso quedó explicado por qué GPT-5 mini soltaba 2.300 tokens de salida por llamada y MiniMax
+  94: el primero razona y **el razonamiento se paga a 2 $/M**. No pagábamos más pulido, pagábamos
+  su reflexión.
+- **Subir la concurrencia de imágenes de 3 a 6.** En una prueba corta parece que reduce el tiempo a
+  la mitad (75 s → 38 s con 12 viñetas, cero fallos). **En carga sostenida no**: con 36 viñetas
+  empieza a 1,78 s/viñeta y termina a 7,29 — cuatro veces más lenta. Cero fallos duros porque el
+  reintento con espera los absorbe, pero el reintento convierte los fallos en cola. Proyectado a 90
+  viñetas: 8,3 min contra 9,5. Un 13 %, no un 50 %. El techo es el límite del proveedor y por encima
+  de tres solo se hace cola. **La concurrencia 3 estaba bien puesta.**
+  · Lección de método: una prueba de 38 segundos no dice nada sobre un límite por minuto.
+- **Reducir reintentos por JSON inválido.** Medido: 1 de 19 llamadas del escritor, 0,0009 $. No hay
+  nada que rascar.
+
+### Lo que NO mide `scripts/measure-comic.js`
+
+Corre en un portátil en España. El tiempo de proveedor es el mismo en Vercel, pero la red no (las
+funciones salen de `iad1`) y el almacén tampoco (aquí ficheros, allí Supabase, que añade una ida y
+vuelta por paso). Para medir contra Vercel hace falta la `SUPABASE_SERVICE_ROLE_KEY`.
+
 ## Estado
 
 - [x] Encuadre, target y regla de PI (2026-08-21)
@@ -501,7 +575,10 @@ lo avisa por consola.
 - [x] Catálogo cerrado, pipeline de guion con crítico y validador (`docs/guion-2026-08-22.md`)
 - [x] Pasada de pulido de diálogo (sustituye el 100 % de las réplicas señaladas; la nota sube de 2 a 3/5 y **ahí se atasca**)
 - [x] Landing ES/EN con muestra real, formulario desde el catálogo y páginas legales de plantilla
-- [ ] **Subir el diálogo de 3/5 a 4/5** — es el único suspenso vivo
+- [x] Medidor de coste real (`lib/meter.js`) y `scripts/measure-comic.js` — se acabaron las estimaciones
+- [x] Pulido de diálogo movido a la mitad de pago: coste por venta 2,40 € → 0,92 € (−62 %)
+- [ ] **Subir el diálogo de 3/5 a 4/5** — sigue siendo el único suspenso vivo, y el pase de pulido
+      que lo mueve de 2 a 3 es lo único que hay. Cambiarlo de proveedor ya está probado y no sirve.
 - [x] Backend de la mitad gratis: `/api/preview`, `/api/job`, visor `/c/<token>`
 - [x] Backend de la mitad de pago: `/api/checkout`, webhook de Stripe, render de 78 viñetas, PDF, correo, cron
 - [x] Validador de imagen (`lib/panel-check.js`) — la última salida de modelo que no pasaba por un validador

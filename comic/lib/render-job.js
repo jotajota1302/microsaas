@@ -1,13 +1,16 @@
 /*
  * The paid render, as a second state machine.
  *
- *   sheets -> panels -> pdf -> deliver -> done
+ *   dialogue -> sheets -> panels -> pdf -> deliver -> done
  *
  * The preview one (lib/preview-job.js) stops at the cover on purpose. This is
- * what runs after the webhook says somebody paid, and it is the expensive
- * half: about 78 panels at ~25 s each, which is seven minutes of provider time
- * and roughly 0,22 EUR. Nothing here runs to completion either — each call
- * draws a bounded batch, persists, and says whether there is more to do.
+ * what runs after the webhook says somebody paid.
+ *
+ * MEDIDO de punta a punta el 2026-08-22, banda 16-17 (la más larga): 16
+ * páginas, 90 viñetas, 94 imágenes contando las hojas de personaje y la
+ * portada. Doce minutos de reloj y 0,33 $ solo de dibujo, con una mediana de
+ * 20,4 s por imagen y tres a la vez. Nada de esto corre hasta el final: cada
+ * llamada dibuja un lote acotado, lo guarda y dice si queda trabajo.
  *
  * Two policies worth stating, because both were decisions and not defaults:
  *
@@ -22,6 +25,9 @@
  */
 
 const S = require("./style.js");
+const P = require("./prompt-script.js");
+const { completeJson } = require("./llm.js");
+const { assemble } = require("./preview-job.js");
 const L = require("./layout.js");
 const { store } = require("./store.js");
 const { blobs, keys } = require("./blobs.js");
@@ -30,7 +36,7 @@ const { checkPanel } = require("./panel-check.js");
 const { buildPdf } = require("./comic-pdf.js");
 const { deliver } = require("./email.js");
 
-const RENDER_STEPS = ["sheets", "panels", "pdf", "deliver", "done"];
+const RENDER_STEPS = ["dialogue", "sheets", "panels", "pdf", "deliver", "done"];
 
 /** Panels attempted per invocation. Eight at concurrency 3 is ~70 s of a 300 s budget. */
 const PANELS_PER_CALL = Number(process.env.PANELS_PER_CALL || 8);
@@ -104,9 +110,9 @@ function panelJobs(story, token) {
 }
 
 function renderProgress(job, drawn, total) {
-  const base = { sheets: 3, panels: 8, pdf: 92, deliver: 97, done: 100 };
+  const base = { dialogue: 3, sheets: 8, panels: 12, pdf: 92, deliver: 97, done: 100 };
   if (job.render_step === "panels" && total) {
-    return 8 + Math.round((drawn / total) * 82);
+    return 12 + Math.round((drawn / total) * 78);
   }
   return base[job.render_step] || 0;
 }
@@ -146,27 +152,93 @@ async function advanceRender(token) {
 
 /** One step's worth of work. Only ever called with the claim held. */
 async function runStep(token, job) {
-  const story = job.data && job.data.story;
-  if (!story) throw new Error("este pedido no tiene guion");
+  const d = job.data || {};
+  const order = job.order;
+  // `story` se rehace en el paso de diálogo, así que se lee de `d` en cada
+  // paso en vez de capturarse una vez: capturarla arriba dejaría a los pasos
+  // siguientes dibujando la versión sin pulir.
+  if (!d.story) throw new Error("este pedido no tiene guion");
 
   const r = job.render || {};
   let patch = {};
 
   try {
-    switch (job.render_step || "sheets") {
+    switch (job.render_step || "dialogue") {
+      /*
+       * El pulido de diálogo, que vivía en la vista previa y ahora se paga solo
+       * cuando alguien paga. Medido el 2026-08-22: 0,076 $ y 7,6 minutos por
+       * cómic, y se gastaba también en los que nunca compran.
+       *
+       * Dos cosas que no son obvias:
+       *
+       * 1. Trabaja sobre `d.pages`, el desglose ENMASCARADO, no sobre
+       *    `d.story`. La historia ya lleva los nombres reales puestos por
+       *    assemble(), y esto es una llamada a un modelo: pulir sobre la
+       *    historia mandaría el nombre del menor al proveedor y desharía la
+       *    corrección de privacidad de esta misma mañana.
+       * 2. Lo pule OpenRouter, y eso se probó al revés antes de decidirlo.
+       *    Pasarlo a MiniMax deja el pulido en 0,008 $ en vez de 0,076 $, y
+       *    MiniMax pule de verdad — cambia réplicas, y algunas a mejor. Pero
+       *    medido el 2026-08-22 sobre este mismo cómic, el juez daba 2 antes y
+       *    2 después: con MiniMax el pase no mueve la nota, y con GPT-5 mini
+       *    la movía de 2 a 3.
+       *
+       *    Lo que hizo barato el pulido fue MOVERLO aquí, no cambiar de
+       *    proveedor: en la vista previa costaba 1,52 $ por venta (se pagaba
+       *    veinte veces, una por cada mirón), y aquí cuesta 0,076 $. Cambiar
+       *    además de proveedor ahorra 6,8 céntimos más por venta y se lleva por
+       *    delante el único punto de calidad que teníamos en el diálogo.
+       */
+      case "dialogue": {
+        const pages = (d.pages || []).filter(Boolean);
+        if (!pages.length) { patch = { render_step: "sheets" }; break; }
+
+        d.dialogueBefore = (await completeJson({
+          ...P.dialogueCriticPrompt(order, pages), provider: "critic",
+        })).json;
+
+        for (let i = 0; i < pages.length; i++) {
+          const page = pages[i];
+          if (!page.panels.some((x) => (x.bubbles || []).length)) continue;
+          try {
+            const { json } = await completeJson({
+              ...P.dialoguePolishPrompt(order, page, i, pages.length, d.dialogueBefore),
+              provider: "critic",
+            });
+            const byIndex = new Map((json.panels || []).map((x) => [Number(x.index), x.bubbles || []]));
+            const sameShape = page.panels.every((panel, q) =>
+              (panel.bubbles || []).length === ((byIndex.get(q) || []).length));
+            if (!sameShape) continue;
+            page.panels.forEach((panel, q) => {
+              const fresh = byIndex.get(q) || [];
+              (panel.bubbles || []).forEach((b, bi) => {
+                const text = fresh[bi] && String(fresh[bi].text || "").trim();
+                if (text) b.text = text;
+              });
+            });
+          } catch { /* una página que no pule se queda con sus réplicas */ }
+        }
+
+        // La historia se rehace con las réplicas nuevas y se le vuelven a poner
+        // los nombres reales. Es lo que leerá el PDF y lo que verá el visor.
+        d.story = assemble({ order, names: job.names }, d);
+        patch = { render_step: "sheets", data: d };
+        break;
+      }
+
       /*
        * The character sheets are the reference every panel is drawn against.
        * They are two or three images, and they gate everything else, so they
        * get their own step rather than being folded into the first batch.
        */
       case "sheets": {
-        const subjects = subjectsOf(story);
+        const subjects = subjectsOf(d.story);
         const todo = Object.keys(subjects);
         const already = await blobs.which(todo.map((k) => keys.sheet(token, k)));
         await pool(todo.filter((k) => !already.has(keys.sheet(token, k))), 2, async (key) => {
           try {
             const { buffer } = await drawWithLadder({
-              prompt: S.sheetPrompt(subjects[key].block, story.style),
+              prompt: S.sheetPrompt(subjects[key].block, d.story.style),
               aspect: "3:2",
             });
             await blobs.put(keys.sheet(token, key), buffer);
@@ -185,7 +257,7 @@ async function runStep(token, job) {
       }
 
       case "panels": {
-        const all = panelJobs(story, token);
+        const all = panelJobs(d.story, token);
         const done = await blobs.which(all.map((j) => j.key));
         const tries = r.tries || {};
         const todo = all
@@ -218,7 +290,7 @@ async function runStep(token, job) {
                * photograph is not stored at all — it is left for the next
                * batch to draw again.
                */
-              const checked = await checkPanel(buffer, story.style);
+              const checked = await checkPanel(buffer, d.story.style);
               if (checked.redraw) {
                 r.checks[j.id] = `${checked.verdict} x${attempt}`;
                 if (attempt < MAX_TRIES_PER_PANEL) return; // no blob: it gets another go
@@ -254,7 +326,7 @@ async function runStep(token, job) {
       }
 
       case "pdf": {
-        const all = panelJobs(story, token);
+        const all = panelJobs(d.story, token);
         const images = new Map();
         const cover = await blobs.get(keys.cover(token));
         if (cover) images.set(keys.cover(token), cover);
@@ -263,7 +335,7 @@ async function runStep(token, job) {
           if (buf) images.set(j.key, buf);
         }
 
-        const { bytes, missing } = await buildPdf({ story, images, token });
+        const { bytes, missing } = await buildPdf({ story: d.story, images, token });
         await blobs.put(keys.pdf(token), bytes);
 
         r.pdfBytes = bytes.length;
@@ -295,7 +367,7 @@ async function runStep(token, job) {
         // email anybody.
         if (job.render_status === "needs_attention") return { job, done: true };
         const to = [job.email, job.paid_email].filter(Boolean);
-        const sent = await deliver({ job, story, to });
+        const sent = await deliver({ job, story: d.story, to });
         patch = {
           render_step: "done",
           render_status: "done",
