@@ -5,8 +5,30 @@
  * until the buyer closes the tab. This is the other half of that: a scheduled
  * sweep so a comic somebody paid for finishes even if they never come back.
  *
- * Paid renders go first, always. A free preview can wait five more minutes; a
- * customer who has been charged cannot.
+ * Paid renders go first, always. A free preview can wait; a customer who has
+ * been charged cannot.
+ *
+ * PARA QUÉ EXISTE ESTO, que no es obvio. Tres cosas, y solo la tercera es
+ * housekeeping:
+ *
+ *   1. Terminar un cómic PAGADO cuyo comprador cerró la pestaña. El render son
+ *      unos siete minutos repartidos en diez llamadas; mientras alguien mira,
+ *      la propia página las hace. Si cierra, no las hace nadie.
+ *   2. Terminar una vista previa abandonada. El correo se manda al acabar, así
+ *      que sin esto quien rellena el formulario y cierra no sabe nunca que su
+ *      historia existe — y ese es el embudo de captación entero.
+ *   3. Borrar lo que ha cumplido su retención, que es una promesa escrita en
+ *      legal/privacidad.html.
+ *
+ * QUIÉN LO LLAMA: no el cron de Vercel. El plan Hobby solo admite crons
+ * diarios (rechaza el despliegue con `cron_jobs_limits_reached` si pides más),
+ * y 24 h de espera para un pedido pagado no es una red de seguridad. Como esto
+ * es un endpoint HTTP con un secreto, lo llama un workflow de GitHub Actions
+ * cada cinco minutos: .github/workflows/comic-cron.yml. Gratis y sin depender
+ * del plan.
+ *
+ * vercel.json mantiene además un barrido diario, que no estorba y cubre el día
+ * en que GitHub desactive el workflow por inactividad del repositorio.
  *
  * One step per job per sweep, not a loop until done. The budget of a single
  * invocation is spent across several orders rather than all of it on the first

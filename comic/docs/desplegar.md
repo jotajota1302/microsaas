@@ -14,12 +14,28 @@ portafolio: la CLI desde dentro de un proyecto ha subido carpetas equivocadas an
 La cuenta está en **Hobby**. `../CLAUDE.md` ya decidió que eso no vale: **Hobby prohíbe el uso
 comercial**, y esto cobra 14,99 €. Hay que pasar a **Pro** (20 $/mes, un asiento) antes de vender.
 
-Y hay una segunda cosa que **hay que comprobar**, porque no la he podido verificar y afecta al
-funcionamiento, no solo a las condiciones: **con qué frecuencia deja tu plan ejecutar un cron**.
-`vercel.json` pide `*/5 * * * *`. El cron es lo que termina un cómic cuando el comprador cierra la
-pestaña; si el plan solo permite uno diario, un pedido pagado puede quedarse a medias hasta 24 h.
-Si resulta ser así, la salida es que `/api/render` lo empuje el propio visor (ya lo hace) y avisar en
-el correo de «lo estamos dibujando», no dejar el cron mintiendo.
+### El cron: resuelto, y no con Vercel
+
+Esto ya está comprobado, y no por la documentación: **Vercel rechazó el primer despliegue** con este
+error literal.
+
+> `cron_jobs_limits_reached` — *Hobby accounts are limited to daily cron jobs. This cron expression
+> (`*/5 * * * *`) would run more than once per day.*
+
+Un pedido pagado esperando 24 h no es una red de seguridad, así que el barrido no lo dispara Vercel:
+lo dispara **`.github/workflows/comic-cron.yml`** cada cinco minutos, porque `/api/cron` es un
+endpoint HTTP con un secreto y lo puede llamar cualquiera. Gratis y sin depender del plan.
+
+`vercel.json` conserva un barrido diario a las 03:00 como respaldo, que sí cabe en Hobby y cubre el
+día en que GitHub desactive el workflow por inactividad del repo (lo hace a los 60 días, y avisa).
+
+Para que el workflow funcione hay que darle dos secretos en
+**Settings → Secrets and variables → Actions** del repo:
+
+    COMIC_BASE_URL      https://myownmanga.com
+    COMIC_CRON_SECRET   el mismo valor que CRON_SECRET en Vercel
+
+Sin ellos no falla: no hace nada y lo dice en el log.
 
 Activa **Spend Management** en cuanto crees el proyecto.
 

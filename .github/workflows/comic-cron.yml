@@ -1,0 +1,56 @@
+# Empuja los trabajos de MyOwnManga que nadie está mirando.
+#
+# POR QUÉ AQUÍ Y NO EN vercel.json: el plan Hobby solo permite crons DIARIOS
+# (Vercel rechaza el despliegue con `cron_jobs_limits_reached` si pides más).
+# Un cómic pagado cuyo comprador cierre la pestaña esperaría hasta 24 h.
+#
+# /api/cron es solo un endpoint HTTP con un secreto, así que lo puede llamar
+# cualquier cosa. Esto es gratis y no depende del plan.
+#
+# LO QUE HAY QUE SABER de los crons de GitHub Actions, para que nadie se
+# sorprenda luego:
+#   - el mínimo son 5 minutos, y bajo carga se retrasan (a veces 10-20 min).
+#     Da igual: es una red de seguridad, no el mecanismo principal. El
+#     principal es que el visor empuja mientras alguien mira.
+#   - se desactivan solos tras 60 días sin actividad en el repo. GitHub avisa.
+#
+# HACE FALTA configurar dos secretos del repositorio
+# (Settings -> Secrets and variables -> Actions):
+#   COMIC_BASE_URL   https://myownmanga.com   (o la URL de Vercel)
+#   COMIC_CRON_SECRET  el mismo valor que CRON_SECRET en Vercel
+# Sin ellos el workflow no falla: no hace nada y lo dice.
+
+name: comic · barrido
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}   # para poder lanzarlo a mano desde la pestaña Actions
+
+concurrency:
+  # Un barrido a la vez. Dos concurrentes no romperían nada — cada trabajo se
+  # reclama con `locked_until` — pero gastarían invocaciones para nada.
+  group: comic-cron
+  cancel-in-progress: false
+
+jobs:
+  barrer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar a /api/cron
+        env:
+          BASE: ${{ secrets.COMIC_BASE_URL }}
+          SECRET: ${{ secrets.COMIC_CRON_SECRET }}
+        run: |
+          if [ -z "$BASE" ] || [ -z "$SECRET" ]; then
+            echo "Faltan COMIC_BASE_URL o COMIC_CRON_SECRET: no hago nada."
+            echo "Configúralos en Settings -> Secrets and variables -> Actions."
+            exit 0
+          fi
+          # --fail-with-body para que un 401 o un 500 salgan en el log con su
+          # cuerpo, en vez de un workflow verde que no ha barrido nada.
+          curl --silent --show-error --fail-with-body \
+               --max-time 240 \
+               -H "Authorization: Bearer $SECRET" \
+               "${BASE%/}/api/cron"
