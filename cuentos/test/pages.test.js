@@ -94,6 +94,18 @@ test("both landings and the sitemap lead to it", () => {
   }
 });
 
+test("the printing page does not lie about the book it is describing", () => {
+  const C = require("../lib/collection.js");
+  const n = C.BOOK_PAGE_COUNT;
+  // The whole page argues "hand this file to a printer as it is". If the book
+  // changes length and this page still says 18, or stops being a multiple of
+  // four while the page promises it is, we have sent somebody to a counter
+  // with the wrong file.
+  assert.strictEqual(n % 4, 0, "the book is no longer a multiple of four, so the page's promise is false");
+  assert.ok(read("/imprimir/").includes(`${n} páginas cuadradas`), `the Spanish page does not say ${n} pages`);
+  assert.ok(read("/en/print/").includes(`${n} square pages`), `the English page does not say ${n} pages`);
+});
+
 test("the viewer sends each language to its own printing page", () => {
   const i18n = fs.readFileSync(path.join(ROOT, "assets", "js", "i18n.js"), "utf8");
   for (const url of ["/imprimir/", "/en/print/"]) {

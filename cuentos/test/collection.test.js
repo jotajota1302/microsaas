@@ -20,11 +20,11 @@ test("narrative beats are the five the validator checks", () => {
   assert.deepStrictEqual(C.BEATS, ["setup", "problem", "attempt", "attempt", "resolution"]);
 });
 
-test("book maths: title + 12 scenes + 4 colouring + card make 18 pages", () => {
+test("book maths: title + nameplate + 12 scenes + 4 colouring + card + colophon make 20 pages", () => {
   assert.strictEqual(C.PAGE_COUNT, 12);
   assert.strictEqual(C.COLORING_PAGE_COUNT, 4);
-  assert.strictEqual(C.BOOK_PAGE_COUNT, 18);
-  assert.strictEqual(1 + C.PAGE_COUNT + C.COLORING_PAGE_COUNT + 1, C.BOOK_PAGE_COUNT);
+  assert.strictEqual(C.BOOK_PAGE_COUNT, 20);
+  assert.strictEqual(2 + C.PAGE_COUNT + C.COLORING_PAGE_COUNT + 2, C.BOOK_PAGE_COUNT);
 });
 
 test("word limits leave room for a 3-8 year old page", () => {

@@ -3,7 +3,7 @@
 Versión 2 · 2026-08-21 · fuente de verdad del alcance. **[verificar]** = pendiente de comprobar.
 Investigación con fuentes: [`research-2026-08.md`](research-2026-08.md). Diseño técnico: [`superpowers/specs/2026-08-20-cuentos-design.md`](superpowers/specs/2026-08-20-cuentos-design.md) (con la revisión del 21-08 al final). Medidas reales: [`fase-0-resultados.md`](fase-0-resultados.md).
 
-> **Cambio de dirección (2026-08-21).** El MVP es **solo digital**: nada de imprenta, envíos ni logística hasta que el PDF demuestre tracción. Con ello cambian cuatro cosas: el precio sube (el PDF deja de ser gancho y pasa a ser el producto), el formato se acorta (18 páginas, una escena por página, en vez de un libro de 32 atado al mínimo de la imprenta), el gancho pasa a ser una **vista previa personalizada generada antes de cobrar** en una URL temporal, y el diferencial se traslada de la consistencia del personaje a **la personalización de la historia**: la familia y los amigos del niño como personajes, y el momento vital que está viviendo. La foto del niño queda **aparcada** (ver §7). El impreso no se descarta: se mide su demanda con un botón antes de construirlo.
+> **Cambio de dirección (2026-08-21).** El MVP es **solo digital**: nada de imprenta, envíos ni logística hasta que el PDF demuestre tracción. Con ello cambian cuatro cosas: el precio sube (el PDF deja de ser gancho y pasa a ser el producto), el formato se acorta (una escena por página, en vez de un libro de 32 atado al mínimo de la imprenta), el gancho pasa a ser una **vista previa personalizada generada antes de cobrar** en una URL temporal, y el diferencial se traslada de la consistencia del personaje a **la personalización de la historia**: la familia y los amigos del niño como personajes, y el momento vital que está viviendo. La foto del niño queda **aparcada** (ver §7). El impreso no se descarta: se mide su demanda con un botón antes de construirlo.
 
 ## 1. Problema y cliente
 
@@ -24,7 +24,7 @@ Investigación con fuentes: [`research-2026-08.md`](research-2026-08.md). Diseñ
 
 ## 3. Producto
 
-**Cuento en PDF, 18 páginas, cuadrado 20×20 cm** (se lee bien en tablet y móvil, y se imprime en A4 sin recortar nada):
+**Cuento en PDF, 20 páginas, cuadrado 20×20 cm** (se lee bien en tablet y móvil, y se imprime en A4 sin recortar nada):
 
 | Páginas | Contenido |
 |---|---|
@@ -55,7 +55,7 @@ Sin cambios de fondo respecto a la v1, menos una fase entera:
 
 - **Texto**: OpenRouter con structured outputs; el prompt incluye la forma exacta del JSON (medido: sin ella, los modelos que no aplican el schema fallan el 100 %). Validador propio como única puerta.
 - **Imagen**: hoja de personaje → escenas con **Nano Banana 2 (`google/gemini-3.1-flash-image`) vía OpenRouter**, medido el 21-08 con dos personajes: mismo personaje, misma acuarela, 0 bloqueos, 14 s y 0,07 $ por imagen, cuadrado 1024 con `image_config.aspect_ratio`. Una sola clave para texto e imagen. El verificador VLM comprueba **personaje y estilo** como red de seguridad.
-- **PDF**: pdf-lib, Andika (OFL), 18 páginas, una escena por página. Sin sangrado ni lomo.
+- **PDF**: pdf-lib, Andika (OFL), 20 páginas (múltiplo de cuatro: es lo que exige una encuadernación, ver `impresion-2026-08-22.md`), una escena por página. Sin sangrado ni lomo.
 - **Generación asíncrona por jobs** en tres tramos sobre la misma máquina de estados: `script` (texto, repetible con la instrucción del usuario), `sample` (hoja + 2 escenas) y `full` (resto + colorear + PDF + revisión humana de ~5 minutos + email), más `retouch`. Techos: guardrail de OpenRouter 5 $/día (externo), `MAX_SCRIPTS_PER_DAY` 200 y `MAX_SAMPLES_PER_DAY` 40, Turnstile, 3 guiones por IP y día. La web no se apaga nunca; las URLs caducan solas.
 - **URL temporal por cuento**: `/c/<token>` servida por la misma app de Vercel (no hay un despliegue por cliente); `stories.expires_at` a 7 días para las vistas previas y 30 para las compradas; un cron borra imágenes, PDF y datos personales al caducar. Es a la vez el escaparate y la entrega.
 - **Cobro**: Stripe Managed Payments (MoR) — **lo integra Edu más adelante**; `api/checkout.js` y `api/webhook-stripe.js` son la única costura. Mientras tanto la web vende **vía Etsy**: «Completar el cuento» lleva a la ficha de Etsy con el token del cuento, y el pedido se confirma a mano desde la cola de revisión. Ya no hace falta Stripe directo ni IVA de envíos.

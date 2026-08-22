@@ -1,5 +1,5 @@
 /*
- * Renders the 18-page PDF (revision 2026-08-21: digital only, no bleed).
+ * Renders the 20-page PDF (revision 2026-08-21: digital only, no bleed).
  *
  * Modes:
  *   screen  - the file the customer downloads
@@ -8,11 +8,22 @@
  * This module is the ONLY place where the child's real name enters the
  * product. Everything upstream works with {{NOMBRE}} / {{PERSONA1}} / {{PERSONA2}}.
  *
- * Page map (18 pages, 20x20 cm):
- *   1        title page with dedication
- *   2-13     12 scenes: illustration on the top 58 %, text below
- *   14-17    4 colouring pages
- *   18       character card + colophon with the AI disclosure
+ * Page map (20 pages, 20x20 cm):
+ *   1        title page
+ *   2        nameplate and dedication
+ *   3-14     12 scenes: illustration on the top 58 %, text below
+ *   15-18    4 colouring pages
+ *   19       character card
+ *   20       colophon with the AI disclosure
+ *
+ * TWENTY, not eighteen, and the reason is printing (measured 2026-08-22).
+ * A bound book is made of folded sheets of four pages, so printers ask for a
+ * page count that is a MULTIPLE OF FOUR — Blurb states it outright, and it is
+ * the normal requirement everywhere. At 18 every printer would have to pad the
+ * book with two blanks, or refuse it. The two pages that close the gap are not
+ * padding: the dedication moves off the title page onto its own, the way books
+ * do it, and the character card stops sharing a page with the colophon, which
+ * was the most crowded page in the book. See docs/impresion-2026-08-22.md.
  */
 
 const fs = require("fs");
@@ -50,6 +61,30 @@ const MUTED = rgb(0.45, 0.44, 0.48);
 const TINT = rgb(0.89, 0.93, 0.91);
 const HAIR = rgb(0.886, 0.863, 0.812); // the same hairline as the web
 
+/*
+ * The few words the book says in its own voice, rather than the story's.
+ *
+ * They were Spanish literals, so an English book — which costs more — was
+ * delivered with a Spanish nameplate and a Spanish colophon. The story itself
+ * was always written in the buyer's language; only the furniture was wrong.
+ */
+const T = {
+  es: {
+    belongs: (name) => `Este cuento es de ${name}`,
+    thisIs: (name) => `Así es ${name}`,
+    madeFor: (name, when) => `Hecho para ${name}${when ? `, en ${when}` : ""}.`,
+    ai: "Texto e ilustraciones generados con inteligencia artificial a partir de lo que nos contaste, y revisados a mano antes de entregarlos.",
+  },
+  en: {
+    belongs: (name) => `This story belongs to ${name}`,
+    thisIs: (name) => `This is ${name}`,
+    madeFor: (name, when) => `Made for ${name}${when ? `, in ${when}` : ""}.`,
+    ai: "Text and illustrations generated with artificial intelligence from what you told us, and checked by hand before delivery.",
+  },
+};
+
+const words = (locale) => T[locale === "en" ? "en" : "es"];
+
 const PLACEHOLDERS = {
   "{{NOMBRE}}": (p) => {
     if (!p.name) throw new Error("[cuentos] name is required to render the book");
@@ -72,7 +107,12 @@ const PLACEHOLDERS = {
 
 /** Replaces the placeholders and refuses to print any it does not know. */
 function substitute(text, personalization) {
-  return String(text).replace(/\{\{[^}]*\}\}/g, (match) => {
+  // String(undefined) is "undefined", and this function feeds the page: a
+  // missing field would have been PRINTED as the word "undefined" in a book
+  // somebody paid for. The validator guarantees these fields exist; this is
+  // the belt for the day it stops.
+  if (typeof text !== "string") throw new Error(`[cuentos] nothing to print: expected text, got ${typeof text}`);
+  return text.replace(/\{\{[^}]*\}\}/g, (match) => {
     const resolve = PLACEHOLDERS[match];
     if (!resolve) throw new Error(`[cuentos] unknown placeholder ${match} — refusing to print it`);
     return resolve(personalization || {});
@@ -234,6 +274,7 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   const bold = await doc.embedFont(fs.readFileSync(path.join(FONT_DIR, "Andika-Bold.ttf")), FACE);
 
   const title = substitute(story.title, personalization);
+  const W = words(personalization && personalization.locale);
   doc.setTitle(title);
   doc.setCreator(brand.name(personalization && personalization.locale));
   doc.setProducer(brand.name(personalization && personalization.locale));
@@ -259,19 +300,36 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
       });
     }
     const titleSize = fitSize(title, bold, textWidth, PAGE_PT * 0.2, { max: 30, min: 16, ratio: 1.3 });
-    const y = drawParagraph(page, {
+    drawParagraph(page, {
       text: title, font: bold, size: titleSize, lineHeight: titleSize * 1.3,
       x: margin, top: PAGE_PT * 0.4, maxWidth: textWidth, align: "center",
-    });
-    const dedication = (personalization && personalization.dedication) || substitute(story.dedication_hint, personalization);
-    drawParagraph(page, {
-      text: dedication, font: regular, size: 12, lineHeight: 18,
-      x: margin, top: y - 26, maxWidth: textWidth, color: MUTED, align: "center",
     });
     if (mode === "preview") stampWatermark(page, bold);
   }
 
-  // --- 2-13. scenes ----------------------------------------------------------
+  // --- 2. nameplate and dedication -------------------------------------------
+  // The page a children's book has so somebody can be told the book is theirs.
+  // The dedication used to sit under the title, where it read as a subtitle.
+  {
+    const page = newPage(doc);
+    const name = substitute("{{NOMBRE}}", personalization);
+    const y = drawParagraph(page, {
+      text: W.belongs(name), font: bold, size: 15, lineHeight: 22,
+      x: margin, top: PAGE_PT * 0.62, maxWidth: textWidth, align: "center",
+    });
+    page.drawLine({
+      start: { x: PAGE_PT * 0.34, y: y - 16 }, end: { x: PAGE_PT * 0.66, y: y - 16 },
+      thickness: 0.75, color: HAIR,
+    });
+    const dedication = (personalization && personalization.dedication) || substitute(story.dedication_hint, personalization);
+    drawParagraph(page, {
+      text: dedication, font: regular, size: 13, lineHeight: 21,
+      x: margin, top: y - 44, maxWidth: textWidth, color: MUTED, align: "center",
+    });
+    if (mode === "preview") stampWatermark(page, bold);
+  }
+
+  // --- 3-14. scenes ----------------------------------------------------------
   for (let i = 0; i < C.PAGE_COUNT; i++) {
     const page = newPage(doc);
     const buffer = illustrationBuffer(images[i]);
@@ -289,7 +347,7 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
     if (mode === "preview") stampWatermark(page, bold);
   }
 
-  // --- 14-17. colouring pages ------------------------------------------------
+  // --- 15-18. colouring pages ------------------------------------------------
   for (let i = 0; i < C.COLORING_PAGE_COUNT; i++) {
     const page = newPage(doc);
     page.drawRectangle({ x: 0, y: 0, width: PAGE_PT, height: PAGE_PT, color: rgb(1, 1, 1) });
@@ -300,47 +358,56 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
       x: (PAGE_PT - embedded.width * scale) / 2, y: (PAGE_PT - embedded.height * scale) / 2,
       width: embedded.width * scale, height: embedded.height * scale,
     });
-    if (i === 0) {
-    }
     if (mode === "preview") stampWatermark(page, bold);
   }
 
-  // --- 18. character card + colophon ----------------------------------------
+  // --- 19. character card ----------------------------------------------------
+  // It used to share a page with the colophon: a heading, a portrait, the
+  // moral, a dedication line, the AI notice and the brand, all on one page.
   {
     const page = newPage(doc);
     const name = substitute("{{NOMBRE}}", personalization);
     let y = PAGE_PT - margin - 24;
-    drawParagraph(page, { text: `Así es ${name}`, font: bold, size: 20, lineHeight: 26, x: margin, top: y, maxWidth: textWidth, align: "center" });
+    drawParagraph(page, { text: W.thisIs(name), font: bold, size: 20, lineHeight: 26, x: margin, top: y, maxWidth: textWidth, align: "center" });
     y -= 40;
     if (sheet) {
       const s = await embedImage(doc, sheet);
-      const box = { width: textWidth, height: PAGE_PT * 0.34 };
+      const box = { width: textWidth, height: PAGE_PT * 0.42 };
       const scale = Math.min(box.width / s.width, box.height / s.height);
       page.drawImage(s, { x: margin + (box.width - s.width * scale) / 2, y: y - s.height * scale, width: s.width * scale, height: s.height * scale });
-      y -= s.height * scale + 24;
+      y -= s.height * scale + 30;
     }
-    y = drawParagraph(page, {
-      text: substitute(story.moral, personalization), font: regular, size: 12, lineHeight: 19,
+    drawParagraph(page, {
+      text: substitute(story.moral, personalization), font: regular, size: 13, lineHeight: 21,
       x: margin, top: y, maxWidth: textWidth, color: MUTED, align: "center",
     });
+    if (mode === "preview") stampWatermark(page, bold);
+  }
+
+  // --- 20. colophon ----------------------------------------------------------
+  {
+    const page = newPage(doc);
+    const name = substitute("{{NOMBRE}}", personalization);
     const when = (personalization && personalization.date) || "";
     drawParagraph(page, {
-      text: `Hecho para ${name}${when ? `, en ${when}` : ""}.`, font: bold, size: 12, lineHeight: 18,
-      x: margin, top: margin + 58, maxWidth: textWidth, align: "center",
+      text: W.madeFor(name, when), font: bold, size: 14, lineHeight: 21,
+      x: margin, top: PAGE_PT * 0.56, maxWidth: textWidth, align: "center",
     });
     drawParagraph(page, {
-      text: "Texto e ilustraciones generados con inteligencia artificial a partir de lo que nos contaste, y revisados a mano antes de entregarlos.",
-      font: regular, size: 8.5, lineHeight: 13,
-      x: margin, top: margin + 46, maxWidth: textWidth, color: MUTED, align: "center",
+      // A shade narrower than the page's measure: a small legal notice set to
+      // the full width reads as body text the reader is meant to skip.
+      text: W.ai, font: regular, size: 9.5, lineHeight: 15,
+      x: margin + textWidth * 0.07, top: PAGE_PT * 0.44, maxWidth: textWidth * 0.86, color: MUTED, align: "center",
     });
     drawParagraph(page, {
       text: `${brand.name(personalization && personalization.locale)} · ${brand.DOMAIN}`,
-      font: bold, size: 8.5, lineHeight: 12,
+      font: bold, size: 9, lineHeight: 13,
       x: margin, top: margin + 16, maxWidth: textWidth, color: MUTED, align: "center",
     });
+    if (mode === "preview") stampWatermark(page, bold);
   }
 
   return Buffer.from(await doc.save());
 }
 
-module.exports = { renderPdf, substitute, wrap, fitSize, MM, PAGE_PT, SAFE_PT, ART_RATIO, ART_BOX, MODES };
+module.exports = { renderPdf, substitute, wrap, fitSize, words, MM, PAGE_PT, SAFE_PT, ART_RATIO, ART_BOX, MODES };

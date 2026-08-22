@@ -1,7 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
 const { PDFDocument } = require("pdf-lib");
-const { renderPdf, MM, PAGE_PT, substitute } = require("../lib/pdf.js");
+const { renderPdf, MM, PAGE_PT, substitute, words } = require("../lib/pdf.js");
 const C = require("../lib/collection.js");
 const story = require("./fixtures/story-valid.json");
 
@@ -17,10 +17,14 @@ const PERSON = {
 const base = (over = {}) => ({ story, images: IMAGES, coloring: COLORING, personalization: PERSON, sheet: PIXEL, ...over });
 const load = (buffer) => PDFDocument.load(buffer);
 
-test("produces exactly 18 pages", async () => {
+test("produces exactly 20 pages, and 20 is a multiple of four", async () => {
   const doc = await load(await renderPdf(base()));
   assert.strictEqual(doc.getPageCount(), C.BOOK_PAGE_COUNT);
-  assert.strictEqual(C.BOOK_PAGE_COUNT, 18);
+  assert.strictEqual(C.BOOK_PAGE_COUNT, 20);
+  // Not decoration: a bound book is folded sheets of four pages, so a printer
+  // asked for a multiple of four (measured against Blurb, 2026-08-22). At 18
+  // every printer had to pad the book with blanks or turn it away.
+  assert.strictEqual(C.BOOK_PAGE_COUNT % 4, 0, "printers require a multiple of four");
 });
 
 test("pages are 20x20 cm with no bleed", async () => {
@@ -59,7 +63,7 @@ test("a fallback page without a catalogue file still renders (tinted box, text i
   const images = IMAGES.slice();
   images[4] = { buffer: null, fallback: true, fallbackPath: "assets/img/fallback/does-not-exist.jpg" };
   const doc = await load(await renderPdf(base({ images })));
-  assert.strictEqual(doc.getPageCount(), 18);
+  assert.strictEqual(doc.getPageCount(), C.BOOK_PAGE_COUNT);
 });
 
 test("the real name reaches the document title, with no placeholder left", async () => {
@@ -80,7 +84,7 @@ test("an unknown mode is rejected rather than silently defaulted", async () => {
 
 test("works without a character sheet", async () => {
   const doc = await load(await renderPdf(base({ sheet: undefined })));
-  assert.strictEqual(doc.getPageCount(), 18);
+  assert.strictEqual(doc.getPageCount(), C.BOOK_PAGE_COUNT);
 });
 
 test("the rendered file is a real PDF", async () => {
@@ -170,4 +174,41 @@ test("the book can be quoted: every letter comes back out as itself", async () =
     assert.strictEqual(glyphs(asWeEmbedIt, word), word.length, `${word}: letters were merged into one glyph`);
   }
   assert.ok(glyphs(withLigatures, "artificial") < "artificial".length, "the default really does ligate — the guard is not theatre");
+});
+
+/*
+ * The book's own furniture — the nameplate, the character card heading, the
+ * colophon — used to be Spanish literals, so an English book, which costs
+ * more, arrived with a Spanish colophon. Only the story had ever been
+ * translated.
+ */
+test("the book speaks the buyer's language, not always Spanish", () => {
+  const es = words("es");
+  const en = words("en");
+  for (const key of ["belongs", "thisIs", "madeFor", "ai"]) {
+    assert.ok(es[key], `no Spanish for ${key}`);
+    assert.ok(en[key], `no English for ${key}`);
+  }
+  assert.notStrictEqual(es.belongs("Ana"), en.belongs("Ana"));
+  assert.notStrictEqual(es.thisIs("Ana"), en.thisIs("Ana"));
+  assert.notStrictEqual(es.ai, en.ai);
+  assert.match(en.madeFor("Ana", "August 2026"), /Made for Ana, in August 2026\./);
+  assert.match(es.madeFor("Ana", ""), /^Hecho para Ana\.$/);
+});
+
+test("an unknown language falls back to Spanish rather than breaking the page", () => {
+  assert.strictEqual(words("pt").ai, words("es").ai);
+  assert.strictEqual(words(undefined).ai, words("es").ai);
+});
+
+test("an English book is not byte-identical to a Spanish one", async () => {
+  const es = await renderPdf(base({ personalization: { ...PERSON, locale: "es" } }));
+  const en = await renderPdf(base({ personalization: { ...PERSON, locale: "en" } }));
+  assert.ok(!es.equals(en), "the colophon and the nameplate did not change language");
+});
+
+test("a missing field is refused, never printed as the word \"undefined\"", () => {
+  // String(undefined) is "undefined": the book would have said it out loud.
+  assert.throws(() => substitute(undefined, PERSON), /nothing to print/i);
+  assert.throws(() => substitute(null, PERSON), /nothing to print/i);
 });

@@ -55,9 +55,9 @@ devuelve — y se sabe en tres semanas, no nunca.
 
 - **Los fotolibros de consumo (Hofmann, Fotoprix, Saal, Albelli) están construidos alrededor
   de su editor**, no de subir un PDF de imprenta. Hay flujos donde cada página se mete como
-  «foto a página completa», y funciona, pero es trabajo del cliente. ⚠️ **Sin verificar**:
-  si Hofmann admite hoy subida de PDF (se agotó el presupuesto de búsqueda web de la
-  sesión). Es una comprobación de cinco minutos en su web y conviene hacerla.
+  «foto a página completa», y funciona, pero es trabajo del cliente. **Verificado el mismo
+  día contra hofmann.es**: no hay subida de PDF por ninguna parte; la web solo ofrece «con
+  nuestra app móvil» o «con nuestro editor de escritorio».
 - **Comisión de afiliado: irrelevante** en fotolibros y con un pedido de 25 €.
 - **Pero como página de ayuda cuesta 0 € y sube el valor del PDF.** Hoy el comprador recibe
   un fichero y se apaña. Una página «Cómo tener tu cuento en papel» con tres caminos —
@@ -104,9 +104,9 @@ eso es **≈ 130 dpi**. Para pantalla y para imprimir en casa vale; una imprenta
 250-300. El impreso exige **generar a 2K o hacer un paso de reescalado**, lo que
 aproximadamente **dobla el coste de IA por libro** (de ~0,57 € a ~1,2 €). Además hacen falta
 **3 mm de sangre**, lomo, y llegar al **mínimo de páginas** del proveedor (Peecho 24,
-Prodigi 24, Lulu 24, Gelato 30): nuestro libro tiene 18, así que la edición impresa necesita
-crecer a 24-32 páginas — gratis en contenido (más colorear, guardas, página «sobre este
-cuento»), pero es trabajo en el generador de PDF.
+Prodigi 24, Lulu 24, Gelato 30): el libro tiene **20** desde hoy (ver el addendum), así que
+a la edición impresa todavía le faltan 4-12 páginas — gratis en contenido (más colorear,
+guardas, página «sobre este cuento»), pero es trabajo en el generador de PDF.
 
 Lo demás del suelo legal físico ya está escrito en `../CLAUDE.md`: inserto **GPSR**,
 registro de envases, y la buena noticia — **el desistimiento no aplica** a un bien
@@ -137,3 +137,44 @@ cuando un lote es honesto y además rentable. Nunca una cola abierta.
 4. Con esos tres números, decidir precio (29,90 vs 34,90) y proveedor.
 5. Mientras tanto: página «cómo imprimirlo» + copy nuevo del botón. Es lo único que se
    construye antes de tener los números.
+
+---
+
+## Addendum (mismo día): qué pide cada imprenta, y qué hemos cambiado por ello
+
+Comprobado contra sus propias webs, no contra recuerdos:
+
+| Imprenta | Acepta PDF | Formatos cuadrados | Regla que nos afecta | Un ejemplar |
+|---|---|---|---|---|
+| **Blurb** | Sí, «Sube tu PDF» | 13×13, 18×18, 30×30 cm | **Páginas múltiplo de cuatro** | Sí |
+| **Lulu** | Sí, interior + portada aparte | 21,6×21,6 cm (8,5 in) tapa dura | La portada es un fichero propio | Sí, desde ~14,76 $ |
+| **Pixartprinting** (ES) | Sí, con corrección automática de sangre y escala | Varios | Ninguna: escala sola | Sí, «desde un ejemplar» |
+| **Hofmann, Fotoprix, Photobox** | **No** | — | Solo su editor; cada página habría que meterla como «foto a página completa» | Sí |
+
+### El cambio: el libro pasa de 18 a 20 páginas
+
+**Múltiplo de cuatro no es un capricho de Blurb.** Un libro encuadernado se hace con pliegos
+de cuatro páginas: es la regla de la industria, y Blurb es simplemente quien la escribe en su
+web. Con 18 páginas, toda imprenta tenía que rellenar con dos blancas o rechazar el fichero.
+
+Las dos páginas que cierran el hueco **no son relleno**:
+
+1. **Dedicatoria a página propia** («Este cuento es de ___» + la dedicatoria). Antes iba
+   debajo del título, donde se leía como un subtítulo. Es la página que cualquier libro
+   infantil tiene para que alguien escriba de quién es.
+2. **El colofón se separa de la ficha de personajes.** Esa página cargaba con un titular, el
+   retrato, la moraleja, la dedicatoria de cierre, el aviso de IA y la marca — era la página
+   más apretada del libro. Ahora la ficha respira (el retrato pasa del 34 % al 42 % de la
+   página) y el colofón es una página tranquila.
+
+De paso se arregló un defecto que no tenía que ver con imprimir: **los textos propios del
+libro estaban escritos en español a pelo**, así que el libro en inglés —que cuesta más— se
+entregaba con la portadilla y el colofón en castellano. Solo la historia se traducía. Ahora
+van por `words(locale)` en `lib/pdf.js`.
+
+### Lo que NO hace falta hacer
+
+**Sangre.** Nuestras páginas tienen margen por diseño: nada llega al borde. Eso significa que
+el fichero se puede **escalar a cualquier tamaño cuadrado sin cortar nada**, que es
+exactamente lo que hace falta para pasar de nuestros 20 cm a los 18 de Blurb o los 21,6 de
+Lulu. Es la ventaja escondida de una decisión que se tomó por estética.

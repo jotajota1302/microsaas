@@ -74,7 +74,7 @@ async function createCheckout({ story, order, baseUrl }, deps = {}) {
     "line_items[0][price_data][unit_amount]": String(product.priceCents),
     "line_items[0][price_data][product_data][name]": product[order.locale === "en" ? "en" : "es"],
     "line_items[0][price_data][product_data][description]":
-      order.locale === "en" ? "18-page personalised PDF, delivered by email" : "PDF personalizado de 18 páginas, entregado por email",
+      order.locale === "en" ? "20-page personalised PDF, delivered by email" : "PDF personalizado de 20 páginas, entregado por email",
     "metadata[token]": story.token,
     "metadata[order_id]": order.id,
   }, deps);

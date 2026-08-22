@@ -207,7 +207,10 @@ const BEAT_RULES = Object.freeze({
 });
 
 const COLORING_PAGE_COUNT = 4;
-const BOOK_PAGE_COUNT = 18; // title + 12 scenes + 4 colouring + card/colophon
+// Title + nameplate + 12 scenes + 4 colouring + character card + colophon.
+// A MULTIPLE OF FOUR on purpose: a bound book is folded sheets of four pages,
+// so printers require it (Blurb states it; it is the norm). See lib/pdf.js.
+const BOOK_PAGE_COUNT = 20;
 
 // Words that must never appear in a story for 3-8 year olds. Matched on
 // normalised text (lowercase, no accents), on word boundaries.
