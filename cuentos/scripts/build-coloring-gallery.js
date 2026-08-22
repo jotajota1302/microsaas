@@ -94,6 +94,7 @@ function shell({ t, title, desc, canonical, alternate, body, jsonLd }) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Karla:wght@400;700&family=Andika:wght@400;700&display=swap">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/track.js" defer></script>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 </head>
 <body>
@@ -272,7 +273,7 @@ function main() {
     }
   }
 
-  const staticUrls = ["/", "/en/", "/crear/"];
+  const staticUrls = ["/", "/en/", "/crear/", "/imprimir/", "/en/print/"];
   const sitemap =
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     [...staticUrls, ...urls].map((u) => `  <url><loc>${BASE}${u}</loc></url>`).join("\n") +
