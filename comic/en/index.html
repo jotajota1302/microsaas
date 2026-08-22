@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyOwnManga · A comic where they are the hero</title>
+<meta name="description" content="A 14-page manga-style comic where the hero is your kid, your nephew or your little brother. Their name, their people, their story. £/€14.99.">
+<link rel="alternate" hreflang="es" href="https://myownmanga.com/">
+<link rel="alternate" hreflang="en" href="https://myownmanga.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://myownmanga.com/">
+<link rel="canonical" href="https://myownmanga.com/en/">
+<meta property="og:title" content="MyOwnManga — a comic where they are the hero">
+<meta property="og:description" content="Their name, their people, their story. 14 manga pages, ready in minutes.">
+<meta property="og:image" content="/assets/img/muestra-portada.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/theme.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="brand">MYOWN<span>MANGA</span></span>
+    <nav>
+      <a href="#how" class="hide-s">How it works</a>
+      <a href="#sample">See a sample</a>
+      <a href="#create">Make theirs</a>
+      <a href="/" class="lang" hreflang="es">ES</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <span class="kicker">A gift for ages 12–17</span>
+      <h1>A comic where <em>they are the hero</em>.</h1>
+      <p class="lead">
+        Their name. Their little brother. The thing that makes them them. Fourteen
+        pages of manga where the day is not saved by some hero — it is saved by
+        them, by being exactly who they are.
+      </p>
+      <a class="btn" href="#create">Make their comic</a>
+      <p class="price-note"><b>€16.99</b> · PDF ready in minutes · free preview before you pay</p>
+    </div>
+    <figure class="cover-shot">
+      <img src="/assets/img/muestra-portada.jpg" width="800" height="1000"
+           alt="Black and white manga comic cover: a teenager with headphones round her neck looks back down a dark street.">
+    </figure>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="sub">Three steps. The first one is free and takes under a minute.</p>
+    <div class="cols">
+      <div class="card">
+        <p class="num">1</p>
+        <h3>Tell us who they are</h3>
+        <p>Their name, what they look like, who is around them and — the important bit —
+           <b>what defines them</b>: never gives up, notices everything, makes everyone laugh.</p>
+      </div>
+      <div class="card">
+        <p class="num">2</p>
+        <h3>Read the story free</h3>
+        <p>We send you <b>the cover with their character and the full script</b>, to read before
+           you pay anything. If it does not land, you stop there.</p>
+      </div>
+      <div class="card">
+        <p class="num">3</p>
+        <h3>Get the comic</h3>
+        <p>Fourteen pages, drawn and lettered, as a PDF. Read it on a phone, on a laptop,
+           or printed at home.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sample">
+  <div class="wrap">
+    <h2>This is what arrives</h2>
+    <p class="sub">
+      A real sample, generated end to end: “What the city does not light”, for Nerea,
+      15, who notices everything.
+    </p>
+    <div class="sample">
+      <figure>
+        <img src="/assets/img/muestra-pagina.png" width="680" height="1020"
+             alt="A black and white manga comic page with six panels and Spanish speech bubbles.">
+      </figure>
+      <div>
+        <h3 style="font-size:28px">They solve it. Not an adult.</h3>
+        <p>It is the one rule we do not bend. If the ending is fixed by a grown-up, a
+           coincidence, or a power that shows up out of nowhere, the script is rejected and
+           rewritten. The gift is not the artwork: it is that <b>the thing that defines them
+           in real life is the thing that saves the day</b>.</p>
+        <p class="quote">— I’m going. Alone.<br>— And if you don’t come back?<br>— If I’m not back in an hour, open the living room window.</p>
+        <div class="pages">
+          <img src="/assets/img/muestra-vineta-1.jpg" alt="Panel: close-up of the hero in a dark doorway.">
+          <img src="/assets/img/muestra-vineta-2.jpg" alt="Panel: the hero running down a corridor.">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="create">
+  <div class="wrap">
+    <h2>Make their comic</h2>
+    <p class="sub">Fill this in and we will send you the cover and the full script, free. No card.</p>
+
+    <form class="form" id="orderForm" novalidate>
+      <fieldset>
+        <legend>Who they are</legend>
+        <div class="grid2">
+          <div class="field">
+            <label for="name">Their name <span class="hint">first name only</span></label>
+            <input id="name" name="name" maxlength="20" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="ageBand">Age</label>
+            <select id="ageBand" name="ageBand" data-options="ageBands"></select>
+          </div>
+          <div class="field">
+            <label for="gender">They are…</label>
+            <select id="gender" name="gender">
+              <option value="m">A boy</option>
+              <option value="f">A girl</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="build">Build</label>
+            <select id="build" name="build" data-options="build"></select>
+          </div>
+          <div class="field">
+            <label for="hairShape">Hair</label>
+            <select id="hairShape" name="hairShape" data-options="hairShape"></select>
+          </div>
+          <div class="field">
+            <label for="hairColour">Hair colour</label>
+            <select id="hairColour" name="hairColour" data-options="hairColour"></select>
+          </div>
+          <div class="field">
+            <label for="eyes">Eyes</label>
+            <select id="eyes" name="eyes" data-options="eyes"></select>
+          </div>
+          <div class="field">
+            <label for="skin">Skin</label>
+            <select id="skin" name="skin" data-options="skin"></select>
+          </div>
+          <div class="field">
+            <label for="mark">What they always wear
+              <span class="hint">this is what makes them recognisable in every panel</span></label>
+            <select id="mark" name="mark" data-options="marks"></select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>What defines them</legend>
+        <div class="grid2">
+          <div class="field">
+            <label for="trait">If you had to say one thing about them
+              <span class="hint">this is what will resolve the story on the last page</span></label>
+            <select id="trait" name="trait" data-options="traits"></select>
+          </div>
+          <div class="field">
+            <label for="sidekickName">Someone from their life <span class="hint">optional, they will be in it</span></label>
+            <input id="sidekickName" name="sidekickName" maxlength="20" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="sidekickRelation">And they are their…</label>
+            <select id="sidekickRelation" name="sidekickRelation" data-options="relations"></select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>What story</legend>
+        <div class="grid2">
+          <div class="field">
+            <label for="trope">The world</label>
+            <select id="trope" name="trope" data-options="tropes"></select>
+          </div>
+          <div class="field">
+            <label for="tone">The tone</label>
+            <select id="tone" name="tone" data-options="tones"></select>
+          </div>
+          <div class="field">
+            <label for="style">The art</label>
+            <select id="style" name="style" data-options="styles"></select>
+          </div>
+          <div class="field">
+            <label for="email">Your email <span class="hint">so we can send the preview</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-foot">
+        <button class="btn" type="submit">See the free preview</button>
+        <p class="consent">
+          Free, no card. We use your email only to send you this preview. We never ask for
+          photos and we publish nothing. <a href="/legal/privacidad.html">Privacy</a>.
+        </p>
+      </div>
+      <p class="formmsg" id="formMsg" role="status"></p>
+    </form>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>What people ask</h2>
+    <details>
+      <summary>Can they be in their favourite series?</summary>
+      <p>No, and that is on purpose. Using someone else’s characters is illegal and, more to the
+         point, it makes a worse gift: an imitation always loses to the original. What you can
+         choose is the <b>kind</b> of story — powers academy, creature hunters, mechs, mystery —
+         and the art style. It feels like what they love, and it is theirs.</p>
+    </details>
+    <details>
+      <summary>Do you need a photo?</summary>
+      <p>We never ask for photos, of them or anyone else. You describe them from a few lists.
+         Safer, and it works better.</p>
+    </details>
+    <details>
+      <summary>Is this made with AI?</summary>
+      <p>Yes, and we say so inside the comic. The artwork and the first draft of the script are
+         generated; the structure, the lettering and the review are ours. No script ships without
+         an editor — and a person — having read it.</p>
+    </details>
+    <details>
+      <summary>What if they do not like it?</summary>
+      <p>That is what the free preview is for: you read the whole story before paying. If it does
+         not land, you do not pay.</p>
+    </details>
+    <details>
+      <summary>Can it be printed?</summary>
+      <p>The PDF is made to read on screen and to print at home. If enough people want a proper
+         printed edition we will make one — tell us when you order.</p>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>MyOwnManga</b> · personalised comics · <a href="/legal/aviso-legal.html">Legal notice</a>
+       · <a href="/legal/privacidad.html">Privacy</a> · <a href="/legal/condiciones.html">Terms</a></p>
+    <p class="disc">Artwork and first script draft generated with AI.
+       We use no third-party characters, brands or works.</p>
+  </div>
+</footer>
+
+<script src="/assets/js/options.js"></script>
+<script src="/assets/js/app.js"></script>
+</body>
+</html>

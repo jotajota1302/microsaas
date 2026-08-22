@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MyOwnManga · panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/theme.js"></script>
+<style>
+  /* El panel es la única página con tablas y rejillas de números, así que su
+     hoja vive aquí y no engorda la CSS que carga un cliente. */
+  .panel-wrap { max-width: 1060px; margin: 0 auto; padding: 22px 18px 60px; }
+  .gate { max-width: 380px; margin: 12vh auto; text-align: center; }
+  .gate input { width: 100%; padding: 11px 13px; font: inherit; margin: 14px 0 10px;
+                background: var(--panel); color: var(--ink);
+                border: 1px solid var(--rule-2); border-radius: 8px; }
+  h2.sec { font-size: 14px; letter-spacing: .09em; text-transform: uppercase;
+           color: var(--dim); margin: 30px 0 12px; font-weight: 700; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 13px 15px; }
+  .card b { display: block; font-size: 26px; line-height: 1.1; font-weight: 900; }
+  .card span { font-size: 12.5px; color: var(--muted); }
+  .card em { font-style: normal; color: var(--amber-text); }
+  .health { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 9px; }
+  .h-item { display: flex; gap: 10px; align-items: baseline; background: var(--panel);
+            border: 1px solid var(--rule); border-left-width: 3px; border-radius: 8px; padding: 10px 13px; }
+  .h-ok { border-left-color: #3f9a55; }
+  .h-warn { border-left-color: var(--amber); }
+  .h-bad { border-left-color: #b3271b; }
+  .h-item b { font-size: 13.5px; }
+  .h-item span { font-size: 12.5px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
+       color: var(--dim); padding: 6px 9px; border-bottom: 1px solid var(--rule-2); font-weight: 700; }
+  td { padding: 9px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  td a { color: var(--amber-text); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px;
+         border-radius: 999px; border: 1px solid var(--rule-2); color: var(--muted); white-space: nowrap; }
+  .tag.bad { border-color: #b3271b; color: #e0776c; }
+  .tag.good { border-color: #3f9a55; color: #6fbd82; }
+  .tag.warm { border-color: var(--amber); color: var(--amber-text); }
+  .mini { font-size: 12px; color: var(--dim); }
+  .scroll { overflow-x: auto; }
+  button.act { font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+               background: transparent; color: var(--amber-text);
+               border: 1px solid var(--rule-2); border-radius: 7px; padding: 5px 10px; }
+  button.act:hover { border-color: var(--amber); }
+  .empty { color: var(--dim); font-size: 13.5px; padding: 10px 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a href="/" class="brand" style="text-decoration:none">MYOWN<span>MANGA</span></a>
+    <nav>
+      <span class="mini" id="stamp"></span>
+      <button class="act" id="reload" type="button">Actualizar</button>
+    </nav>
+  </div>
+</header>
+
+<div class="panel-wrap">
+
+  <div class="gate" id="gate">
+    <h1 style="font-size:22px;margin:0 0 6px">Panel</h1>
+    <p class="mini">Pega el <code>ADMIN_TOKEN</code>. Se queda en esta pestaña y se manda como cabecera, nunca en la URL.</p>
+    <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="ADMIN_TOKEN">
+    <button class="btn" id="enter" type="button" style="width:100%">Entrar</button>
+    <p class="mini" id="gateErr" hidden style="color:#e0776c"></p>
+  </div>
+
+  <main id="main" hidden>
+    <h2 class="sec">El embudo</h2>
+    <div class="cards" id="funnel"></div>
+    <p class="mini" id="capNote"></p>
+
+    <h2 class="sec">Lo que hay que mirar</h2>
+    <div id="attention"></div>
+
+    <h2 class="sec">Dibujándose ahora</h2>
+    <div id="drawing"></div>
+
+    <h2 class="sec">Qué está conectado</h2>
+    <div class="health" id="health"></div>
+
+    <h2 class="sec">Calidad del dibujo</h2>
+    <div class="cards" id="quality"></div>
+
+    <h2 class="sec">Últimos pedidos</h2>
+    <div class="scroll" id="recent"></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = "myownmanga-admin";
+  var data = null;
+
+  function token() { try { return sessionStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function eur(cents) { return (cents / 100).toFixed(2).replace(".", ",") + " €"; }
+  function pct(x) { return (x * 100).toFixed(1).replace(".", ",") + " %"; }
+  function ago(iso) {
+    if (!iso) return "";
+    var m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+    if (m < 60) return "hace " + m + " min";
+    if (m < 1440) return "hace " + Math.round(m / 60) + " h";
+    return "hace " + Math.round(m / 1440) + " d";
+  }
+
+  function card(box, value, label, note) {
+    var c = el("div", "card");
+    c.appendChild(el("b", null, value));
+    c.appendChild(el("span", null, label));
+    if (note) { var e = el("em", null, " " + note); c.querySelector("span").appendChild(e); }
+    box.appendChild(c);
+  }
+
+  function fill(box, build) {
+    while (box.firstChild) box.removeChild(box.firstChild);
+    build(box);
+  }
+
+  /* Una tabla de pedidos, con las acciones que correspondan. Las acciones NO
+     son aprobaciones: reintentar empuja un trabajo atascado y soltar entrega
+     un cómic que paramos nosotros, después de que un humano mire el PDF. */
+  function orders(box, rows, actions) {
+    if (!rows.length) { box.appendChild(el("p", "empty", "Nada por aquí.")); return; }
+    var t = el("table");
+    var head = el("tr");
+    ["Historia", "Estado", "Viñetas", "Cuándo", ""].forEach(function (h) {
+      head.appendChild(el("th", null, h));
+    });
+    t.appendChild(head);
+
+    rows.forEach(function (r) {
+      var tr = el("tr");
+
+      var td1 = el("td");
+      var a = el("a", null, r.title || "(sin título)");
+      a.href = "/c/" + r.token;
+      a.target = "_blank";
+      a.rel = "noopener";
+      td1.appendChild(a);
+      td1.appendChild(el("div", "mini", (r.hero || "?") + " · " + r.lang));
+      if (r.review) td1.appendChild(el("span", "tag warm", "el editor la suspendió"));
+      tr.appendChild(td1);
+
+      var td2 = el("td");
+      var state = r.render_status || (r.paid_at ? "pagado" : r.status);
+      var cls = state === "needs_attention" || state === "failed" ? "tag bad"
+              : state === "done" ? "tag good" : "tag";
+      td2.appendChild(el("span", cls, state === "needs_attention" ? "parado" : state));
+      if (r.error) td2.appendChild(el("div", "mini", r.error));
+      tr.appendChild(td2);
+
+      var td3 = el("td");
+      td3.appendChild(document.createTextNode(r.total ? r.drawn + "/" + r.total : "—"));
+      if (r.holes) td3.appendChild(el("div", "mini", r.holes + " sin dibujar"));
+      tr.appendChild(td3);
+
+      tr.appendChild(el("td", "mini", ago(r.paid_at || r.created_at)));
+
+      var td5 = el("td");
+      if (actions) {
+        if (r.holes || r.render_status === "needs_attention") {
+          var pdf = el("a", null, "PDF");
+          pdf.href = "/api/file?token=" + encodeURIComponent(r.token) + "&k=pdf";
+          pdf.target = "_blank";
+          pdf.rel = "noopener";
+          td5.appendChild(pdf);
+          td5.appendChild(document.createTextNode(" "));
+          td5.appendChild(action("Entregar igual", r.token, "release"));
+        }
+        td5.appendChild(document.createTextNode(" "));
+        td5.appendChild(action("Reintentar", r.token, "retry"));
+      }
+      tr.appendChild(td5);
+
+      t.appendChild(tr);
+    });
+    box.appendChild(t);
+  }
+
+  function action(label, tok, verb) {
+    var b = el("button", "act", label);
+    b.type = "button";
+    b.addEventListener("click", function () {
+      b.disabled = true;
+      b.textContent = "…";
+      fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Admin-Token": token() },
+        body: JSON.stringify({ action: verb, token: tok })
+      }).then(function (r) { return r.json(); })
+        .then(function () { load(); })
+        .catch(function () { b.disabled = false; b.textContent = label; });
+    });
+    return b;
+  }
+
+  function draw(d) {
+    data = d;
+    $("stamp").textContent = new Date(d.at).toLocaleTimeString("es-ES");
+
+    fill($("funnel"), function (box) {
+      var f = d.funnel.today;
+      var a = d.funnel.all;
+      card(box, String(f.asked), "vistas previas hoy", "(" + a.asked + " en total)");
+      card(box, String(f.ready), "guiones terminados hoy", f.failed ? "(" + f.failed + " fallaron)" : "");
+      card(box, String(a.paid), "cómics pagados", a.delivered === a.paid ? "todos entregados" : "(" + a.delivered + " entregados)");
+      card(box, eur(a.revenueCents), "facturado", a.paid ? "" : "todavía nada");
+      card(box, a.ready ? pct(a.conversion) : "—", "de vista previa a compra");
+      card(box, d.spend.all.eur.toFixed(2).replace(".", ",") + " €", "gastado en IA",
+           d.spend.all.perPaidEur != null ? "(" + d.spend.all.perPaidEur.toFixed(2).replace(".", ",") + " € por venta)" : "");
+    });
+
+    $("capNote").textContent = "Tope diario: " + d.caps.usedToday + " de " + d.caps.perDay +
+      " vistas previas usadas hoy · " + d.caps.perIp + " por visitante.";
+
+    fill($("attention"), function (box) {
+      if (!d.queues.attention.length) {
+        box.appendChild(el("p", "empty", "Nada parado. Todo lo que pasa el validador se entrega solo, sin aprobar nada."));
+        return;
+      }
+      box.appendChild(el("p", "mini", "Estos NO se han mandado: el validador ha encontrado demasiadas viñetas sin dibujar. Mira el PDF y decide."));
+      orders(box, d.queues.attention, true);
+    });
+
+    fill($("drawing"), function (box) { orders(box, d.queues.drawing, true); });
+
+    fill($("health"), function (box) {
+      d.health.items.forEach(function (i) {
+        var cls = i.ok ? "h-item h-ok" : (i.required ? "h-item h-bad" : "h-item h-warn");
+        var n = el("div", cls);
+        var t = el("div");
+        t.appendChild(el("b", null, i.name));
+        t.appendChild(el("div", "mini", i.ok ? i.detail : i.hint));
+        n.appendChild(t);
+        box.appendChild(n);
+      });
+    });
+
+    fill($("quality"), function (box) {
+      var q = d.quality;
+      card(box, String(q.panels), "viñetas dibujadas");
+      card(box, String(q.drift), "con color colado", "arregladas gratis");
+      card(box, String(q.collapse), "sin tinta", "redibujadas");
+      card(box, String(q.holes), "huecos que quedaron");
+      card(box, q.panels ? pct(q.driftRate) : "—", "tasa de deriva");
+    });
+
+    fill($("recent"), function (box) { orders(box, d.queues.recent, false); });
+
+    $("gate").hidden = true;
+    $("main").hidden = false;
+  }
+
+  function load() {
+    return fetch("/api/admin", { headers: { "X-Admin-Token": token() }, cache: "no-store" })
+      .then(function (r) {
+        if (r.status === 401) throw new Error("Ese token no vale.");
+        return r.json();
+      })
+      .then(draw);
+  }
+
+  $("enter").addEventListener("click", function () {
+    var v = $("key").value.trim();
+    if (!v) return;
+    try { sessionStorage.setItem(KEY, v); } catch (e) { /* sin memoria, funciona igual esta vez */ }
+    $("gateErr").hidden = true;
+    load().catch(function (e) {
+      $("gateErr").hidden = false;
+      $("gateErr").textContent = e.message;
+    });
+  });
+  $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") $("enter").click(); });
+  $("reload").addEventListener("click", function () { load(); });
+
+  if (token()) load().catch(function () { /* el token guardado ya no vale: se pide otro */ });
+})();
+</script>
+</body>
+</html>

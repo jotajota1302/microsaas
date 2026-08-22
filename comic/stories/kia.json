@@ -1,0 +1,211 @@
+{
+  "title": "El que mira donde nadie mira",
+  "subtitle": "Volumen 1",
+  "genre": "urban-heroes",
+  "language": "es",
+  "hero": {
+    "name": "Kia",
+    "age": 16,
+    "gender": "m",
+    "hair": "short messy black hair",
+    "eyes": "dark brown",
+    "skin": "light brown",
+    "outfit": "an oversized grey hoodie over a black t-shirt, dark jeans and worn trainers",
+    "trait": "no se rinde y se fija en lo que nadie mira"
+  },
+  "cast": {
+    "vigia": {
+      "label": "VIGÍA",
+      "sheet": "an adult male superhero in his thirties, tall and heavily built, wearing dark navy blue armour with crimson red plates on the shoulders and chest, a cracked grey visor covering the eyes, a torn short cape, short blond stubble beard visible below the visor"
+    },
+    "nul": {
+      "label": "NUL",
+      "sheet": "a tall faceless villain in a long black coat, his body made of shifting fragments of black code, wearing a completely smooth blank white mask with no features, black gloves"
+    }
+  },
+  "cover": {
+    "scene": "dramatic comic book cover composition: the teenage boy standing small in the foreground on a rooftop at night with an open glowing laptop under his arm, looking up; behind and above him the enormous silhouette of an armoured superhero against a burning orange sky, and further back the faint outline of a faceless masked figure made of black code; the city far below",
+    "ref": "hero"
+  },
+  "pages": [
+    {
+      "beat": "vida normal",
+      "layout": "quad",
+      "panels": [
+        { "ref": "hero", "room": "top-left", "scene": "a teenage boy's small bedroom at night lit only by three computer monitors, a window behind showing a city skyline, posters on the wall, he sits hunched at the desk with his back to us",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "Martes. 02:47." }, { "type": "thought", "at": "bottom-right", "text": "Un bug más y me voy a dormir." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "extreme close-up of his face lit from below by the monitor glow, frowning, eyes narrowed at something on the screen",
+          "bubbles": [ { "type": "speech", "at": "top-right", "text": "...esto no es un bug." } ] },
+        { "ref": null, "room": "top-left", "scene": "close-up of a computer monitor filling the frame, endless lines of glitching red code cascading and disappearing, a warning glow, no people in the shot",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "Alguien estaba borrando la ciudad. Línea a línea." } ] },
+        { "ref": "hero", "room": "bottom-right", "scene": "the boy leaning back slowly in his chair, hands frozen over the keyboard, staring at the screens",
+          "bubbles": [ { "type": "thought", "at": "bottom-right", "text": "¿Quién borra un semáforo?" } ] }
+      ]
+    },
+    {
+      "beat": "la ciudad se apaga",
+      "layout": "wide-two",
+      "panels": [
+        { "ref": null, "room": "top-left", "scene": "wide night view of a huge city skyline seen from above, entire districts blacking out one after another in a spreading wave of darkness, no people in the shot",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "Y entonces se apagó todo." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "the boy standing at his dark bedroom window, silhouetted, the dead city below, only his laptop still glowing behind him",
+          "bubbles": [ { "type": "speech", "at": "top-right", "text": "Mamá... ¿tú también estás a oscuras?" } ] },
+        { "ref": null, "room": "bottom-left", "scene": "street level: cars stopped in the middle of a dark avenue, dead traffic lights, people getting out of their cars and looking up, no main character in the shot",
+          "bubbles": [ { "type": "caption", "at": "bottom-left", "text": "Once minutos después, medio país." } ] }
+      ]
+    },
+    {
+      "beat": "la chispa",
+      "layout": "wide-two",
+      "panels": [
+        { "ref": null, "room": null, "scene": "dramatic wide shot: an armoured figure crashes down onto the flat rooftop of the building opposite, sparks and dust exploding outward, the dark dead city behind, seen from a distance" },
+        { "ref": "vigia", "room": "top-right", "scene": "the armoured superhero standing battered on the rooftop among smoke, one arm hanging, looking straight at the viewer through a cracked visor",
+          "bubbles": [ { "type": "speech", "at": "top-right", "who": "VIGÍA", "text": "¿Eres tú el que ha visto el patrón?" } ] },
+        { "ref": "hero", "room": "top-left", "scene": "the boy frozen at his open window, laptop still in one hand, looking up at something enormous outside, tiny in the frame",
+          "bubbles": [ { "type": "speech", "at": "top-left", "text": "Yo... yo solo miraba los registros." } ] }
+      ]
+    },
+    {
+      "beat": "el encargo",
+      "layout": "quad",
+      "panels": [
+        { "ref": "vigia", "room": "top-left", "scene": "the armoured superhero crouching down to be at eye level with someone shorter, holding out a scorched metal shard in his glove",
+          "bubbles": [ { "type": "speech", "at": "top-left", "who": "VIGÍA", "text": "Llevo tres noches persiguiendo a algo que no deja huella." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "close-up of the boy holding the scorched shard, turning it over, examining it with sudden concentration",
+          "bubbles": [ { "type": "speech", "at": "top-right", "text": "Sí que la deja. Deja el hueco donde estaba." } ] },
+        { "ref": "vigia", "room": "bottom-left", "scene": "the armoured hero straightening up sharply, surprised, the cracked visor catching the light",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "who": "VIGÍA", "text": "Repite eso." } ] },
+        { "ref": "hero", "room": "top-left", "scene": "the boy already sitting down cross-legged on the rooftop gravel, opening his laptop, hood up, wind in his hair",
+          "bubbles": [ { "type": "speech", "at": "top-left", "text": "Dame una hora y un sitio con luz." } ] }
+      ]
+    },
+    {
+      "beat": "el rastreo",
+      "layout": "quad",
+      "panels": [
+        { "ref": "hero", "room": "top-right", "scene": "the boy typing fast on the laptop on his knees on the windy rooftop, the armoured hero standing behind him with arms folded, the dead city below",
+          "bubbles": [ { "type": "speech", "at": "top-right", "text": "No busco lo que hizo. Busco lo que no está." } ] },
+        { "ref": null, "room": "bottom-right", "scene": "close-up of a laptop screen filling the frame, a glowing wireframe map of the city with hundreds of grey dots and one single red dot pulsing on a northern tower, no people in the shot",
+          "bubbles": [ { "type": "shout", "at": "bottom-right", "text": "¡Torre norte!" } ] },
+        { "ref": "vigia", "room": "top-left", "scene": "the armoured superhero already launching himself off the edge of the roof, cape snapping, motion lines, seen from behind",
+          "bubbles": [ { "type": "speech", "at": "top-left", "who": "VIGÍA", "text": "Quédate aquí." } ] },
+        { "ref": "hero", "room": "bottom-left", "scene": "the boy alone on the empty rooftop, half standing, arm still raised where the hero was a second ago",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "text": "Espera, todavía no he..." } ] }
+      ]
+    },
+    {
+      "beat": "el fracaso",
+      "layout": "wide-two",
+      "panels": [
+        { "ref": null, "room": "top-right", "scene": "wide shot of a tall dark corporate tower at night, a distant orange explosion blooming on one of the upper floors, no people visible",
+          "bubbles": [ { "type": "caption", "at": "top-right", "text": "Llegó a la planta 44 en cuarenta segundos." } ] },
+        { "ref": null, "room": "top-left", "scene": "close-up of a laptop screen filling the frame, the glowing city map dissolving into static and glitch fragments, the red dot gone, no people in the shot",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "No había nadie. Nunca lo hubo." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "the boy sitting very still on the rooftop, the laptop dark on his knees, shoulders dropped, dawn starting behind him",
+          "bubbles": [ { "type": "thought", "at": "top-right", "text": "Le he mandado a un sitio vacío." } ] }
+      ]
+    },
+    {
+      "beat": "la bronca",
+      "layout": "tall-stack",
+      "panels": [
+        { "ref": "vigia", "room": "top-right", "scene": "vertical composition: the armoured superhero landing hard back on the rooftop, armour smoking and scorched, one shoulder plate torn off, looming tall",
+          "bubbles": [ { "type": "speech", "at": "top-right", "who": "VIGÍA", "text": "Era una trampa. Y tú me metiste dentro." } ] },
+        { "ref": "hero", "room": "bottom-left", "scene": "close-up of the boy's face looking down and away, jaw tight, refusing to cry",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "text": "Lo sé." } ] },
+        { "ref": "vigia", "room": "top-left", "scene": "the armoured hero walking away toward the far edge of the roof, seen from behind, dawn light ahead of him",
+          "bubbles": [ { "type": "speech", "at": "top-left", "who": "VIGÍA", "text": "Vete a casa, chaval." } ] }
+      ]
+    },
+    {
+      "beat": "la idea",
+      "layout": "quad",
+      "panels": [
+        { "ref": "hero", "room": "top-right", "scene": "the boy sitting alone with his back against a rooftop wall at first light, closed laptop on his knees, the sky going from black to orange above him",
+          "bubbles": [ { "type": "caption", "at": "top-right", "text": "No se fue a casa." } ] },
+        { "ref": "hero", "room": "bottom-right", "scene": "the boy opening the laptop again in the dawn light, face lit blue, starting to read from the very beginning",
+          "bubbles": [ { "type": "caption", "at": "bottom-right", "text": "Volvió a mirar. Otra vez. Y otra." } ] },
+        { "ref": "hero", "room": "bottom-left", "scene": "extreme close-up of his eyes reflecting scrolling lines of code, pupils widening as he realises something",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "text": "Nadie borra tan limpio... salvo el que tiene prisa." } ] },
+        { "ref": null, "room": "top-left", "scene": "close-up of a laptop screen filling the frame, thousands of code lines in grey with one single line highlighted in bright red, no people in the shot",
+          "bubbles": [ { "type": "shout", "at": "top-left", "text": "¡Aquí! Se dejó su propia firma." } ] }
+      ]
+    },
+    {
+      "beat": "volver a por el heroe",
+      "layout": "wide-two",
+      "panels": [
+        { "ref": "hero", "room": "top-left", "scene": "wide shot: the boy running full speed across a rooftop at sunrise with the open laptop clutched to his chest, jumping a low wall",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "Seis manzanas. Con el portátil abierto." } ] },
+        { "ref": "vigia", "room": "top-right", "scene": "the armoured superhero sitting slumped against a water tank, helmet off his knee, repairing a broken shoulder plate with his bare hands",
+          "bubbles": [ { "type": "speech", "at": "top-right", "who": "VIGÍA", "text": "Te dije que te fueras." } ] },
+        { "ref": "hero", "room": "bottom-left", "scene": "the boy standing in front of him out of breath, holding the glowing laptop screen up like a shield, absolutely certain",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "text": "Y yo te dije que deja huella. Mira." } ] }
+      ]
+    },
+    {
+      "beat": "la infiltracion",
+      "layout": "quad",
+      "panels": [
+        { "ref": null, "room": "top-left", "scene": "wide establishing shot of a vast dark server hall, towers of blinking machines in long rows, thick cables hanging like vines from the ceiling, no people in the shot",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "Planta menos tres. La que no sale en los planos." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "the boy walking between two rows of server racks with the laptop open in his arms, small against the machines, blue light on his face",
+          "bubbles": [ { "type": "speech", "at": "top-right", "text": "Está aquí abajo. Lo noto en la latencia." } ] },
+        { "ref": "vigia", "room": "bottom-left", "scene": "the armoured superhero moving ahead down the aisle with one fist raised, ready, armour scorched, seen from behind",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "who": "VIGÍA", "text": "Detrás de mí. Esta vez de verdad." } ] },
+        { "ref": null, "room": "bottom-right", "scene": "close-up of a bank of server lights all turning from green to red at once, row after row, no people in the shot",
+          "bubbles": [ { "type": "caption", "at": "bottom-right", "text": "Sabía que iban." } ] }
+      ]
+    },
+    {
+      "beat": "el villano",
+      "layout": "wide-two",
+      "panels": [
+        { "ref": "nul", "room": "top-left", "scene": "dramatic wide shot: the faceless villain in a long black coat standing at the far end of the server hall under a single hanging light, body made of shifting black code fragments, towering and still",
+          "bubbles": [ { "type": "speech", "at": "top-left", "who": "NUL", "text": "Un crío con un portátil." } ] },
+        { "ref": "nul", "room": "bottom-right", "scene": "close-up of the smooth blank white mask filling the frame, fragments of black code peeling off its edge",
+          "bubbles": [ { "type": "speech", "at": "bottom-right", "who": "NUL", "text": "Yo borré a tu ciudad entera antes de cenar." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "the boy standing his ground, small, jaw set, laptop held tight against his chest",
+          "bubbles": [ { "type": "speech", "at": "top-right", "text": "Ya. Y dejaste la servilleta." } ] }
+      ]
+    },
+    {
+      "beat": "la caida",
+      "layout": "quad",
+      "panels": [
+        { "ref": "vigia", "room": null, "scene": "violent action: the armoured superhero charging forward down the aisle, fist first, motion lines, debris flying" },
+        { "ref": null, "room": null, "scene": "a huge blast of black code fragments erupting outward through a row of server racks, metal tearing, sparks, no faces visible" },
+        { "ref": "vigia", "room": "top-right", "scene": "the armoured superhero lying face down and sparking on the floor among broken machines, one arm outstretched, visor cracked open",
+          "bubbles": [ { "type": "shout", "at": "top-right", "text": "¡VIGÍA!" } ] },
+        { "ref": "hero", "room": "top-left", "scene": "the boy alone on his knees beside the fallen hero, terrified, the huge shadow of the villain falling over them both",
+          "bubbles": [ { "type": "thought", "at": "top-left", "text": "Vale. Vale. Piensa." } ] }
+      ]
+    },
+    {
+      "beat": "la resolucion",
+      "layout": "quad",
+      "panels": [
+        { "ref": "hero", "room": "top-left", "scene": "wide dramatic shot: the boy kneeling on the floor of the dark server hall, laptop open, typing with total concentration, blue screen light on his face, the enormous villain looming above him",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "No tenía poderes. Tenía la costumbre de no rendirse." } ] },
+        { "ref": null, "room": "bottom-right", "scene": "close-up of the laptop screen filling the frame, the same highlighted red line of code now repeated a thousand times and multiplying, no people in the shot",
+          "bubbles": [ { "type": "speech", "at": "bottom-right", "text": "Tu firma era tu error." } ] },
+        { "ref": "nul", "room": "top-right", "scene": "the faceless villain coming apart, his body of black code fragments unravelling upward into nothing, the blank white mask cracking down the middle",
+          "bubbles": [ { "type": "shout", "at": "top-right", "who": "NUL", "text": "¿Qué has hecho?" } ] },
+        { "ref": "hero", "room": "bottom-left", "scene": "the boy still kneeling, lit from below by the laptop, looking up at the empty air where the villain was, exhausted",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "text": "Mirar donde no mirabas." } ] }
+      ]
+    },
+    {
+      "beat": "el cierre",
+      "layout": "wide-two",
+      "panels": [
+        { "ref": null, "room": "top-left", "scene": "wide shot of the whole city skyline at dawn with the lights coming back on district by district in a spreading wave, no people in the shot",
+          "bubbles": [ { "type": "caption", "at": "top-left", "text": "A las 06:14 volvió la luz." } ] },
+        { "ref": "hero", "room": "top-right", "scene": "the boy and the battered armoured superhero sitting side by side on the edge of the rooftop, feet hanging over the drop, the lit city below them",
+          "bubbles": [ { "type": "speech", "at": "top-right", "who": "VIGÍA", "text": "¿Cómo lo viste?" } ] },
+        { "ref": "hero", "room": "bottom-left", "scene": "close-up of the boy in profile against the sunrise, half a smile, hood down, hair moving in the wind",
+          "bubbles": [ { "type": "speech", "at": "bottom-left", "text": "Miré donde nadie mira." } ] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu vista previa · MyOwnManga</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/app.css">
+<script src="/assets/js/theme.js"></script>
+<style>
+  .wait { text-align: center; padding: 70px 0; }
+  .bar { height: 6px; background: var(--rule); max-width: 420px; margin: 24px auto 12px; border-radius: 3px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--amber); width: 0; transition: width .6s ease; }
+  .step { color: var(--muted); font-size: 15px; }
+  .preview { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 40px; align-items: start; }
+  /* Mat under the cover, same reason as the landing: a black-and-white page is
+     the brightest thing on this background and needs an edge to sit against. */
+  .preview figure { margin: 0; background: var(--panel); padding: 10px;
+                    border: 1px solid var(--rule-2); box-shadow: 0 18px 44px rgba(0,0,0,.45); }
+  .script { border: 1px solid var(--rule); background: var(--bg-2); padding: 26px 28px; border-radius: 2px; }
+  .script h4 { font-family: "Bangers", sans-serif; font-weight: 400; font-size: 19px;
+               margin: 26px 0 10px; letter-spacing: .03em; color: var(--amber); }
+  .script h4:first-child { margin-top: 0; }
+  .line { margin: 0 0 7px; font-size: 16px; color: var(--ink); }
+  .line b { color: var(--amber); font-size: 13px; letter-spacing: .05em; }
+  .line.caption { font-style: italic; color: var(--muted); }
+  .buy { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  @media (max-width: 860px) { .preview { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap"><a href="/" class="brand" style="text-decoration:none">MYOWN<span>MANGA</span></a></div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div id="waiting" class="wait">
+      <h2 id="waitTitle">Estamos escribiendo su historia</h2>
+      <p class="step" id="stepText">Empezando…</p>
+      <div class="bar"><i id="barFill"></i></div>
+      <p class="step">Tarda unos minutos. Puedes cerrar esto: te avisamos por correo.</p>
+    </div>
+
+    <div id="ready" hidden>
+      <h2 id="title"></h2>
+      <p class="sub" id="logline"></p>
+      <div class="preview">
+        <figure><img id="cover" alt="Portada del cómic"></figure>
+        <div>
+          <div class="script" id="script"></div>
+          <div class="buy" id="buyBox">
+            <p><b>Esto es solo la portada y el guion.</b> El cómic completo son 14 páginas
+               dibujadas y rotuladas, en PDF.</p>
+            <a class="btn" id="buyBtn" href="#">Quiero el cómic completo — 14,99 €</a>
+          </div>
+
+          <!-- Después de pagar. Dibujar 78 viñetas son unos siete minutos, así
+               que esto no es un spinner: dice cuántas van. -->
+          <div class="buy" id="makingBox" hidden>
+            <p><b id="makingTitle">Estamos dibujando el cómic.</b>
+               <span id="makingCount"></span></p>
+            <div class="bar"><i id="makeFill"></i></div>
+            <p class="step">Tarda unos minutos. Puedes cerrar esto: te lo mandamos por correo
+               en cuanto esté.</p>
+          </div>
+
+          <div class="buy" id="doneBox" hidden>
+            <p><b>Ya está.</b> Las 14 páginas dibujadas y rotuladas.</p>
+            <a class="btn" id="pdfBtn" href="#">Descargar el PDF</a>
+            <p class="step" id="holesNote" hidden></p>
+          </div>
+
+          <div class="buy" id="stuckBox" hidden>
+            <p><b>Lo hemos parado para mirarlo a mano.</b> <span id="stuckText"></span></p>
+            <p class="step">No hace falta que hagas nada: te escribimos hoy mismo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="failed" hidden class="wait">
+      <h2>Se nos ha atascado</h2>
+      <p class="step" id="failText"></p>
+      <p><a class="btn ghost" href="/#crear">Volver a intentarlo</a></p>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+  var token = location.pathname.split("/").filter(Boolean).pop();
+  var STEPS = {
+    outline: "Pensando la historia…",
+    critique: "El editor la está leyendo…",
+    rewrite: "Arreglando lo que el editor ha marcado…",
+    breakdown: "Repartiendo la historia en viñetas…",
+    dialogue: "Puliendo los diálogos…",
+    cover: "Dibujando la portada…",
+    done: "Ya casi…"
+  };
+  var $ = function (id) { return document.getElementById(id); };
+  var tries = 0;
+
+  function renderScript(pages) {
+    var box = $("script");
+    while (box.firstChild) box.removeChild(box.firstChild);
+    pages.forEach(function (page, i) {
+      var h = document.createElement("h4");
+      h.textContent = "Página " + (i + 1) + " · " + page.beat;
+      box.appendChild(h);
+      if (!page.lines.length) {
+        var p = document.createElement("p");
+        p.className = "line caption";
+        p.textContent = "(sin diálogo)";
+        return box.appendChild(p);
+      }
+      page.lines.forEach(function (l) {
+        var p = document.createElement("p");
+        p.className = "line" + (l.type === "caption" ? " caption" : "");
+        if (l.who) { var b = document.createElement("b"); b.textContent = l.who + " "; p.appendChild(b); }
+        p.appendChild(document.createTextNode(l.text));
+        box.appendChild(p);
+      });
+    });
+  }
+
+  function show(data) {
+    if (data.status === "failed") {
+      $("waiting").hidden = true;
+      $("failed").hidden = false;
+      $("failText").textContent = data.error || "Vuelve a intentarlo, no te cobramos nada.";
+      return true;
+    }
+    $("barFill").style.width = (data.progress || 0) + "%";
+    $("stepText").textContent = STEPS[data.step] || "Trabajando…";
+
+    if (data.status === "ready" && data.cover && data.pages) {
+      $("waiting").hidden = true;
+      $("ready").hidden = false;
+      $("title").textContent = data.title || "";
+      $("logline").textContent = data.logline || "";
+      $("cover").src = data.cover;
+      $("cover").alt = "Portada de " + (data.title || "el cómic");
+      renderScript(data.pages);
+      $("buyBtn").href = "/api/checkout?token=" + encodeURIComponent(token);
+      if (data.paid) startRender();
+      return true;
+    }
+    return false;
+  }
+
+  /* --- después de pagar --------------------------------------------------- */
+
+  var MAKING = {
+    sheets: "Dibujando a los personajes…",
+    panels: "",           // lo sustituye el contador de viñetas
+    pdf: "Montando las páginas…",
+    deliver: "Mandándotelo…"
+  };
+  var renderTries = 0;
+
+  function showRender(d) {
+    $("buyBox").hidden = true;
+    $("makingBox").hidden = d.status === "done" || d.status === "needs_attention";
+    $("doneBox").hidden = d.status !== "done";
+    $("stuckBox").hidden = d.status !== "needs_attention";
+
+    if (d.status === "needs_attention") {
+      $("stuckText").textContent = d.error || "";
+      return true;
+    }
+    if (d.status === "done") {
+      $("pdfBtn").href = d.pdf || ("/api/file?token=" + encodeURIComponent(token) + "&k=pdf");
+      if (d.holes) {
+        $("holesNote").hidden = false;
+        $("holesNote").textContent = d.holes === 1
+          ? "Una viñeta se nos ha resistido y sale en blanco. Si te molesta, respóndenos y la rehacemos."
+          : d.holes + " viñetas se nos han resistido y salen en blanco. Si te molesta, respóndenos y las rehacemos.";
+      }
+      return true;
+    }
+
+    $("makeFill").style.width = (d.progress || 0) + "%";
+    $("makingCount").textContent = d.step === "panels" && d.total
+      ? "Van " + d.drawn + " de " + d.total + " viñetas."
+      : (MAKING[d.step] || "");
+    return false;
+  }
+
+  /* Igual que arriba: quien mira, empuja. Cada llamada dibuja un lote y
+     devuelve; el cron se ocupa de los que nadie está mirando. */
+  function startRender() {
+    fetch("/api/render?token=" + encodeURIComponent(token), { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.error && !d.status) return;   // 402 sin pagar: no hay nada que enseñar
+        if (showRender(d)) return;
+        renderTries++;
+        setTimeout(startRender, Math.min(4000 + renderTries * 500, 15000));
+      })
+      .catch(function () { renderTries++; setTimeout(startRender, 10000); });
+  }
+
+  /* Whoever is looking pushes the job along: each poll advances one step.
+     Backing off keeps a forgotten tab from hammering the generator. */
+  function poll() {
+    fetch("/api/job?token=" + encodeURIComponent(token), { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error && !data.status) {
+          $("waiting").hidden = true;
+          $("failed").hidden = false;
+          $("failText").textContent = data.error;
+          return;
+        }
+        if (show(data)) return;
+        tries++;
+        setTimeout(poll, Math.min(3000 + tries * 500, 12000));
+      })
+      .catch(function () { tries++; setTimeout(poll, 8000); });
+  }
+  poll();
+})();
+</script>
+</body>
+</html>

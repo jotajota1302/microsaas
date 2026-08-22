@@ -1,0 +1,832 @@
+{
+  "title": "Píxeles rotos",
+  "subtitle": "Volumen 1",
+  "logline": "Una adolescente que se fija en los detalles minúsculos debe descifrar una ciberamenaza que paraliza su ciudad, usando su habilidad única para ver lo que nadie más percibe.",
+  "genre": "ciber",
+  "style": "manga-bn",
+  "language": "es",
+  "order": {
+    "name": "Nerea",
+    "age": 15,
+    "gender": "f",
+    "ageBand": "14-15",
+    "hairShape": "recogido",
+    "hairColour": "castano",
+    "eyes": "miel",
+    "skin": "media",
+    "build": "delgado",
+    "mark": "auriculares",
+    "trait": "observador",
+    "sidekick": {
+      "name": "Bruno",
+      "relation": "hermano-peq"
+    },
+    "trope": "ciber",
+    "tone": "oscuro",
+    "style": "manga-bn"
+  },
+  "hero": {
+    "name": "Nerea",
+    "age": 15,
+    "gender": "f",
+    "hair": "hair tied back in a ponytail, dark brown",
+    "eyes": "hazel",
+    "skin": "light brown",
+    "outfit": "big over-ear headphones around the neck, slight build",
+    "trait": "Se fija en todo"
+  },
+  "cast": {
+    "ally": {
+      "label": "BRUNO",
+      "sheet": "A wiry 10-year-old boy, perpetually sporting messy dark hair and an oversized t-shirt featuring a faded graphic of a game character."
+    },
+    "villain": {
+      "label": "SOMBRA",
+      "sheet": "A figure cloaked in shadow, face obscured by a glitching digital mask or a shroud of darkness. Their movements are precise, almost too smooth, with hands that seem to constantly manipulate unseen interfaces."
+    }
+  },
+  "cover": {
+    "ref": "hero",
+    "scene": "comic book cover composition: the teenager standing in the foreground, the ally behind and to one side, and far back the silhouette of SOMBRA; a connected city where infrastructure itself is under attack, server halls, dark streets, dead traffic lights"
+  },
+  "critique": {
+    "verdict": "revisar",
+    "scores": {
+      "resuelve_el_rasgo": 4,
+      "fracaso_propio": 2,
+      "decision_cara": 1,
+      "antagonista": 4,
+      "dialogo_creible": 2,
+      "se_entiende_sin_dibujos": 4
+    },
+    "worst": "El guion presenta a Nerea como pasiva ante las trampas y el desarrollo de la trama, diluyendo su rasgo principal y su capacidad para tomar decisiones significativas que impliquen un coste real."
+  },
+  "pages": [
+    {
+      "beat": "La urbe digital",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "CLOSE UP ON NEREA'S EYES scanning a flickering street light pole. City street, day, slightly overcast.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "MEDIUM SHOT. Nerea walks, distracted by a digital billboard glitching. Her gaze is intense, focused on the imperfection.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "WIDE SHOT, from behind. Nerea is a small figure in the bustling city. Bruno, younger, is a blur running towards her.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "¡Nerea! ¡Ven, vamos a jugar al parque!"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "MEDIUM SHOT, Nerea looks down at Bruno, a faint, almost imperceptible sigh. Her attention is already drifting back to the urban decay.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Ahora no puedo, Bruno."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "EXTREME CLOSE UP on Nerea's finger tracing a tiny anomaly on a grimy wall. The city noise is a muffled background.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Observación en clase",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Medium shot of Nerea in a classroom, hunched over her notebook, drawing. Sunlight streams through a window, illuminating dust motes. The projector screen above her flickers erratically.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "PROFESSOR",
+              "text": "Nerea, ¿estás atendiendo? Céntrate."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Close-up on Nerea's notebook. She's not doodling, but meticulously sketching a complex, glitchy pattern that mirrors the projector's stutter. Her pen moves with precision.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Over-the-shoulder shot from behind the professor, looking at Nerea. She looks up briefly, a flicker of something in her eyes, but then her gaze drifts back to the projector, a small, almost imperceptible smile playing on her lips. The professor sighs.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "(murmurando para sí misma) Qué ritmo más raro..."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Extreme close-up on the projector screen. A geometric pattern of static momentarily resolves into a series of rapidly changing, abstract symbols before dissolving back into chaos.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium shot of Nerea again. She's already forgotten the professor's reprimand, her brow furrowed in concentration as she adds more detail to her drawing. The projector behind her continues its erratic display.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Primeras señales",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "EXT. CALLE DEL CENTRO - NOCHE. Un primer plano de un semáforo parpadeando caóticamente. La luz roja y verde se alternan con una frecuencia errática. Las farolas de la calle cercanas parpadean al unísono, creando un patrón de luz y sombra inquietante.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "INT. HABITACIÓN DE NEREA - NOCHE. Nerea está de pie junto a la ventana, mirando hacia afuera. Su rostro está iluminado por el parpadeo de las luces de la calle. Su expresión es de intensa concentración, no de miedo.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Es… rítmico."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "EXT. CALLE DEL CENTRO - NOCHE. Una vista desde la ventana de Nerea, mostrando varios coches detenidos en medio de la calle, sus luces encendiéndose y apagándose. El caos vehicular es evidente. El parpadeo de las farolas y semáforos es ahora más pronunciado.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "INT. HABITACIÓN DE NEREA - NOCHE. Nerea ha sacado su cuaderno y un lápiz. Está dibujando con rapidez, intentando capturar la secuencia de las luces parpadeantes. Su frente está fruncida en concentración.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "No es aleatorio. Hay un patrón."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "INT. HABITACIÓN DE NEREA - NOCHE. Bruno entra en la habitación, mirando su teléfono con frustración. Las luces parpadeantes de fuera se reflejan en su cara, acentuando su irritación.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "¿Qué le pasa a esto? No hay cobertura."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "INT. HABITACIÓN DE NEREA - NOCHE. Nerea no le presta atención a Bruno, absorta en su dibujo. Sigue trazando líneas en el cuaderno, su mirada perdida en algún punto más allá de la habitación.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Es como… una señal."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "El apagón",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Nerea's face in close-up, lit by the dying glow of her phone screen. She's staring at it, her brow furrowed.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Pero qué coño... No responde."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "A wider shot showing Nerea and Bruno in their living room. Bruno is on the floor, furiously mashing buttons on a dead portable game console. His face is a mask of frustration, then dawning panic.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "¡Maldita sea! ¡Tú tampoco, enana!"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "The street outside their window, seen from their perspective. The streetlights are flickering erratically, plunging the scene into strobe-like darkness and brief flashes of light. Traffic lights are stuck on red, causing horns to blare in the distance.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Nerea looking out the window, her expression shifting from annoyance to a more serious concern. Her eyes scan the chaos outside, not focusing on the obvious panic, but on the subtle, underlying rhythm of the flickering lights.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "No es aleatorio. Hay un patrón."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Bruno looking up from his console, his earlier frustration replaced by a nervous uncertainty as he looks at Nerea, then back at the flickering streetlights.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Hermana... ¿Está pasando lo que creo que está pasando?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Trampa digital",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "medium shot, Nerea hunched over a public information terminal, streetlights casting long shadows, dark alleyway, moody lighting",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Esto va más lento que el internet de mi abuela."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "close up on the terminal screen, a generic security alert box with red warning icons, the cursor flickers erratically, dark, flickering screen",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "medium close up on Nerea's face, her brow furrowed in concentration, eyes narrowed as she notices something subtle, dim lighting",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "¿Qué mierda es esto? La han hackeado."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "wide shot, Bruno standing a few feet behind Nerea, silhouetted against the dead streetlights, looking small and scared, dark",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "Nerea… ¿qué pasa?"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "overhead shot of the street, the public terminal screen suddenly goes completely black, followed by a ripple effect as nearby streetlights begin to flicker and die out, deep shadows",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "close up on Nerea's eyes, wide with dawning realization, reflected in them is the dying light of the terminal, shadows consuming her face",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Oh. Joder. Era una trampa."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Aislamiento",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Nerea's face, dimly lit by her phone screen, looking up in alarm. The background is a street with several buildings, some of which are going dark.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Se ha extendido. Ya no es solo el centro."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Bruno huddled against Nerea, her arms around him. He's wide-eyed, staring into the darkness. The light from Nerea's phone casts long shadows.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "Tengo un poco de frío."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Wide shot of the street. More windows are dark now. The traffic lights at the intersection are dead, casting the scene in an eerie twilight.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up on Nerea's hand holding her phone. The screen shows an alert: 'SYSTEM LOCKDOWN ACTIVE. UNAUTHORIZED ACCESS DETECTED.' Her thumb hovers over the dismiss button.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "No quería ser la que hiciera clic."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Nerea looking down at her phone screen, her expression a mixture of frustration and dawning realization. The phone's light illuminates the worry lines on her forehead.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Me estaban guiando. Una trampa."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Bruno fidgeting with a small, old, plastic toy remote control, his focus entirely on it. Nerea watches him, her own worries momentarily forgotten.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Refugio en la penumbra",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Medium shot, low angle, Nerea huddled in a dark alley. Overhead, a single flickering streetlight. Her expression is tense, shoulders hunched.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Todo esto por un acceso rápido. Menudo plan."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Close up on Bruno’s hands turning a grimy, old toy remote control. The plastic is scratched. In the background, out of focus, Nerea's legs.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Clic. Clic. ¿Hay alguna señal secreta aquí?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Over Nerea’s shoulder, looking out of the alley. The city street is eerily silent and dark, only faint light spills from a distant building.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Silencio total. Ni un zumbido de la red."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Medium shot of Bruno, looking up at Nerea. He offers her the remote, his face a mixture of boredom and a hint of worry.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "¿No quieres jugar tú también? A lo mejor este funciona."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close up on Nerea's eyes. They dart from Bruno's remote to the shadows of the alley. Her gaze sharpens, a flicker of recognition.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Espera… los símbolos… los he visto antes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Un patrón recurrente",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "ally",
+          "scene": "CLOSE UP on Bruno's hands pressing buttons on a worn, colorful toy remote. The plastic is scratched. Street trash is visible in the background, out of focus.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "MEDIUM SHOT of Nerea, hunched over, staring intently at Bruno's hands and the remote. Her expression is focused, a furrow between her brows. The dim light of a distant, flickering street lamp casts long shadows.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Joder, ¿otra vez esto?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "EXTREME CLOSE UP on Nerea's eyes. They are wide, scanning, absorbing details. A faint reflection of the remote's symbols can be seen in her pupils.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "OVER THE SHOULDER shot, from behind Nerea, looking at a police-issue tablet displaying schematics of traffic light systems. Nerea is tracing a finger over a simplified, geometric symbol on the screen.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Es el mismo puto símbolo. Una y otra vez."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "SPLIT PANEL. Left side: Nerea’s face, illuminated by the tablet screen, a dawning realization. Right side: A flash back to a previous memory – Nerea looking at a dead traffic light, the same minimalist symbol visible on its casing, slightly blurred.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "No son fallos aleatorios."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "El código oculto",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Close-up on Nerea's eyes, reflecting the intricate patterns of the remote control buttons. Her gaze is sharp, focused.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Este patrón... lo he visto antes."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Split panel: Left side shows a traffic light blinking erratically. Right side shows a streetlamp flickering with the same strange rhythm.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Nerea's hand hovers over a notebook, filled with quick sketches of the blinking lights and symbols. Her brow is furrowed in concentration.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "No son fallos aleatorios. Son señales."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium shot of Nerea and Bruno in a dimly lit room. Bruno is still fiddling with the remote, oblivious. Nerea looks out a window.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Es como un lenguaje. De baja señal."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Exterior, dark city street at night. A holographic interface glows faintly on a public control panel. A shadowed figure's hands move over it.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "Close-up on the figure's hands as they glide across the interface, emitting subtle pulses of light that mirror the remote's symbols.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Observando al titiritero",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Nerea, medium shot, silhouetted against a flickering streetlamp. Her eyes dart around.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "Nerea",
+              "text": "Tiene que haber algo. Una pista, lo que sea."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Extreme close-up on a dark, grimy window. A distorted reflection shows the street.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "Reflection in the window. A figure is hunched over a public control panel. Their fingers move in an unnatural, flowing way.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up on Nerea's face, eyes wide, staring at the reflection. Focus on her pupils.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "Nerea",
+              "text": "Es como... el mando. Mismo patrón. Mismo ritmo."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Abstract representation of light patterns emanating from the panel in the reflection, mirroring the abstract shapes from the controller.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Nerea, low angle, looking up towards a distant, dilapidated building with a sign that reads 'Centro de Comunicaciones Antiguo'. Rain streaks down her face.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Ahí debe estar la fuente."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "A la caza de la señal",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "EXT. CALLEJÓN OSCURO - NOCHE. Nerea, de espaldas, mira un edificio deteriorado, un antiguo centro de comunicaciones. La luz de la luna ilumina tenuemente su silueta.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Tiene que ser aquí. La antena... aún funciona, creo."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "INT. CENTRO DE COMUNICACIONES ABANDONADO - NOCHE. Una consola de control antigua, cubierta de polvo, con luces parpadeantes. Cables sueltos cuelgan del techo.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "INT. CENTRO DE COMUNICACIONES ABANDONADO - NOCHE. Nerea se acerca a la consola. Sus dedos trazan patrones en el polvo, imitando los que vio. Luz azul tenue emana de la pantalla.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Esto... es la misma secuencia."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "PANTALLA DE LA CONSOLA. La interfaz parpadea con patrones de luz erráticos, intentando confundir. Líneas de código rojas y verdes se cruzan caóticamente.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "INT. CENTRO DE COMUNICACIONES ABANDONADO - NOCHE. Nerea frunce el ceño, sus dedos ahora se mueven con urgencia sobre los botones, siguiendo un ritmo que solo ella percibe. La consola emite un zumbido alto.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "No me vas a engañar con ruido, 'Sombra'."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "PANTALLA DE LA CONSOLA. Un mensaje de 'ACCESO DENIED' aparece brevemente antes de ser reemplazado por un símbolo de 'BLOQUEO ACTIVADO'. Las luces de la consola se vuelven estables y de un color verde calmado.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Contramedida digital",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "CLOSE UP on Nerea's hands, moving rapidly over a glowing, alien console. Sparks fly from the edges of the interface. Low, emergency lighting.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Esto... es todo lo que queda. El lenguaje del creador."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "WIDE SHOT of the console, showing intricate, geometric patterns lighting up as Nerea types. A blast of static energy erupts from the screen.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Sombra",
+              "text": "Insensata. Crees que puedes detener esto."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "MEDIUM SHOT of Nerea, face illuminated by the console, eyes narrowed in intense concentration. Her knuckles are white as she presses buttons.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Tu lenguaje es un virus. El mío es la cura."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "EXTREME CLOSE UP on a single button being pressed on the console. The pattern is sharp, angular.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "EXT. CITY STREET - NIGHT. Traffic lights flicker erratically. The hum of failing systems.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Y entonces, el silencio."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Restablecimiento",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Close-up on Nerea's hands on the console. Her fingers are poised, about to press a final sequence. The room is lit by the flickering screens, casting long shadows.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Vale. Aquí va. El último código."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "A wide shot of the city's central server hall. Lights are flashing erratically, sparks fly from exposed wiring. The air is thick with tension.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "Sombra's silhouette is visible in the background, watching a monitor displaying Nerea's progress. His posture is rigid with disbelief and anger.",
+          "bubbles": [
+            {
+              "type": "shout",
+              "who": "SOMBRA",
+              "text": "¡Imposible! ¡Ese lenguaje…!"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "The city skyline at night. Suddenly, all the traffic lights blink and then stabilize. Streetlights flicker on, one by one, in a wave across the metropolis.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "Back in the server hall, Sombra looks at his hands, which seem to be fading, becoming less substantial as the city's original systems come back online.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "SOMBRA",
+              "text": "Mi red… se desmorona."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "A dark alley. Sombra's fading form is swallowed by the deepening shadows. He's gone.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Lectura de la urbe",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "WIDE SHOT. Early morning city street. Traffic lights blink green, yellow, red in sequence. Pedestrians walk, cars drive normally. The city hums with activity. SOFT, WARM LIGHTING.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "MEDIUM SHOT. Nerea sits on a park bench, eyes slightly unfocused, looking at the street. She's still, observing. The background is slightly blurred. NORMAL DAYLIGHT.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Al día siguiente."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "CLOSE UP on Bruno, sitting next to Nerea on the bench. He's scrolling on a small handheld device, looking bored. A few streetlights are visible in the background, functioning normally. DAYLIGHT.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "¿Ya has terminado de pensar en códigos?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "MEDIUM SHOT. Nerea turns her head slowly towards Bruno, a faint, almost imperceptible smile playing on her lips. Her eyes are sharp, focused. DAYLIGHT.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "No es pensar en códigos. Es verlos."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "SUPER CLOSE UP. Nerea's eyes. Reflected in her pupils, faint, abstract lines of light and data streams pulse and weave, like a digital map overlaying reality. BRIGHT, CLEAN LIGHT.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "WIDE SHOT. Nerea and Bruno on the bench. Nerea looks out at the city, a new understanding in her gaze. The city lights, street signs, and network cables seem to hum with a visible, interconnected energy only she can perceive. DAYLIGHT.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Como si esto fuera… un mapa."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "needsHumanReview": [
+    "no fracasa por su culpa antes de ganar",
+    "el diálogo no suena creíble"
+  ]
+}

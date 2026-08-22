@@ -1,0 +1,31 @@
+{
+  "pages": [
+    { "id": "elegida", "name": "Elegida" },
+    { "id": "descartadas", "name": "Descartadas" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html",  "page": "elegida",     "x": 0,    "y": 0,   "w": 900, "h": 600, "title": "Seinen nocturno · en producción" },
+    { "file": "Jump.dc.html",  "page": "descartadas", "x": 0,    "y": 0,   "w": 900, "h": 600, "title": "A · Jump blanco" },
+    { "file": "Riso.dc.html",  "page": "descartadas", "x": 1020, "y": 0,   "w": 900, "h": 600, "title": "B · Riso zine" },
+    { "file": "Acido.dc.html", "page": "descartadas", "x": 0,    "y": 760, "w": 900, "h": 600, "title": "C · Tinta y ácido" }
+  ],
+  "annotations": [
+    {
+      "id": "elegida-nota",
+      "page": "elegida",
+      "x": 0,
+      "y": -230,
+      "w": 640,
+      "text": "Seinen nocturno, elegida el 22-08-2026 y ya aplicada en assets/css/app.css.\n\nLo que se llevó con ella, además del color: línea de 1 px en vez de 3, sombra difusa en vez de bloque desplazado, y fuera la trama de puntos de papel. Sin eso queda oscuro y ruidoso, no seinen.\n\nY una decisión que salió de aquí: el cómic es blanco y negro, así que sobre este fondo la página sería lo más brillante de la pantalla. Va sobre un paspartú de #232B36 para que tenga un borde contra el que apoyarse."
+    },
+    {
+      "id": "descartadas-nota",
+      "page": "descartadas",
+      "x": 0,
+      "y": -170,
+      "w": 640,
+      "text": "Las tres que no salieron. Se quedan porque el argumento de cada una sigue siendo válido si el producto cambia de público:\n\nA sería la elegida para 12-13 años. B, si el canal acabara siendo Etsy y hiciera falta destacar en una cuadrícula de miniaturas. C, si alguna vez hay app o lector en pantalla."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "elegida" }
+}

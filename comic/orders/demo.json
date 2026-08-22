@@ -1,0 +1,17 @@
+{
+  "name": "Nerea",
+  "age": 15,
+  "gender": "f",
+  "ageBand": "14-15",
+  "hairShape": "recogido",
+  "hairColour": "castano",
+  "eyes": "miel",
+  "skin": "media",
+  "build": "delgado",
+  "mark": "auriculares",
+  "trait": "observador",
+  "sidekick": { "name": "Bruno", "relation": "hermano-peq" },
+  "trope": "ciber",
+  "tone": "oscuro",
+  "style": "manga-bn"
+}

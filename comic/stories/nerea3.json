@@ -1,0 +1,914 @@
+{
+  "title": "Señal",
+  "subtitle": "Volumen 1",
+  "logline": "Una chica que se fija en todo es la única que nota el patrón oculto en el apagón que tiene la ciudad paralizada.",
+  "genre": "ciber",
+  "style": "manga-bn",
+  "language": "es",
+  "order": {
+    "name": "Nerea",
+    "age": 15,
+    "gender": "f",
+    "ageBand": "14-15",
+    "hairShape": "recogido",
+    "hairColour": "castano",
+    "eyes": "miel",
+    "skin": "media",
+    "build": "delgado",
+    "mark": "auriculares",
+    "trait": "observador",
+    "sidekick": {
+      "name": "Bruno",
+      "relation": "hermano-peq"
+    },
+    "trope": "ciber",
+    "tone": "oscuro",
+    "style": "manga-bn"
+  },
+  "hero": {
+    "name": "Nerea",
+    "age": 15,
+    "gender": "f",
+    "hair": "hair tied back in a ponytail, dark brown",
+    "eyes": "hazel",
+    "skin": "light brown",
+    "outfit": "big over-ear headphones around the neck, slight build",
+    "trait": "Se fija en todo"
+  },
+  "cast": {
+    "ally": {
+      "label": "BRUNO",
+      "sheet": "A twelve-year-old boy with messy brown hair, a permanent smudge on his cheek, and a huge old laptop he carries in a backpack."
+    },
+    "villain": {
+      "label": "SILEN",
+      "sheet": "A thin man in his forties, gray hair slicked back, pale eyes, always wearing a dark coat with a high collar, no tie."
+    }
+  },
+  "cover": {
+    "ref": "hero",
+    "scene": "comic book cover composition: the teenager standing in the foreground, the ally behind and to one side, and far back the silhouette of SILEN; a connected city where infrastructure itself is under attack, server halls, dark streets, dead traffic lights"
+  },
+  "critique": {
+    "verdict": "revisar",
+    "scores": {
+      "resuelve_el_rasgo": 4,
+      "fracaso_propio": 5,
+      "decision_cara": 5,
+      "antagonista": 5,
+      "causalidad": 3,
+      "se_entiende_sin_dibujos": 4
+    },
+    "worst": "Inconsistencia sobre la vigilancia del sótano: se dice 'sin vigilancia' pero Silen detecta la intrusión en pantalla, lo que rompe la lógica del clímax y la credibilidad del antagonista."
+  },
+  "dialogueFixed": 5,
+  "dialogue": {
+    "before": 3,
+    "after": 3,
+    "note": "Hay muchas réplicas creíbles y concisas, pero el texto alterna buen argot con pasajes demasiado explicativos o teatrales que suenan a adulto escribiendo, no a chicos de 15 años."
+  },
+  "pages": [
+    {
+      "beat": "Vida normal",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Wide shot of a sunlit urban sidewalk at morning. The teenager walks with earbuds in, eyes scanning the ground, walls and street fixtures.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "Close-up of a freshly repainted square manhole cover on the asphalt, with an odd three-digit number stenciled in black on one corner.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "The teenager crouched by the manhole cover, phone held low, framing the painted number with one hand steady.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Genial... otro detalle que nadie pilla."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother sitting on a low wall at the school gate, laptop open on his knees, scrolling through a forum thread.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Tío, mira: en el foro dicen que muchos cuadros vienen con admin/admin."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium two-shot: the younger brother on the laptop, the teenager standing over him, still holding her phone with the photo.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Pues claro. Es que nadie cambia la contraseña de mierda por defecto, ¿no?"
+            },
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "O eso."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La ciudad se para",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Wide shot of a sunlit classroom from the back; rows of teenagers at desks, a teacher's hand writing on a whiteboard under fluorescent light.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium close-up of the teenage girl, mid-row, head tilted, eyes narrowing as the fluorescent tube above her flickers twice and dies; the rest of the room goes dim.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Genial."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Cut to the corridor drinking fountain sputtering dry, a thin dribble of water hitting the cracked tile floor; lockers reflected in the metal surface.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Después, se cuela algo, o sea..."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "View through the classroom window: the street intersection below, every traffic light dead, cars idling, a delivery truck half-blocking the crosswalk.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Silencio."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of the girl's wrist, her smartwatch still ticking steadily under the dim emergency strip light; in the blurred background, students tapping dead phone screens.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "No es un corte. Esto tiene huella — alguien ha tocado la ciudad."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Over-the-shoulder shot: through the window the street lamps are still glowing amber, while across the road a phone mast displays a blank red LED.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "La red?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Se corre la voz",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Wide shot of a dimly lit school corridor, students crowding toward the exits, ceiling lights off, emergency strips casting a faint green line along the floor.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Tres minutos después — Instituto Vallecas."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "A teacher standing in a doorway, arms half-raised, tie loosened, looking harried, flashlight in one hand pointing at the floor.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Tranquilos... fallo general. Salida ordenada, sin empujones, ¿vale?"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Close-up on a ceiling-mounted security camera, small red diode blinking steadily, its lens angled outward through a dark window.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "The teenager, backpack half-on one shoulder, standing still in the moving crowd, eyes tilted up toward the camera, frown pulled sideways, mouth a thin line.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Si todo está caído... ¿por qué esto sigue funcionando?"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Low angle from behind a phone screen lying on a hallway windowsill, the lock screen showing 17:48, no signal bars, a single battery icon.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "¿Vienes?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "The teenager turning back toward her younger brother, still looking over her shoulder, hand gripping the strap of her backpack.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Espera — algo no cuadra."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Aviso inyectado",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Close-up of a smartphone screen glowing in a dim hallway, notification banner from the municipal channel, official municipal logo visible, no people in frame.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "20:14. Nada es normal."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Tighter crop on the same screen, the message body filling the frame, small municipal icon next to a fresh corporate logo.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Canal oficial Ayuntamiento. SeguraTotal: servicio restablecido en el centro. Contrato exprés activo."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium shot of the teenager in a dark corridor, phone light cutting across her face, one hand holding the device, the other gripping the strap of her backpack.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Sale del repetidor municipal... está tocado."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Cutaway to a graphic detail: the corporate logo beside the municipal one, slight color mismatch suggesting a layered overlay.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Wider shot, the teenager turns sharply toward a side door where faint light spills in, jaw set, eyes tracking something off-panel.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Ven. Ya."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Primer contacto",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "ally",
+          "scene": "A small bedroom at night, lit only by a laptop screen on a desk. A younger boy sits hunched over the keyboard, the glow catching the edge of a grin.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Tranquila, ya tengo el portátil listo. Cuando vuelva la luz, rastreo qué han tocado."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "The same bedroom, over the teenager's shoulder. The phone in her hand shows a notification from the city hall channel.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "¿SeguraTotal? Menudo nombre. Contrato exprés... ¿será trampa?"
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger boy still at the laptop, but the grin fades. He glances sideways, eyes sharper now.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Ese mensaje salió del repetidor que petó. ¿Cómo coño han transmitido—desde ahí?"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "An empty street seen through a window. One pedestrian traffic light works steady green, while the others around it blink out of sync.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight shot from the window: the teenager's face reflected against the glass, the working traffic light centered behind her. Her eyes narrow, lips pressed.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "No cuadra."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Bruno entra al sistema",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "ally",
+          "scene": "The younger brother crouched at the base of a rusted telecom repeater on a deserted sidewalk, laptop open and glowing against his face, typing with one hand while the other holds a flash drive.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Entré, joder."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Tight view of the laptop screen: a faded admin panel with a list of node IDs, some marked offline in red, one highlighted in pale yellow. A password field at the top, already filled.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "The teenager standing beside her brother, leaning close to the screen, squinting against the reflection of a streetlight on the glass.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Espera... ahí, en la esquina. Con este reflejo no lo pillo bien."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Closer angle on the teen's profile as she tilts her head sideways to read past the glare, a folded paper and a pen pressed against the laptop lid.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "Over the younger brother's shoulder: the screen now shows the string NODO-7C in the corner, its last two characters partly hidden by a glint on the glass.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Apúntalo ya, que con un toque lo pierdo."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of her hand writing NODO-7C on a torn piece of paper, pen pressed hard, the repeater's blinking indicator reflecting off the page.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Huele raro."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Primer intento",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "A dim bedroom lit only by a laptop screen; a 15-year-old girl sits cross-legged on the bed, a notebook open on her knee, pen hovering over a blank line.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Si esto se va al garete... que al menos no parezca un drama."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of the notebook page: a handwritten sentence in Spanish, underlined twice, with a signature line beneath.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Nada de amenazas. Sin postureo. Datos claros y firma."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother hunched over the laptop on a desk cluttered with cables, the bedroom door cracked open behind him, house router blinking on a shelf.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Directo."
+            },
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Bruno, el router sale en la cabecera."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "The girl's hand presses down on the laptop lid edge, knuckles pale, her face half in shadow.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Ya. Lo tenemos."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "A long exterior shot of a residential street at night: every streetlight on the block is dead, only the faint glow of a phone screen from a window.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Esa noche. 00:47."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Inside a dark server room, a single monitor displays scrolling logs; a silhouetted figure leans forward, one finger tapping a node identifier on the screen.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Cuesta algo",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Exterior of a modest apartment block at dawn, two municipal technicians in dark jackets ringing the intercom, their van parked across the street with a city cybersecurity unit logo.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Al día siguiente. Antes de las nueve."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "From behind the teenager's shoulder, watching her open the door to two uniformed technicians holding a tablet, the mother's face half-lit from the hallway.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "¿Hay algún adulto en casa? Tenemos que hablar con un responsable."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Close-up of the tablet screen showing router logs, a highlighted public IP address and a timestamp, the mother's hand gripping the doorframe.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "MADRE",
+              "text": "Aquí pone que la subida salió de este router..."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother crouched on his bed in a dim room, laptop open, sweat on his temple, curtains half-drawn against late afternoon light.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Si lo borro antes de que lleguen... no sabrán nada."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Top-down of the laptop keyboard, trash bin icon emptying, progress bars filling, external drive being yanked from the USB port, a tangle of cables.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Esa tarde."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother sitting on the edge of his bed, lid closed on his knees, staring at the dark window where two streetlamps have gone out, a single phone notification glowing on the nightstand.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Me está costando. Pero no saben que fui yo."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Momento bajo",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Small bedroom lit only by a phone screen, the teenager sitting cross-legged on the bed, a pile of printed photos spread across the duvet.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Over-the-shoulder close-up of the phone screen showing a gallery of street photos; one thumb scrolls slowly past a traffic-light shot.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight crop on a single photo pinned under a finger: a dark street, a green construction hoarding reading 'SeguraTotal - Obras Municipales' in the background.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Same photo now one of three lined up on the screen, each taken on a different day but all sharing the same corporate hoarding in frame.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Siempre la misma firma. Siempre cuando se va la luz... ¿casualidad?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "The phone lowered to her lap, screen fading to black; her face half in shadow, eyes fixed on nothing, jaw tight.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Mi culpa."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Wide of the empty bedroom, duvet rumpled, phone face-down on the pillow, the window behind reflecting a dead traffic light at the end of the street.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "La idea",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Early morning, pre-dawn city street lit only by distant sodium lamps; a teenager walks alone with her head down, eyes on the pavement, hood up, breath fogging slightly.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Close-up of asphalt: a freshly painted square utility cover with a hand-scratched number, still smelling of wet paint, framed by dark tarmac.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Wider street view, low angle: three similar painted square covers lined along a sidewalk, each with its own number, while an older round metal cover sits unnumbered further down the road.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Another empty avenue, traffic lights dead overhead; the teenager stands still on the curb, glancing back toward a cross-street where the lights are working again.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "No es al azar."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium shot from the side: the teenager walks on, eyes now scanning the sidewalk like she's counting something, jaw tight, hands buried in her pockets.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Lo hicieron rápido; despistan para que yo pierda el hilo —mi mensaje... joder, trajo a Bruno."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight close-up of her face, half in shadow from a flickering lamp; one eye catches the cold light, the other lost in dark.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Mi culpa."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Pista confirmada",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Low angle on a teenager crouched beside a square metal hatch in the pavement, holding an old polaroid photo next to a freshly painted number in white. Dim streetlight, dead traffic lights in the background.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "No es casualidad... alguien quería que lo encontráramos."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Close-up of the polaroid and the painted hatch side by side, the matching numbers circled with a finger. No people, just the photo and the metal surface.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother sitting on a bed, laptop balanced on his knees, color back in his face, screen casting green light on him.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Cruzo el número con la configuración del repetidor... espera."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Over-the-shoulder view of the laptop screen: a terminal showing a match between the painted code and a node ID labeled NODE-7C, with a partial street address beneath it.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Nodo-7C. Sótano municipal. No hay vigilancia."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Wide shot of the teenager pulling on a jacket, the polaroid and a small notebook visible in her hand. Her brother stands up behind her, laptop under his arm.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Es lo único que tenemos. Salimos ya."
+            },
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Vale."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La prueba",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Fire escape staircase seen from above, rusted metal steps descending into a dark municipal basement corridor lit only by a flickering emergency lamp.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Venga. Escalera de incendios, ahora."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Inside the basement: the younger brother crouches by a wall, phone flashlight on, checking a hand-drawn number on an old square manhole cover.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "NODO-7C."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Wide shot of a dim server hallway with closed metal doors; at the far end, a node cabinet stands against the wall, cables spilling out.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "A workstation screen in a dark room: an alert pops up showing two heat signatures entering the basement floor plan.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Joder... ya."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "The teenager grabs the younger brother's arm and pulls him toward the node cabinet, urgent movement, low angle.",
+          "bubbles": [
+            {
+              "type": "shout",
+              "who": "",
+              "text": "¡Al armario, corre! Yo te cubro la puerta — tú desconecta lo mínimo y rápido."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother sprints down the hallway, jacket flying, toward the patch panel cabinet at the end.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Resolución",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Close-up of a teenager girl pinned against a basement door frame, a hand snatching a smartphone from her grip, her knuckles white against the metal bar she is still holding across the door.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "SILEN",
+              "text": "Dame eso. No tienes ni puta idea con quién juegas; se acabó."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight shot of the girl's hand slipping a single wireless earpiece from her jacket pocket, low blue light from a server rack catching the small white plastic.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Perfecto."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Detail shot of a small printed sign nailed to the bare concrete wall, a handwritten MAC address under a row of arrows pointing to different cables, dust on the staples.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "The girl crouches beside an open server rack, comparing the MAC on the wall sign with a sticker on the rack door, eyes flicking back and forth, one earpiece in her ear.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "7C:A3. Solo tira el cable con esa etiqueta. Ni toques otros. ¿Me sigues?"
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger boy in front of the patch panel, fingers tracing a row of ethernet cables until they stop on one, a strip of tape under it with the matching MAC scrawled in marker.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "7C:A3... Vale. ¿Solo este? ¿Seguro?"
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Wide shot from street level: half the intersection lit again, traffic signals blinking green, a few streetlamps humming back on, the other half of the block still dark, a distant siren.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Que sea solo un parche."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Cierre",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Newspaper page spread on a kitchen counter, morning light from a window, headline about the blackout with a subheading reading 'AYUNTAMIENTO ABRE INVESTIGACIÓN', mug of coffee casting a shadow.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "A la mañana siguiente."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "The teenager sitting at the counter, holding the newspaper open with both hands, eyes narrowed at a small photo on the page. Toast untouched on a plate.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Espera..."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of the newspaper photo: an official shot of the consistory office, rows of chairs behind a polished table, one office chair slightly out of line, rotated towards the wall.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "The younger brother leaning over the counter, looking at a phone photo he took in the basement: the same chair, same model, same scuff on the left armrest, next to a patch panel in dim light.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "¿Tú estás metido en esto?"
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "Over-the-shoulder shot from behind the younger brother: his face lit by the phone screen, newspaper on the left, his basement photo on the right, both showing the matching chair.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Pues el listo la dejó ahí para volver, tío."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

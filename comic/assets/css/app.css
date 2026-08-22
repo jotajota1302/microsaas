@@ -1,0 +1,287 @@
+/*
+ * Landing de comic. Sin frameworks, sin build, sin fuentes externas de pago.
+ *
+ * DIRECCION: "Seinen nocturno" (elegida 2026-08-22). Pizarra azulada, hueso y
+ * ambar. Sustituye al crema anterior, que se parecia demasiado al papel de la
+ * app hermana de cuentos infantiles: dos productos distintos no pueden
+ * compartir el fondo.
+ *
+ * La paleta no viene sola. El seinen se distingue del shonen por la CONTENCION:
+ * linea de 1 px en vez de 3, sombra difusa en vez de bloque desplazado, y nada
+ * de texturas de papel. Cambiar solo los colores y dejar los bordes gruesos da
+ * algo oscuro y ruidoso, que es justo lo contrario.
+ *
+ * Y una consecuencia que hay que vigilar: el comic se dibuja en MANGA BLANCO Y
+ * NEGRO, asi que sobre este fondo la vineta es lo mas brillante de la pantalla.
+ * Por eso las imagenes van sobre un paspartu de --panel y no a sangre.
+ */
+
+:root {
+  color-scheme: dark;
+  --bg: #171c24;
+  --bg-2: #1e242e;      /* tarjetas y campos: un escalon por encima del fondo */
+  --panel: #232b36;     /* paspartu bajo las imagenes del comic */
+  --ink: #e8e3d8;       /* hueso, nunca blanco puro */
+  --muted: #9aa4b0;
+  --dim: #7d8894;
+  --amber: #e8a33d;
+  --amber-dark: #c8862a;
+  --amber-text: #e8a33d; /* el ambar sobre fondo, para texto y enlaces */
+  --rule: #2e3743;
+  --rule-2: #3d4854;
+  --on-amber: #171c24;   /* lo que va ENCIMA del boton ambar, en los dos modos */
+  --err: #e8685d;
+  --shadow-soft: 0 18px 44px rgba(0, 0, 0, .45);
+  --shadow-deep: 0 24px 60px rgba(0, 0, 0, .5);
+  --wrap: 1060px;
+}
+
+/*
+ * Modo dia. Mismo acento, distinta luz: no se vuelve al crema del que veniamos
+ * — ese era el papel de la app de cuentos — sino a un gris frio de papel de
+ * imprenta, que es de donde sale el manga.
+ *
+ * Un cambio que no es cosmetico: el ambar #E8A33D sobre fondo claro se queda en
+ * 2,3:1 y es ilegible como texto. En dia, --amber-text baja a un ambar tostado
+ * que si pasa; el boton mantiene el ambar vivo porque ahi el ambar es el FONDO
+ * y el texto va en pizarra.
+ *
+ * Los valores de dia estan escritos DOS veces a proposito — en la media query y
+ * en [data-theme="light"] — porque una sola regla no puede cubrir a la vez "el
+ * sistema lo pide" y "el visitante lo ha elegido". Si tocas uno, toca el otro.
+ */
+
+/* Sin eleccion guardada mandan las preferencias del sistema... */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --bg: #eef0f3; --bg-2: #ffffff; --panel: #e0e4ea; --ink: #171c24;
+    --muted: #55606d; --dim: #626d7a; --amber-text: #9a5f06;
+    --rule: #d4dae1; --rule-2: #b9c2cc; --err: #b3271b;
+    --shadow-soft: 0 10px 26px rgba(23, 28, 36, .13); --shadow-deep: 0 16px 36px rgba(23, 28, 36, .16);
+  }
+}
+/* ...y la eleccion explicita gana en las dos direcciones. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef0f3; --bg-2: #ffffff; --panel: #e0e4ea; --ink: #171c24;
+  --muted: #55606d; --dim: #626d7a; --amber-text: #9a5f06;
+  --rule: #d4dae1; --rule-2: #b9c2cc; --err: #b3271b;
+    --shadow-soft: 0 10px 26px rgba(23, 28, 36, .13); --shadow-deep: 0 16px 36px rgba(23, 28, 36, .16);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #171c24; --bg-2: #1e242e; --panel: #232b36; --ink: #e8e3d8;
+  --muted: #9aa4b0; --dim: #7d8894; --amber-text: #e8a33d;
+  --rule: #2e3743; --rule-2: #3d4854; --err: #e8685d;
+  --shadow-soft: 0 18px 44px rgba(0, 0, 0, .45); --shadow-deep: 0 24px 60px rgba(0, 0, 0, .5);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+/* Nothing should ever scroll the page sideways. */
+html, body { max-width: 100%; overflow-x: clip; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.6 "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * height:auto is not optional next to max-width:100%. The width/height
+ * attributes reserve space while the image loads; without height auto the width
+ * shrinks and the attribute keeps the height, so the picture stretches. Both
+ * large images were rendering at 0.41 instead of their real 0.67.
+ */
+img { max-width: 100%; height: auto; display: block; }
+
+.wrap { max-width: var(--wrap); margin-inline: auto; padding-inline: 20px; }
+
+h1, h2, h3, .display {
+  font-family: "Bangers", "Arial Black", Impact, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.98;
+  margin: 0;
+}
+
+a { color: var(--amber-text); }
+a:hover { color: var(--amber-dark); }
+
+/* --- barra ------------------------------------------------------------- */
+
+.top {
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.top .wrap { display: flex; align-items: center; gap: 16px; height: 62px; }
+.brand { font-family: "Bangers", "Arial Black", sans-serif; font-size: 26px; letter-spacing: .04em; }
+.brand span { color: var(--amber-text); }
+.top nav { margin-left: auto; display: flex; gap: 20px; align-items: center; font-size: 15px; font-weight: 700; }
+.top nav a { text-decoration: none; color: var(--muted); }
+.top nav a:hover { color: var(--ink); }
+.lang {
+  border: 1px solid var(--rule-2); border-radius: 999px; padding: 3px 10px;
+  font-size: 13px; text-decoration: none; color: var(--muted);
+}
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; padding: 0; cursor: pointer;
+  border: 1px solid var(--rule-2); border-radius: 999px;
+  background: transparent; color: var(--muted);
+  transition: color .12s ease, border-color .12s ease;
+}
+.theme-toggle:hover { color: var(--amber-text); border-color: var(--amber-text); }
+.theme-toggle:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* --- portada ------------------------------------------------------------ */
+
+.hero { padding: 64px 0 52px; }
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+.hero h1 { font-size: clamp(40px, 6.4vw, 72px); }
+.hero h1 em { color: var(--amber-text); font-style: normal; }
+.hero p.lead { font-size: 18px; margin: 20px 0 28px; max-width: 46ch; color: var(--muted); }
+
+/*
+ * margin:0 is not cosmetic: a <figure> carries 40px of default margin on each
+ * side, which pushed the page 80px wider than a phone screen.
+ *
+ * The 4:5 crop is the other half. The cover is a true 2:3 — not distorted — but
+ * 2:3 in a 490px column is 735px tall and swallowed the headline. It crops from
+ * slightly above centre, which is where the face is.
+ */
+.hero .cover-shot {
+  margin: 0; justify-self: center; max-width: 400px;
+  background: var(--panel); padding: 10px;
+  border: 1px solid var(--rule-2);
+  box-shadow: var(--shadow-deep);
+}
+.hero .cover-shot img { aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 32%; }
+
+.kicker {
+  display: inline-block; border: 1px solid var(--amber-text); color: var(--amber-text);
+  font-weight: 900; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+  padding: 5px 12px; margin-bottom: 20px;
+}
+
+/* --- botones ------------------------------------------------------------ */
+
+.btn {
+  display: inline-block; border: 1px solid var(--amber); background: var(--amber); color: var(--on-amber);
+  font-family: "Bangers", "Arial Black", sans-serif; font-size: 22px; letter-spacing: .04em;
+  padding: 13px 28px; text-decoration: none; cursor: pointer;
+  transition: background .12s ease, transform .12s ease;
+}
+.btn:hover { background: var(--amber-dark); border-color: var(--amber-dark); color: var(--on-amber); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn.ghost { background: transparent; color: var(--amber-text); }
+.btn.ghost:hover { background: rgba(232, 163, 61, .14); color: var(--amber-text); }
+.btn:disabled { opacity: .5; cursor: default; transform: none; }
+.price-note { font-size: 15px; margin-top: 14px; color: var(--dim); }
+.price-note b { color: var(--ink); font-size: 17px; }
+
+/* --- secciones ---------------------------------------------------------- */
+
+section { padding: 64px 0; border-top: 1px solid var(--rule); }
+section h2 { font-size: clamp(28px, 4vw, 42px); margin-bottom: 10px; }
+section .sub { color: var(--muted); margin: 0 0 34px; max-width: 60ch; }
+
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.card {
+  border: 1px solid var(--rule); background: var(--bg-2); padding: 22px;
+  border-radius: 2px;
+}
+.card h3 { font-size: 23px; margin-bottom: 10px; }
+.card p { margin: 0; font-size: 16px; color: var(--muted); }
+.card .num { font-family: "Bangers", sans-serif; font-size: 30px; color: var(--amber-text); line-height: 1; margin: 0 0 4px; }
+
+/* --- muestra ------------------------------------------------------------ */
+
+.sample { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 40px; align-items: start; }
+/* The comic is black-and-white on white paper: on this background a page would
+   be the brightest thing on screen. The mat gives it an edge to sit against. */
+.sample figure {
+  margin: 0; background: var(--panel); padding: 10px;
+  border: 1px solid var(--rule-2); box-shadow: var(--shadow-soft);
+}
+.pages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+.pages img { background: var(--panel); padding: 6px; border: 1px solid var(--rule); }
+.quote {
+  border-left: 3px solid var(--amber); padding: 6px 0 6px 18px; margin: 22px 0;
+  font-size: 18px; font-style: italic; color: var(--ink);
+}
+
+/* --- formulario --------------------------------------------------------- */
+
+.form { border: 1px solid var(--rule); background: var(--bg-2); padding: 30px; border-radius: 2px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+/* min-width:0 on both the cell and the control. A grid item defaults to
+   min-width:auto, so a <select> whose longest option is a whole sentence makes
+   its column that wide and pushes the page sideways. */
+.grid2 > * { min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.field .hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--dim); font-size: 13px; }
+.field input, .field select {
+  font: inherit; padding: 11px 13px; border: 1px solid var(--rule-2); background: var(--bg);
+  color: var(--ink); border-radius: 2px; width: 100%; min-width: 0; max-width: 100%;
+}
+.field input::placeholder { color: var(--dim); }
+.field input:focus, .field select:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: var(--amber); }
+/* The explanation of the selected option goes UNDER the control: a hint
+   appended to the <option> text made the select a whole sentence wide. */
+.field .live { font-size: 13px; color: var(--dim); min-height: 1.2em; margin: 0; }
+
+fieldset { border: 1px solid var(--rule); border-radius: 2px; padding: 22px; margin: 0 0 22px; }
+legend { font-family: "Bangers", sans-serif; font-size: 21px; padding: 0 10px; color: var(--amber-text); }
+.form-foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+.consent { font-size: 13px; color: var(--dim); max-width: 52ch; margin: 0; }
+.formmsg { margin-top: 16px; font-weight: 700; color: var(--amber-text); }
+.formmsg.err { color: var(--err); }
+
+/* --- faq y pie ---------------------------------------------------------- */
+
+details { border-bottom: 1px solid var(--rule); padding: 16px 0; }
+details summary { font-weight: 900; cursor: pointer; font-size: 17px; }
+details summary:hover { color: var(--amber-text); }
+details p { margin: 12px 0 0; color: var(--muted); }
+
+footer { border-top: 1px solid var(--rule); padding: 34px 0 64px; font-size: 14px; color: var(--dim); }
+footer a { color: var(--muted); }
+footer .disc { margin-top: 14px; font-size: 13px; }
+
+/* --- movil -------------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .hero .wrap, .sample { grid-template-columns: 1fr; }
+  .hero { padding-top: 38px; }
+  .cols { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  .top nav a.hide-s { display: none; }
+}
+
+/*
+ * Under ~520 px the header was wider than the screen — brand plus three links
+ * plus the language chip — and one overflowing row drags the whole page
+ * sideways. Fixed by shrinking the bar, not by hiding the overflow.
+ */
+@media (max-width: 520px) {
+  .top .wrap { gap: 10px; height: 56px; }
+  .brand { font-size: 21px; }
+  .top nav { gap: 12px; font-size: 13px; }
+  .top nav a[href="#muestra"], .top nav a[href="#sample"] { display: none; }
+  .lang { padding: 2px 8px; font-size: 12px; }
+  .wrap { padding-inline: 16px; }
+  .hero h1 { font-size: 34px; }
+  .btn { font-size: 19px; padding: 12px 22px; }
+  .price-note { font-size: 14px; }
+  .form, fieldset { padding: 18px; }
+}

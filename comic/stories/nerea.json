@@ -1,0 +1,829 @@
+{
+  "title": "Lo que la ciudad no enciende",
+  "subtitle": "Volumen 1",
+  "logline": "Una chica que se fija en todo se da cuenta de quién apaga los semáforos cuando nadie más mira.",
+  "genre": "ciber",
+  "style": "manga-bn",
+  "language": "es",
+  "order": {
+    "name": "Nerea",
+    "age": 15,
+    "gender": "f",
+    "ageBand": "14-15",
+    "hairShape": "recogido",
+    "hairColour": "castano",
+    "eyes": "miel",
+    "skin": "media",
+    "build": "delgado",
+    "mark": "auriculares",
+    "trait": "observador",
+    "sidekick": {
+      "name": "Bruno",
+      "relation": "hermano-peq"
+    },
+    "trope": "ciber",
+    "tone": "oscuro",
+    "style": "manga-bn"
+  },
+  "hero": {
+    "name": "Nerea",
+    "age": 15,
+    "gender": "f",
+    "hair": "hair tied back in a ponytail, dark brown",
+    "eyes": "hazel",
+    "skin": "light brown",
+    "outfit": "big over-ear headphones around the neck, slight build",
+    "trait": "Se fija en todo"
+  },
+  "cast": {
+    "ally": {
+      "label": "BRUNO",
+      "sheet": "Twelve-year-old boy, skinny, messy dark hair, oversized hoodie, a bandage on his left knuckle, always looking down at his phone."
+    },
+    "villain": {
+      "label": "IÑAKI ECHEVARRÍA",
+      "sheet": "Tall man in his late forties, hollow cheeks, gray at the temples, deep-set eyes, permanent frown, wearing a dark technical jacket with the company logo scratched off."
+    }
+  },
+  "cover": {
+    "ref": "hero",
+    "scene": "comic book cover composition: the teenager standing in the foreground, the ally behind and to one side, and far back the silhouette of the man in the navy jacket the man in the navy jacket; a connected city where infrastructure itself is under attack, server halls, dark streets, dead traffic lights"
+  },
+  "critique": {
+    "verdict": "revisar",
+    "scores": {
+      "resuelve_el_rasgo": 4,
+      "fracaso_propio": 3,
+      "decision_cara": 3,
+      "antagonista": 4,
+      "dialogo_creible": 3,
+      "se_entiende_sin_dibujos": 3
+    },
+    "worst": "La historia encadena tres MacGuffins consecutivos (el número en la pantalla, la comisaría inútil, el botón de emergencia) que sustituyen decisiones del personaje por conveniencia de guion, así que Nerea acaba pareciendo arrastrada por la trama en vez de empujándola con su rasgo."
+  },
+  "dialogueFixed": 5,
+  "dialogue": {
+    "before": 2,
+    "after": 4,
+    "note": "El bloque Bruno/Nerea en comisaría y WhatsApp suena muy real; todo lo que toca Iñaki o el clímax huele a guion escrito por alguien de más de 30."
+  },
+  "pages": [
+    {
+      "beat": "Vida normal",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Wide shot of a grey morning sidewalk, cracked asphalt, a traffic light stuck on red overhead. the teenage girl walking alone in a dark puffer jacket, hood down, backpack slung on one shoulder, hands in pockets. Dead leaves on the curb.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Low angle of an open municipal access hatch on the pavement. A city technician crouched beside it, tool case open, headlamp on. Half a square inventory sticker peeling off the metal lid, its serial number scratched half off, mostly unreadable.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Eye-level medium of the teenage girl stopped on the sidewalk, the flow of students walking past her blurred behind. She is looking down at the hatch, weight shifted onto one leg, chin tilted. The technician glances up at her, suspicious.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Esa pegatina… la han rascado."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Interior of a small apartment hallway at night, dim blue light from a living room. the teenage girl crouched by the router on a low shelf, the router LED blinking red. Her backpack open on the floor behind her, a compact digital camera sticking out of it.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "the ally lying on the couch, face lit by his phone screen, thumbs moving, earbuds in, not looking up. Living room shadows around him.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Bruno. El router. Otra vez."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl in the hallway, putting on her jacket, door half-open to a dark street. Her mother is already out, only a half-zipped coat hanging where it was. the teenage girl zips the backpack shut with the camera inside.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Otra vez. Y sin decir nada."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La casa",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Close-up of a domestic router on a shelf, red LED blinking in a dim hallway, the rest of the apartment in shadow behind it.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "21:47. Nerea llega a casa."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl's hand on the router, her face lit from below by the red light, eyes narrowed, looking sideways at her phone screen.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Roja fija. Fija fija. Eso no pinta bien."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "the ally sprawled on the sofa, hoodie up, thumb scrolling, blue phone glow on his face, ignoring everything else around him.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Bruno. ¿Llevas toda la tarde sin internet o sin sangre en las orejas?"
+            },
+            {
+              "type": "speech",
+              "who": "Bruno",
+              "text": "Luego, Nere."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl at the front door, coat half on, watching her mother in uniform walk out into the unlit street without turning around, car keys already in hand.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "Nerea",
+              "text": "Mamá, ¿sales otra vez? ¿Pasa algo?"
+            },
+            {
+              "type": "speech",
+              "who": "MADRE",
+              "text": "Curro. No me esperes."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "the teenage girl's school backpack slumped by the door, a small compact camera poking out of an unzipped side pocket, hallway light flickering once.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Cámara prestada. Más vale que no se note."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Low angle from inside the dark hallway: the teenage girl silhouetted in the doorway, streetlights outside already out, the red router glow behind her.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Algo va mal. Y todo el mundo mirando al puto móvil."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La chispa",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Wide shot of a dim high-school classroom, afternoon light through half-closed blinds, students mid-lesson, the projector frozen mid-slide.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "COMPAÑERO",
+              "text": "Profe, que se ha vuelto a colgar la pizarra."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Close-up of a dead traffic light at an intersection, all three LEDs off, cars idling in soft focus behind it, grey dusk light.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "En algún sitio del barrio, las luces empezaron a apagarse una detrás de otra."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Tight close-up of a school laptop screen, taskbar frozen, network icon crossed out, battery suddenly draining.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Over-the-shoulder on the teenage girl at her desk, her face lit only by the laptop screen reflecting in her eyes, fingers hovering over the keyboard.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Espera... eso no es un fallo normal."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Extreme close-up of the laptop screen: a terminal window flashes for one second showing a long technical account string and an inventory number, then goes black.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl's hand slams the laptop shut, her jaw tight, eyes flicking toward the window where more streetlights are dying in sequence.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Ese número... lo he visto antes, joder."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Seis horas antes",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "villain",
+          "scene": "An empty office floor at night, lit by three laptop screens on a folding table, seen from the far end of the room.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Close-up of three connected laptops, a compact black device, and several cables spread across a scratched table.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "An intersection at night, its traffic lights dark, while a nearby car headlight reflects faintly in the glass.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "A scratched company access card lies beside a laptop, its printed name scraped away, while a man's hand repeatedly checks his pocket.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "the man in the navy jacket sits alone in a dim office, looking at the dark intersection on a laptop and smiling slightly.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "IÑAKI ECHEVARRÍA",
+              "text": "Venga. Otra vez no."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La ciudad se oscurece",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Wide shot of a school gate at dusk, the teenage girl walking out with her backpack, students milling on the sidewalk, every traffic light around dead and black.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium shot on the teenage girl on a dim street, a shuttered bakery and a closed pharmacy behind her, a group of neighbors standing still looking at a dark intersection, one woman holding a phone with a blank screen.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "¿Tenéis cobertura? Es la cuarta vez que lo intento."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of the teenage girl holding her phone to her ear, the screen showing NO SIGNAL, her jaw tight, street reflections in the dark shop window behind her.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Mamá no coge. Claro, si no hay red, qué va a coger."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Over-the-shoulder shot: the teenage girl's phone screen lighting up with a message from the ally, the street behind her out of focus, a dead crosswalk lit only by a pharmacy's emergency lamp.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "Nerea. Estoy solo. Segundo sin ascensor. Un vecino me ha abierto."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Two-shot: the teenage girl reading the message, typing fast with one thumb, a small keychain flashlight clipped to her bag already on, casting a hard circle on her jacket.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "No abras a nadie más. En diez minutos estoy. Diez, ¿vale? No, ocho."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "Wide cityscape at street level: a long block of parked cars with no headlights, a tram stopped across the rails, three people on a corner frozen mid-step, the only light a single vending machine glowing blue.",
+          "bubbles": []
+        }
+      ]
+    },
+    {
+      "beat": "Primer intento",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Exterior night: the teenage girl pushes through the glass door of a small police station, the street behind her lit only by a phone-screen glow.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Interior reception desk seen from behind the teenage girl's shoulder: two officers on landline phones, headsets slipping, papers scattered, a dead computer screen reflecting the empty lobby.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "Medium shot of a young officer leaning on the counter, pen ready, nodding slowly while the teenage girl's hands rest on the formica.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "AGENTE JOVEN",
+              "text": "La cadena esa que salía en pantalla… ¿me la puedes repetir despacio?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Same officer pointing at a dead radio on his belt, mouth tight, eyes apologetic; the teenage girl's jaw set, holding it together.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "AGENTE JOVEN",
+              "text": "Te creo, tía. Pero no puedo mandar a nadie hasta que vuelva la línea."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl stepping back toward the glass door, officers still on phones behind her; her reflection tiny in the dark street outside.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Me ha creído. Y no puede hacer nada."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "El error de Nerea",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Street at dusk, dead traffic lights overhead, the teenage girl walking briskly toward the camera, scanning the facades.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Camino de la comisaría."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "A dark building doorway spilling yellow light; a man in a navy jacket steps out carrying a black bag, slight limp on his left leg.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up: the teenage girl's fingers tapping the camera app on her phone, the school camera icon visible on screen.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "NEREA",
+              "text": "Ese cojea igual que Ibai, el de Literatura."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "A blurry photo on a small screen: a navy jacket, a side profile, the edge of a black bag, a parked scooter.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "¿Has sido tú el del código?"
+            }
+          ]
+        },
+        {
+          "ref": "villain",
+          "scene": "Narrow alley, low angle; the man's face half-lit by a buzzing neon sign, eyes locked forward, one hand in his jacket pocket.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "From behind: the man's hand snatching the camera strap, the teenage girl's arm still extended, the alley wall closing in on both sides.",
+          "bubbles": [
+            {
+              "type": "shout",
+              "who": "NEREA",
+              "text": "¡Eh, para!"
+            },
+            {
+              "type": "caption",
+              "who": "",
+              "text": "La carta, en el bolsillo. Sin pruebas."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "El momento bajo",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "the teenage girl seen from behind in a dark stairwell, pressing the broken intercom button, a neighbor's hand holding the inner door open from the second-floor landing above.",
+          "bubbles": []
+        },
+        {
+          "ref": "ally",
+          "scene": "the ally crouched on the floor by the apartment door, ear pressed to it, hallway bulb flickering once overhead, his phone screen dead in his hand.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Mamá no coge. Lleva horas sin coger."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Inside the apartment, low angle across the living room: ceiling lamp strobes, TV is a black mirror, the teenage girl sits on the arm of the sofa with her head down, rucksack still on, hands empty.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of the teenage girl's hands gripping the rucksack strap, knuckles white, the apartment lamp mid-flicker casting a fractured shadow on her face.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Tenía que haberme quedado quieta."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Wide shot of the room, the ally standing in the kitchen doorway still holding his dead phone, the teenage girl's back to him by the window, city lights behind her all out.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "",
+              "text": "Si no vuelvo en una hora, bajas y gritas. A quien sea."
+            },
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "¿Por qué no me lo cuentas y ya?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La decisión que cuesta",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Interior of a dim apartment hallway, single bulb flickering; the teenage girl stands by the front door with her jacket half on, backpack over one shoulder.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Salgo. Sola."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "the ally sitting on the sofa, knees pulled up, TV screen behind him showing only static.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "Y si no vuelves?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "Close-up of the teenage girl's face in profile, jaw tight, eyes fixed on something off-panel.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Si en una hora no he vuelto, abres la ventana del salón."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "the ally standing up from the sofa, arms crossed, weight on his back foot, blocking the hallway.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "¿Y qué grito?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl facing the ally in the narrow corridor, the flickering bulb casting uneven shadows across both their faces.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "NEREA",
+              "text": "Su nombre. Iñaki. Alto, que te oigan los vecinos."
+            }
+          ]
+        },
+        {
+          "ref": "ally",
+          "scene": "the ally's hands dropping to his sides, shoulders slumping; behind him the hallway stretches into darkness.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "BRUNO",
+              "text": "Nerea... ¿por qué no me cuentas qué pasa?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La pista pequeña",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Night street, dim orange glow from a busted traffic light; the teenage girl stops in front of a grey metal cabinet, its lock hanging broken open, spilling faint blue light from inside.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Close-up inside the open cabinet: a thick black connector jammed into a port it clearly does not belong to, wires hanging loose around it.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight on the cabinet door's metal surface: a small cabinet number hand-scrawled in thick black marker, slightly smudged.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Cuarenta y dos. Vale."
+            }
+          ]
+        },
+        {
+          "ref": null,
+          "scene": "the teenage girl's hand holding a cheap phone, the screen's notes app open; she types with one thumb, face lit by the cold glow.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Wide shot from behind: the teenage girl slipping into a narrow back alley, shoulders close to the brick wall, the open cabinet shrinking into the dark behind her.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Una hora. Como mucho."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La prueba",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": null,
+          "scene": "Exterior night, a low concrete municipal building with a single lit window on the second floor, green emergency exit sign above a side door, dead traffic lights down the street, wet asphalt reflecting sparse light.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Calle de atrás. El edificio del CPD municipal."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl at the side door, reflected in the glass panel, holding it half-open with one hand, eyes wide, jaw set, backpack slipping off her shoulder.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "Through the glass, the man in the navy jacket seen from behind at a server rack, large over-ear headphones on, hands on a keyboard, several rack LEDs blinking red.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Wide view inside the server hall: a municipal technician in a blue uniform slumped on the floor beside an overturned chair, a half-spilled coffee mug, one overhead strip light dead, the other flickering.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Close on the teenage girl's hand tightening on the door frame, knuckles pale, veins visible, the faint reflection of the technician's shoe visible in the glass beside her fingers.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl stepping inside the server hall, the door swinging closed behind her, her silhouette cutting the green exit-sign light, both hands at her sides, not hiding, not sneaking.",
+          "bubbles": [
+            {
+              "type": "thought",
+              "who": "",
+              "text": "Entro. No hay otra."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "Lo que nadie mira",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Low angle, dim emergency light: the man in the navy jacket's hand clamping the teenage girl's forearm, her wrist twisted upward, the server hall corridor stretching behind them in darkness.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "Close-up of the man in the navy jacket's face in green monitor glow, mouth half-open, headset pushed back, sweat on his temple, eyes locked on her.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "IÑAKI",
+              "text": "¿Cuánto llevas aquí?"
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl's eye-line, looking down past the man in the navy jacket's boot: a thick red cable snaking under his sole, taut, dust around it undisturbed.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Wide shot of the server rack wall: dozens of green status LEDs blinking out of sync, except one steady green pilot light on the leftmost cabinet, glowing calm in the chaos.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight on the teenage girl's face, half in shadow, eyes sharp, jaw set, perfectly still in his grip — not scared, calculating.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "the man in the navy jacket's fingers digging into her jacket, his other hand hovering over his keyboard, the fallen technician visible on the floor behind them.",
+          "bubbles": [
+            {
+              "type": "speech",
+              "who": "IÑAKI",
+              "text": "Da igual. No sales de esta."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "La resolución",
+      "layout": "six",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Close-up: the teenage girl's boot heel hooking a thick red cable on the floor, pulling it free from a taped-down connector under flickering emergency lighting.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Three laptops side by side on a table rebooting simultaneously, screens flashing POST screens in a dim server hallway.",
+          "bubbles": []
+        },
+        {
+          "ref": "villain",
+          "scene": "the man in the navy jacket half-turning away from the teenage girl, hands dropping her arm to slam keys on the nearest laptop as data-loss warnings flash on screen.",
+          "bubbles": [
+            {
+              "type": "shout",
+              "who": "IÑAKI",
+              "text": "No, no, no — venga, guardad, joder, venga."
+            }
+          ]
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl sprinting down a dark corridor toward a large electrical cabinet, her jacket flapping behind her.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "the teenage girl slamming her palm on the red emergency button of the main electrical cabinet, the green pilot glowing steady under her hand.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Wide night skyline of the city: distant traffic lights popping back on one by one, block after block, amber first then green.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "Zona por zona. Despacio. Pero vuelve."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "beat": "El cierre",
+      "layout": "five",
+      "panels": [
+        {
+          "ref": "hero",
+          "scene": "Wide shot of a building entrance at dawn, empty street, amber traffic lights blinking one by one down the block, the teenage girl standing alone against the doorframe with her hands in her jacket pockets.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "Close-up of a traffic light switching from dead black to flickering amber, reflection of the doorframe visible in its glass.",
+          "bubbles": []
+        },
+        {
+          "ref": null,
+          "scene": "A woman's silhouette appears at the far end of the street, walking slowly toward the doorway, dawn light cutting a long shadow behind her.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Medium shot from the side as the mother stops in front of the teenage girl, both still, no smile, the teenage girl's eyes slightly red but her jaw set.",
+          "bubbles": []
+        },
+        {
+          "ref": "hero",
+          "scene": "Tight shot of the space between them as the teenage girl shifts her weight and takes half a step sideways, leaving room in the doorway, neither of them moving to embrace.",
+          "bubbles": [
+            {
+              "type": "caption",
+              "who": "",
+              "text": "No dice nada. Tampoco hace falta."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

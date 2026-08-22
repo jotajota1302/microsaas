@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /legal/
+Disallow: /admin
+Disallow: /c/
+Disallow: /api/
+
+Sitemap: https://myownmanga.com/sitemap.xml
