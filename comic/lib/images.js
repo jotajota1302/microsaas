@@ -12,6 +12,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const meter = require("./meter.js");
 
 const ENV_FILE = path.join(__dirname, "..", ".env");
 if (fs.existsSync(ENV_FILE)) {
@@ -75,7 +76,11 @@ async function minimax({ prompt, ref, aspect }) {
     if (/1026|sensitive|risk|policy|violat/i.test(msg)) throw new BlockedError(msg);
     throw new Error(msg);
   }
-  return { buffer: await download(url), ms: Date.now() - started, costUsd: COST_PER_IMAGE };
+  const buffer = await download(url);
+  const ms = Date.now() - started;
+  // Tarifa plana por imagen, así que aquí el coste sí es exacto sin más cuentas.
+  meter.record("image", { model: "image-01", ms, usd: COST_PER_IMAGE, label: aspect || "" });
+  return { buffer, ms, costUsd: COST_PER_IMAGE };
 }
 
 const PROVIDERS = { minimax };

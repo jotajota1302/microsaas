@@ -13,6 +13,7 @@
  *     throwing away a whole generation over one apostrophe.
  */
 
+const meter = require("./meter.js");
 const fs = require("fs");
 const path = require("path");
 
@@ -53,7 +54,14 @@ async function callMiniMax({ system, user, maxTokens }) {
   const data = await res.json();
   const choice = data.choices && data.choices[0];
   if (!choice) throw new LlmError(JSON.stringify(data.base_resp || data).slice(0, 300));
-  return choice.message.content || "";
+  // El uso viene en la respuesta y antes se tiraba, lo que dejaba el coste de
+  // texto en una estimación. Es lo único que permite decir lo que cuesta un
+  // cómic en vez de calcularlo a ojo.
+  return {
+    text: choice.message.content || "",
+    usage: data.usage || null,
+    model: process.env.MINIMAX_MODEL || "MiniMax-M3",
+  };
 }
 
 async function callOpenRouter({ system, user, maxTokens, model }) {
@@ -75,7 +83,11 @@ async function callOpenRouter({ system, user, maxTokens, model }) {
   const data = await res.json();
   const choice = data.choices && data.choices[0];
   if (!choice) throw new LlmError(JSON.stringify(data.error || data).slice(0, 300));
-  return choice.message.content || "";
+  return {
+    text: choice.message.content || "",
+    usage: data.usage || null,
+    model: data.model || model || process.env.TEXT_MODEL || "google/gemini-2.5-flash-lite",
+  };
 }
 
 /** Strips M3's reasoning block and any markdown fence around the JSON. */
@@ -163,11 +175,28 @@ async function completeJson({ system, user, shape, maxTokens, attempts = 2, prov
       ? framed
       : `${framed}\n\nTu respuesta anterior no era JSON válido (${lastError}). Devuélvela corregida, solo el JSON.`;
     const started = Date.now();
-    const raw = await call({ system, user: prompt, maxTokens, model });
+    const answer = await call({ system, user: prompt, maxTokens, model });
+    const raw = answer.text;
+    const ms = Date.now() - started;
     lastRaw = raw;
+
+    /*
+     * Se registra el intento, salga bien o mal. Un reintento por JSON inválido
+     * se ha pagado igual, y esconderlo del medidor haría que el coste real de
+     * un cómic difícil pareciera el de uno fácil — que es justo el número que
+     * no interesa.
+     */
+    meter.record("text", {
+      model: answer.model,
+      ms,
+      inTokens: (answer.usage && (answer.usage.prompt_tokens ?? answer.usage.input_tokens)) || 0,
+      outTokens: (answer.usage && (answer.usage.completion_tokens ?? answer.usage.output_tokens)) || 0,
+      label: provider === "critic" ? "critic" : "writer",
+    });
+
     try {
       const json = JSON.parse(repairJson(extractJson(raw)));
-      return { json, ms: Date.now() - started, raw };
+      return { json, ms, raw };
     } catch (e) {
       lastError = e.message.slice(0, 120);
     }
