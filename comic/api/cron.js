@@ -70,27 +70,46 @@ function authorised(req) {
   return given === secret;
 }
 
+/*
+ * How much of a token this answer carries.
+ *
+ * The token is not an id, it is the whole authorisation: it opens /c/<token>
+ * and downloads a PDF somebody paid for. So the default answer carries only
+ * enough of it to correlate two lines in a log — six characters of twenty-two,
+ * which is not enough to guess the rest — and the full value only when a human
+ * asks for it with ?verbose=1, holding the secret, reading it themselves.
+ *
+ * This exists because the workflow that calls this endpoint was printing the
+ * whole response into a PUBLIC GitHub Actions log. That is fixed on the
+ * workflow side too; this is the half that does not depend on remembering.
+ */
+function tokenFor(token, verbose) {
+  return verbose ? token : `${String(token).slice(0, 6)}…`;
+}
+
 module.exports = async function handler(req, res) {
   if (!requireMethod(req, res, "GET", "POST")) return;
   if (!authorised(req)) return send(res, 401, { error: "no" });
 
+  const verbose = new URL(req.url, "http://localhost").searchParams.get("verbose") === "1";
+  const id = (t) => tokenFor(t, verbose);
   const out = { renders: [], previews: [] };
 
   for (const job of await store.pendingRenders(RENDERS_PER_SWEEP)) {
     try {
       const r = await advanceRender(job.token);
-      out.renders.push({ token: job.token, step: r.job.render_step, status: r.job.render_status });
+      out.renders.push({ token: id(job.token), step: r.job.render_step, status: r.job.render_status });
     } catch (e) {
-      out.renders.push({ token: job.token, error: String(e.message).slice(0, 120) });
+      out.renders.push({ token: id(job.token), error: String(e.message).slice(0, 120) });
     }
   }
 
   for (const job of await store.pending(PREVIEWS_PER_SWEEP)) {
     try {
       const r = await advance(job.token);
-      out.previews.push({ token: job.token, step: r.job.step, status: r.job.status });
+      out.previews.push({ token: id(job.token), step: r.job.step, status: r.job.status });
     } catch (e) {
-      out.previews.push({ token: job.token, error: String(e.message).slice(0, 120) });
+      out.previews.push({ token: id(job.token), error: String(e.message).slice(0, 120) });
     }
   }
 
@@ -111,9 +130,9 @@ module.exports = async function handler(req, res) {
       try {
         const files = await blobs.removeAll(job.token);
         await store.remove(job.token);
-        out.purged.push({ token: job.token, paid: Boolean(job.paid_at), files });
+        out.purged.push({ token: id(job.token), paid: Boolean(job.paid_at), files });
       } catch (e) {
-        out.purged.push({ token: job.token, error: String(e.message).slice(0, 120) });
+        out.purged.push({ token: id(job.token), error: String(e.message).slice(0, 120) });
       }
     }
     if (old.length > PURGE_PER_SWEEP) out.purgePending = old.length - PURGE_PER_SWEEP;

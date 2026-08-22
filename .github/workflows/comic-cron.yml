@@ -48,9 +48,28 @@ jobs:
             echo "Configúralos en Settings -> Secrets and variables -> Actions."
             exit 0
           fi
-          # --fail-with-body para que un 401 o un 500 salgan en el log con su
-          # cuerpo, en vez de un workflow verde que no ha barrido nada.
-          curl --silent --show-error --fail-with-body \
-               --max-time 240 \
-               -H "Authorization: Bearer $SECRET" \
-               "${BASE%/}/api/cron"
+
+          # EL CUERPO NO SE IMPRIME, y esto no es prudencia genérica.
+          #
+          # Este repositorio es público, así que los logs de Actions son
+          # públicos. La respuesta de /api/cron lleva el identificador de cada
+          # pedido que ha tocado, y ese identificador ES la autorización
+          # completa: con él se abre /c/<token> y se descarga el PDF que
+          # alguien ha pagado. La primera versión de este paso usaba
+          # `curl --silent` sin -o, que escribe el cuerpo en stdout SIEMPRE
+          # (no solo al fallar). Habría publicado enlaces funcionales a los
+          # cómics de los clientes cada cinco minutos.
+          #
+          # Lo que queda es lo único que hace falta saber desde aquí: si el
+          # barrido respondió. El detalle está en los logs de Vercel, que son
+          # privados y es donde debe estar.
+          code=$(curl --silent --show-error -o /dev/null -w '%{http_code}' \
+                      --max-time 240 \
+                      -H "Authorization: Bearer $SECRET" \
+                      "${BASE%/}/api/cron")
+          echo "HTTP $code"
+          case "$code" in
+            2*) exit 0 ;;
+            401) echo "401: COMIC_CRON_SECRET no coincide con CRON_SECRET en Vercel."; exit 1 ;;
+            *)   echo "El barrido no respondió correctamente. Mira los logs de Vercel."; exit 1 ;;
+          esac
