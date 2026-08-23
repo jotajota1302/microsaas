@@ -38,8 +38,19 @@ const { deliver } = require("./email.js");
 
 const RENDER_STEPS = ["dialogue", "sheets", "panels", "pdf", "deliver", "done"];
 
-/** Panels attempted per invocation. Eight at concurrency 3 is ~70 s of a 300 s budget. */
-const PANELS_PER_CALL = Number(process.env.PANELS_PER_CALL || 8);
+/*
+ * Viñetas por invocación.
+ *
+ * Medido EN PRODUCCIÓN el 2026-08-23: 15 s por viñeta con tres a la vez. Ayer,
+ * en seco, salían 6,3 — la diferencia es subir cada imagen a Supabase, que en
+ * la prueba local no ocurría. Vale la medición de producción.
+ *
+ * Doce son 180 s, el 60 % del presupuesto de 300 s de la función. Dieciséis
+ * serían 240 y no dejan margen para que un reintento con espera se coma la
+ * llamada entera. Subirlo más no resuelve nada: el cuello no es el tamaño del
+ * lote sino cada cuánto viene alguien a pedir el siguiente.
+ */
+const PANELS_PER_CALL = Number(process.env.PANELS_PER_CALL || 12);
 const CONCURRENCY = Number(process.env.PANEL_CONCURRENCY || 3);
 /** Above this many permanently missing panels the comic is not sent out. */
 const MAX_HOLES = Number(process.env.MAX_HOLES || 2);
