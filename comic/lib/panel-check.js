@@ -82,13 +82,33 @@ async function measure(buffer) {
  */
 async function judgePanel(buffer, styleId) {
   const m = await measure(buffer);
+  const greyscale = styleId === "manga-bn";
 
-  // No ink at all means the model stopped drawing a comic. True in every
-  // style, so this is checked before anything about colour.
-  if (m.ink < INK_FLOOR) return { verdict: "collapse", ...m };
-
-  const greyscaleStyle = styleId === "manga-bn";
-  if (greyscaleStyle && m.colour >= COLOUR_SHARE) return { verdict: "drift", ...m };
+  /*
+   * LA DENSIDAD DE TINTA SOLO VALE PARA `manga-bn`, y creer lo contrario costó
+   * un cómic entero.
+   *
+   * El umbral se midió sobre 74 viñetas correctas de un cómic en blanco y
+   * negro (suelo 52 %, mediana 72 %) contra una fotografía que dio 11,6 %, y
+   * de ahí se dedujo un suelo del 30 % «cierto en todos los estilos». No lo
+   * es. Medido el 2026-08-23 sobre las muestras de los seis estilos:
+   *
+   *   manga-bn 92 %  ·  ligne-claire 31 %  ·  shonen 25 %
+   *   novela-grafica 25 %  ·  americano 24 %  ·  seinen 11 %
+   *
+   * Cuatro de seis suspenden, y `seinen` da exactamente lo mismo que la
+   * fotografía. Esto no mide «esto es un cómic», mide «esto es línea en blanco
+   * y negro»: un estilo con color y medios tonos vive en los grises por
+   * definición. En producción tiró siete viñetas seguidas de un cómic seinen
+   * dándolas por colapsadas.
+   *
+   * Así que fuera de manga-bn NO HAY detector de colapso. Se podría inventar
+   * otro umbral, pero seinen y la fotografía puntúan igual: no hay número que
+   * los separe, y poner uno sería volver a hacer lo mismo con más decimales.
+   * Lo que hay para esos estilos es el validador de guion y unos ojos.
+   */
+  if (greyscale && m.ink < INK_FLOOR) return { verdict: "collapse", ...m };
+  if (greyscale && m.colour >= COLOUR_SHARE) return { verdict: "drift", ...m };
 
   return { verdict: "ok", ...m };
 }
