@@ -2,17 +2,37 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/job.js": { "maxDuration": 300 },
-    "api/render.js": { "maxDuration": 300 },
-    "api/cron.js": { "maxDuration": 300 }
+    "api/job.js": {
+      "maxDuration": 300
+    },
+    "api/render.js": {
+      "maxDuration": 300
+    },
+    "api/cron.js": {
+      "maxDuration": 300
+    }
   },
   "crons": [
-    { "path": "/api/cron", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/cron",
+      "schedule": "0 3 * * *"
+    }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/c/:token",
+      "destination": "/c/index.html"
     }
   ]
 }

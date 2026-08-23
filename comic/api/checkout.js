@@ -57,7 +57,7 @@ module.exports = async function handler(req, res) {
 
   /*
    * A story the editor failed does not get sold. It can still be looked at for
-   * free — that is what `needsHumanReview` is for — but taking 14,99 € for a
+   * free — that is what `needsHumanReview` is for — but taking 9,99 € for a
    * script we ourselves marked as bad is the exact thing that state exists to
    * prevent.
    */

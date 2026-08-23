@@ -96,7 +96,11 @@ function parseOrder(body) {
 
   // Age inside the band, so the prompts have a number without asking for a
   // birth date we do not need and would have to protect.
-  const age = { "12-13": 13, "14-15": 15, "16-17": 17 }[ageBand];
+  /*
+   * Una edad concreta por banda, para el dibujo. Se coge el extremo alto: es
+   * menos malo que a alguien de 24 lo dibujen de 24 que de 18.
+   */
+  const age = { "12-13": 13, "14-15": 15, "16-17": 17, "18-24": 24, "25-30": 30 }[ageBand];
 
   return {
     ok: true,

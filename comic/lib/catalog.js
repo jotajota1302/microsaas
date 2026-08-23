@@ -232,6 +232,27 @@ const AGE_BANDS = {
     register: "dry, understated, adult rhythm, silences allowed",
     speech: "tacos normales sin pasarse; mucho subtexto, respuestas cortantes, silencios y frases que se cortan a la mitad",
   },
+  /*
+   * Adultos (2026-08-23). El producto se encuadró para 12-17 y JJ lo abre hasta
+   * los 30: hay adolescentes interesados y hay gente algo mayor que también.
+   *
+   * A partir de los dieciocho la EXTENSIÓN deja de subir — se queda en 16
+   * páginas — porque ya no la manda la edad sino el precio. Lo que sí cambia es
+   * la voz: un adulto no habla como un chaval de quince con más palabras.
+   * Sobre todo, ninguna de estas dos bandas admite el arco de «aprender una
+   * lección», que es exactamente lo que un modelo escribe por defecto cuando le
+   * dices que el protagonista tiene treinta años.
+   */
+  "18-24": {
+    label: "18-24 años", pages: 16, words: [3, 24],
+    register: "adult, dry, unsentimental; irony instead of enthusiasm, and silence where a teenager would explain",
+    speech: "tacos normales y bien puestos; frases cortas, subtexto, nadie dice lo que siente y se nota igual",
+  },
+  "25-30": {
+    label: "25-30 años", pages: 16, words: [3, 26],
+    register: "adult with mileage; tired humour, self-aware, no coming-of-age beats and no lessons learned",
+    speech: "habla de alguien que ya ha perdido cosas: frases hechas, cansancio, y una broma para no decir lo otro",
+  },
 };
 const DEFAULT_AGE_BAND = "14-15";
 

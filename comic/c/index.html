@@ -52,9 +52,9 @@
         <div>
           <div class="script" id="script"></div>
           <div class="buy" id="buyBox">
-            <p><b>Esto es solo la portada y el guion.</b> El cómic completo son 14 páginas
-               dibujadas y rotuladas, en PDF.</p>
-            <a class="btn" id="buyBtn" href="#">Quiero el cómic completo — 14,99 €</a>
+            <p><b>Esto es solo la portada y el guion.</b> El cómic completo son
+               <span id="buyPages">las páginas de arriba</span> dibujadas y rotuladas, en PDF.</p>
+            <a class="btn" id="buyBtn" href="#">Quiero el cómic completo — <span id="buyPrice">9,99 €</span></a>
           </div>
 
           <!-- Después de pagar. Dibujar 78 viñetas son unos siete minutos, así
@@ -68,7 +68,7 @@
           </div>
 
           <div class="buy" id="doneBox" hidden>
-            <p><b>Ya está.</b> Las 14 páginas dibujadas y rotuladas.</p>
+            <p><b>Ya está.</b> Todas las páginas dibujadas y rotuladas.</p>
             <a class="btn" id="pdfBtn" href="#">Descargar el PDF</a>
             <p class="step" id="holesNote" hidden></p>
           </div>
@@ -146,6 +146,8 @@
       $("cover").src = data.cover;
       $("cover").alt = "Portada de " + (data.title || "el cómic");
       renderScript(data.pages);
+      var np = $("buyPages");
+      if (np && data.pages) np.textContent = data.pages.length + " páginas";
       $("buyBtn").href = "/api/checkout?token=" + encodeURIComponent(token);
       if (data.paid) startRender();
       return true;

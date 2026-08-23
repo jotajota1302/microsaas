@@ -132,6 +132,16 @@ window.COMIC_OPTIONS = {
       "id": "16-17",
       "label": "16-17 años",
       "pages": 16
+    },
+    {
+      "id": "18-24",
+      "label": "18-24 años",
+      "pages": 16
+    },
+    {
+      "id": "25-30",
+      "label": "25-30 años",
+      "pages": 16
     }
   ],
   "hairShape": [

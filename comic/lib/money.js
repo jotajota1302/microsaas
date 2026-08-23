@@ -2,16 +2,22 @@
  * The price, the VAT and the product name, in one file so that no other file
  * in the codebase carries a number in it.
  *
- * Price (2026-08-22): 14,99 EUR, digital only.
+ * Precio (2026-08-23): 9,99 EUR. SOLO EDICIÓN DIGITAL — no hay impreso, ni
+ * como opción ni como promesa, y nada en el sitio debe insinuarlo.
  *
- * Why more than the 11,99 of `cuentos` when the pipeline is the same: this
- * product has to clear TWO filters instead of one. The adult has to think it
- * is a good present, and the teenager has to not be embarrassed by it. A
- * present for a 15-year-old at 11,99 reads as a novelty; the same thing at
- * 14,99 reads as a book. And the buyer here is not the reader, so the price
- * is not weighed against "what I get" but against "what I turn up with".
+ * Bajado desde 14,99 por decisión de JJ. El argumento del precio alto era que
+ * un regalo para un chaval de quince a 11,99 se lee como una tontería y a
+ * 14,99 como un libro; el argumento de bajarlo es que este producto todavía no
+ * ha vendido nada y un euro de menos en la barrera vale más que un euro de más
+ * en el margen. Se puede subir cuando haya conversión medida; bajarlo después
+ * de haber vendido es lo que no se puede hacer.
  *
- * The arithmetic, per sale, at 14,99:
+ * Lo que NO cambia: el coste medido es 0,92 € por venta contando las veinte
+ * vistas previas que hacen falta para una. A 9,99 eso es el 9,2 % del precio
+ * en vez del 6,1 %. Sigue siendo un producto con margen; deja de serlo si la
+ * conversión baja de 1 de cada 30.
+ *
+ * La cuenta, por venta, a 9,99:
  *   - Stripe Managed Payments, when it is available to us: 5 % + 0,25 = 1,00
  *   - plain Stripe card EEE, when it is not: 1,5 % + 0,25 = 0,47
  *   - VAT inside the price at 4 %: 0,58
@@ -33,7 +39,7 @@
 const PRODUCT = Object.freeze({
   id: "comic_pdf",
   kind: "digital",
-  priceCents: 1499,
+  priceCents: 999,
   currency: "eur",
   vatRate: 0.04,
   taxCode: "txcd_10302000", // Stripe: Digital Books
@@ -46,12 +52,14 @@ const PRODUCT = Object.freeze({
     en: "Personalised comic as a PDF",
   },
   description: {
-    es: "14 páginas en estilo manga, protagonizadas por quien tú digas. Entrega por email.",
-    en: "14 manga-style pages starring whoever you choose. Delivered by email.",
+    // Sin número: la extensión va por banda de edad (12, 14 o 16 páginas) y
+    // prometer catorce a quien va a recibir doce es una reclamación servida.
+    es: "Un cómic en estilo manga, protagonizado por quien tú digas. Entrega por email.",
+    en: "A manga-style comic starring whoever you choose. Delivered by email.",
   },
 });
 
-/** "14,99 €" / "€14.99", for anything the buyer reads. */
+/** "9,99 €" / "€9.99", para todo lo que lee el comprador. */
 function format(cents, lang) {
   return new Intl.NumberFormat(lang === "en" ? "en-IE" : "es-ES", {
     style: "currency",
