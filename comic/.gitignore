@@ -1,4 +1,7 @@
 out/
 node_modules/
-.env
+.env*
 .vercel/
+
+.vercel
+.env*
