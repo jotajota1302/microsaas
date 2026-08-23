@@ -37,9 +37,40 @@ microsaas/
 - **Analítica**: sin cookies de terceros (Umami/Plausible o Vercel Analytics) → sin banner de cookies. UTM en todo enlace que salga.
 - **Operaciones**: OpenClaw en el PC como capa interna: alertas de pagos/errores por Telegram, triaje de soporte, cola de contenido, informe semanal por producto.
 
+## Quién vende (decidido 2026-08-23)
+
+Los tres productos los vende **la sociedad**, no una persona física:
+
+    4 Bits Engineering S.L.
+    CIF B27563725
+    Calle José Luis Navarro Campello 1, esc. 3, 3º 1ª · 03202 Elx/Elche (Alicante)
+    info@4bitsengineering.com
+
+Esto es lo que exige la **LSSI art. 10** en el aviso legal, y no es cosmética: tiene que estar
+publicado y encontrarse sin registrarse. «Elche (Alicante)» no vale — hace falta domicilio a efectos
+de notificaciones, con calle, número y código postal.
+
+**Cómo se pone, y por qué así**: en variables de entorno (`LEGAL_NAME`, `LEGAL_NIF`,
+`LEGAL_ADDRESS`, `LEGAL_EMAIL`), servidas por un endpoint público y pintadas en la página en tiempo
+de ejecución. Nunca escritas en el HTML. Dos motivos: es dato fiscal real y **estos repos son
+públicos**; y un dato que vive en un sitio se cambia una vez en vez de en nueve ficheros.
+
+`comic/` ya lo tiene así (`api/config.js` + `assets/js/legal.js` + `push-env.js`). Se puede copiar
+tal cual.
+
+### ⚠️ Estado a 2026-08-23
+
+- `comic/` — puesto y verificado en producción.
+- `cuentos/` — **PUBLICADO CON EL AVISO LEGAL VACÍO**. Su `legal/index.html` conserva los
+  marcadores `[[NIF]]`, `[[DOMICILIO]]` y `[[EMAIL]]`, y un cliente lee hoy «Titular:» sin nada
+  detrás. Es exposición legal en un sitio que ya está sirviendo.
+- `viajeros/` y `kit-local/` — sin código todavía, no aplica.
+
 ## Suelo legal (una vez, sirve para los tres)
 
-1. Alta en Hacienda **modelo 036** antes de la primera venta (el 037 ya no existe).
+1. Alta en Hacienda **modelo 036** antes de la primera venta (el 037 ya no existe). Con la sociedad
+   ya constituida (ver «Quién vende»), lo que aplica es el alta censal de la sociedad en el epígrafe
+   correspondiente, no el de una persona física.
 2. **RETA con tarifa plana** (~89 €/mes) en cuanto haya ingresos recurrentes (STS 941/2025: "no llego al SMI" ya no protege con suscripciones).
 3. Web: aviso legal LSSI (nombre, NIF, domicilio, email), privacidad + registro de actividades (**Facilita_RGPD** de la AEPD), condiciones con desistimiento (descargas: checkbox de inicio inmediato + email; suscripción: 14 días con prorrata), botón "desistir".
 4. DPAs: Supabase (región UE), Vercel, MoR, proveedor de IA con datos personales.
