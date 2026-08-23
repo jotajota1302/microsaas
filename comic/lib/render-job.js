@@ -193,9 +193,27 @@ async function runStep(token, job) {
         const pages = (d.pages || []).filter(Boolean);
         if (!pages.length) { patch = { render_step: "sheets" }; break; }
 
-        d.dialogueBefore = (await completeJson({
-          ...P.dialogueCriticPrompt(order, pages), provider: "critic",
-        })).json;
+        /*
+         * Mismo criterio que en la vista previa: si el editor no responde, el
+         * cómic sale igual. Aquí el cliente YA HA PAGADO, así que dejar caer el
+         * pedido porque un proveedor está sin saldo es la peor opción posible.
+         * Sin nota de partida no hay pulido —no hay contra qué pulir— y se
+         * entregan las réplicas del desglose, que son las que se le enseñaron
+         * en la vista previa.
+         */
+        try {
+          d.dialogueBefore = (await completeJson({
+            ...P.dialogueCriticPrompt(order, pages), provider: "critic",
+          })).json;
+        } catch (e) {
+          d.dialogueBefore = null;
+          console.warn(`[comic] sin editor, entrego sin pulir: ${String(e.message).slice(0, 140)}`);
+        }
+        if (!d.dialogueBefore) {
+          d.story = assemble({ order, names: job.names }, d);
+          patch = { render_step: "sheets", data: d };
+          break;
+        }
 
         for (let i = 0; i < pages.length; i++) {
           const page = pages[i];

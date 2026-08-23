@@ -130,9 +130,29 @@ async function runStep(token, job) {
         break;
       }
 
+      /*
+       * El editor es una PUERTA DE CALIDAD, no un requisito para existir.
+       *
+       * La primera versión dejaba que un fallo aquí matara el pedido entero, y
+       * el 2026-08-23 pasó exactamente eso en producción: el saldo de
+       * OpenRouter llegó a cero, el editor devolvió 403 y el embudo se paró en
+       * seco — con el esqueleto ya escrito y pagado. Un proveedor caído no
+       * puede tirar un producto que ya tiene la historia hecha.
+       *
+       * Así que un editor que no responde se anota y se sigue. La historia
+       * queda marcada como NO JUZGADA: el validador estructural la sigue
+       * mirando entera, pero nadie ha opinado sobre si es buena, y eso se ve en
+       * el panel en vez de fingir que aprobó.
+       */
       case "critique": {
-        d.critique = (await completeJson({ ...P.criticPrompt(order, d.outline), provider: "critic" })).json;
-        d.verdict = judgeCritique(d.critique);
+        try {
+          d.critique = (await completeJson({ ...P.criticPrompt(order, d.outline), provider: "critic" })).json;
+          d.verdict = judgeCritique(d.critique);
+        } catch (e) {
+          d.critique = null;
+          d.verdict = { needsRewrite: false, unjudged: true, why: String(e.message).slice(0, 200) };
+          console.warn(`[comic] sin editor, sigo sin juzgar: ${String(e.message).slice(0, 140)}`);
+        }
         patch = { step: d.verdict.needsRewrite ? "rewrite" : "breakdown", data: d };
         break;
       }

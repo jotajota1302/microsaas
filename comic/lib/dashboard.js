@@ -231,6 +231,9 @@ function queues(rows) {
     error: r.render_error || r.error || r.last_error || null,
     // A story our own editor failed. It is not sold, and that is worth seeing.
     review: Boolean(r.data && r.data.verdict && r.data.verdict.needsHumanReview),
+    // Y una que NADIE juzgó, porque el editor no respondía. El validador
+    // estructural sí pasó; lo que falta es la opinión sobre si es buena.
+    unjudged: Boolean(r.data && r.data.verdict && r.data.verdict.unjudged),
   });
 
   const newest = (a, b) => String(b.created_at).localeCompare(String(a.created_at));

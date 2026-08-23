@@ -158,6 +158,7 @@
       td1.appendChild(a);
       td1.appendChild(el("div", "mini", (r.hero || "?") + " · " + r.lang));
       if (r.review) td1.appendChild(el("span", "tag warm", "el editor la suspendió"));
+      if (r.unjudged) td1.appendChild(el("span", "tag warm", "sin juzgar: el editor no respondía"));
       tr.appendChild(td1);
 
       var td2 = el("td");
