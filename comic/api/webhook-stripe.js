@@ -15,6 +15,7 @@ const { store } = require("../lib/store.js");
 const { readEvent } = require("../lib/stripe.js");
 const { send, requireMethod, rawBody } = require("../lib/http.js");
 const { PRODUCT } = require("../lib/money.js");
+const { RENDER_STEPS } = require("../lib/render-job.js");
 
 module.exports = async function handler(req, res) {
   if (!requireMethod(req, res, "POST")) return;
@@ -66,9 +67,18 @@ module.exports = async function handler(req, res) {
       managed: Boolean(session.managed_payments && session.managed_payments.enabled),
       vat_rate: PRODUCT.vatRate,
     },
-    // The render is a second state machine, and this is where it is armed.
+    /*
+     * El render es una segunda máquina de estados y aquí se arma, EN SU PRIMER
+     * PASO, leído de ella y no escrito a mano.
+     *
+     * Estaba escrito a mano —"panels"— y eso se saltaba los dos pasos de
+     * delante. El de diálogo es una mejora que se perdía; el de las hojas de
+     * personaje NO: son la referencia contra la que se dibuja cada viñeta, y
+     * sin ellas las noventa salen sin referencia y el protagonista cambia de
+     * cara a lo largo del cómic. Habría salido así en la primera venta.
+     */
     render_status: "pending",
-    render_step: "panels",
+    render_step: RENDER_STEPS[0],
     render_progress: 0,
     render_attempts: 0,
   };
