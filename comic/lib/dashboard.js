@@ -216,7 +216,16 @@ function queues(rows) {
   const brief = (r) => ({
     token: r.token,
     title: (r.data && r.data.story && r.data.story.title) || null,
-    hero: (r.order && r.order.name) || null,
+    /*
+     * El nombre real, que vive en la historia. `order.name` lleva {{NOMBRE}}
+     * desde que el pedido se guarda enmascarado, así que leerlo de ahí ponía
+     * literalmente "{{NOMBRE}}" en el panel. Este es nuestro propio panel y va
+     * autenticado: aquí el nombre real es lo correcto, y es lo único que
+     * permite reconocer un pedido de un vistazo.
+     */
+    hero: (r.data && r.data.story && r.data.story.hero && r.data.story.hero.name)
+      || (r.names && r.names["{{NOMBRE}}"])
+      || null,
     lang: r.lang || "es",
     created_at: r.created_at,
     paid_at: r.paid_at || null,

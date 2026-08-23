@@ -171,6 +171,11 @@
 
       var td3 = el("td");
       td3.appendChild(document.createTextNode(r.total ? r.drawn + "/" + r.total : "—"));
+      if (r.render_step && r.render_status && r.render_status !== "done") {
+        var PASO = { dialogue: "puliendo diálogos", sheets: "dibujando personajes",
+                     panels: "dibujando viñetas", pdf: "montando el PDF", deliver: "enviando" };
+        td3.appendChild(el("div", "mini", PASO[r.render_step] || r.render_step));
+      }
       if (r.holes) td3.appendChild(el("div", "mini", r.holes + " sin dibujar"));
       tr.appendChild(td3);
 
@@ -269,6 +274,7 @@
 
     $("gate").hidden = true;
     $("main").hidden = false;
+    reprogramar(d);
   }
 
   function load() {
@@ -292,6 +298,22 @@
   });
   $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") $("enter").click(); });
   $("reload").addEventListener("click", function () { load(); });
+
+  /*
+   * Refresco automático MIENTRAS hay algo dibujándose.
+   *
+   * Un render son diez minutos y el panel solo se actualizaba al pulsar un
+   * botón, así que la sección «Dibujándose ahora» se quedaba congelada en el
+   * número que hubiera al entrar y parecía que no pasaba nada. Cuando no hay
+   * nada en marcha no se pide nada: el panel no tiene por qué sondear una
+   * base de datos para enseñar ceros.
+   */
+  var timer = null;
+  function reprogramar(d) {
+    if (timer) { clearTimeout(timer); timer = null; }
+    var enMarcha = d && d.queues && d.queues.drawing.length;
+    if (enMarcha) timer = setTimeout(function () { load().catch(function () {}); }, 15000);
+  }
 
   if (token()) load().catch(function () { /* el token guardado ya no vale: se pide otro */ });
 })();
