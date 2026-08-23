@@ -30,9 +30,24 @@ const { PRODUCT } = require("./money.js");
 
 const API = "https://api.stripe.com/v1";
 
-// Managed Payments only exists from this API version onwards. Pinning it also
-// means Stripe never changes a response shape under us without us asking.
-const API_VERSION = process.env.STRIPE_API_VERSION || "2026-04-22";
+/*
+ * La versión de la API: por defecto NINGUNA, es decir la de la cuenta.
+ *
+ * Aquí había un pin a "2026-04-22", sacado de una búsqueda web sobre Managed
+ * Payments y jamás comprobado contra la cuenta. Stripe lo rechazaba con
+ * "Invalid Stripe API version" y el botón de comprar devolvía 502 — el único
+ * clic que produce ingresos, roto por una cadena que me inventé.
+ *
+ * La versión real de la cuenta resultó ser "2026-04-22.dahlia", con sufijo de
+ * canal. Podría escribirla aquí, pero pinear a la versión que la cuenta ya usa
+ * no protege de nada y vuelve a poner una cadena que nadie puede verificar sin
+ * la cuenta delante. Un pin equivocado es peor que ningún pin.
+ *
+ * Cuando haya un motivo real para fijarla —Managed Payments exige una mínima—
+ * se pone en STRIPE_API_VERSION, que es donde se puede comprobar antes de
+ * desplegar.
+ */
+const API_VERSION = process.env.STRIPE_API_VERSION || null;
 
 class StripeError extends Error {
   constructor(message, { status } = {}) {
@@ -57,7 +72,7 @@ async function call(path, params, deps = {}) {
     headers: {
       Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
       "Content-Type": "application/x-www-form-urlencoded",
-      "Stripe-Version": API_VERSION,
+      ...(API_VERSION ? { "Stripe-Version": API_VERSION } : {}),
     },
     body: new URLSearchParams(params).toString(),
   });
@@ -120,8 +135,31 @@ async function createCheckout({ job, baseUrl }, deps = {}) {
     params["automatic_tax[enabled]"] = "true";
   }
 
-  const session = await call("/checkout/sessions", params, deps);
-  return { id: session.id, url: session.url };
+  try {
+    const session = await call("/checkout/sessions", params, deps);
+    return { id: session.id, url: session.url, consent: true };
+  } catch (e) {
+    /*
+     * Stripe solo deja pedir el consentimiento si hay una URL de condiciones
+     * configurada EN SU PANEL — no se puede poner por API en la cuenta propia,
+     * lo intenté. Sin ella devuelve este error y el botón de comprar daba 502.
+     *
+     * Que el único clic que produce ingresos se caiga por un ajuste de un panel
+     * ajeno es inaceptable, así que se vende igual. Pero se pierde algo real y
+     * por eso el aviso es de error y no de nota: sin ese consentimiento el
+     * comprador CONSERVA los 14 días de desistimiento sobre un fichero que ya
+     * ha descargado. Se arregla en 30 segundos en
+     * dashboard.stripe.com/settings/public poniendo /legal/condiciones.
+     */
+    if (!/terms of service/i.test(String(e.message))) throw e;
+    console.error(
+      "[comic] VENDIENDO SIN CONSENTIMIENTO DE ENTREGA INMEDIATA: falta la URL de " +
+      "condiciones en el panel de Stripe, así que el comprador conserva el desistimiento"
+    );
+    delete params["consent_collection[terms_of_service]"];
+    const session = await call("/checkout/sessions", params, deps);
+    return { id: session.id, url: session.url, consent: false };
+  }
 }
 
 /**
