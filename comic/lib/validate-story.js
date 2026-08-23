@@ -239,8 +239,29 @@ function pageProblems(page, order, cast) {
    * validation. A checker that cannot see what the gate sees is not a checker.
    */
   const r = validateStory(probe, order ? { ...order, ageBand: order.ageBand } : null);
+
+  /*
+   * Qué quejas puede arreglar volver a pedir ESTA página, que es lo único que
+   * hace quien llama.
+   *
+   * La regla es la de las que APUNTAN A UNA VIÑETA CONCRETA. No es una lista de
+   * palabras y no es «los errores»: sobre una página suelta el validador emite
+   * quejas espurias («falta el título», «tiene 1 páginas y el pedido pide 12»,
+   * «el antagonista no aparece») que son ciertas de una historia de una página
+   * y no significan nada aquí. Rehacer esta página no arregla ninguna. Lo que
+   * sí arregla es lo que señala una de sus viñetas.
+   *
+   * Se llega a esto tras dos intentos peores, los dos por filtrar por palabra:
+   *
+   *   1. /escena/ — tiraba todo lo demás. El 2026-08-23 un cómic entero murió
+   *      en producción por una réplica de 17 palabras con el tope en 16: esta
+   *      función la había visto y la había descartado, así que reapareció en la
+   *      validación final, donde ya no hay nada que pueda arreglarla.
+   *   2. añadir /bocadillo|viñeta|nombre/ — enganchaba las quejas de historia
+   *      entera y habría reintentado las doce páginas por ruido.
+   */
   return r.errors.concat(r.warnings)
-    .filter((m) => /escena/.test(m))
+    .filter((m) => /^página 1, viñeta \d+/.test(m))
     .map((m) => m.replace(/^página 1, /, ""));
 }
 
