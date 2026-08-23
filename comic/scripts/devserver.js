@@ -71,7 +71,15 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // /c/<token> is one page for every token.
+  /* /c/<token> es UNA página para todos los tokens.
+   *
+   * En Vercel esto lo hace una regla de vercel.json, y el destino tiene que ser
+   * "/c" y NO "/c/index.html": con cleanUrls la segunda devuelve un 308 hacia
+   * la primera, y una reescritura cuyo destino redirige acaba en 404. Medido:
+   * /c da 200, /c/index.html da 308, /c/loquesea daba 404.
+   *
+   * Aquí se resuelve a mano porque el emparejador de reescrituras de abajo
+   * compara rutas exactas y no entiende :token. */
   if (/^\/c\/[\w-]+$/.test(pathname)) pathname = "/c/index.html";
 
   // Whatever vercel.json rewrites, we rewrite the same way.
