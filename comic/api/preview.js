@@ -147,8 +147,18 @@ module.exports = async function handler(req, res) {
   try {
     await store.create(job);
   } catch (e) {
+    /*
+     * El motivo va al log NUESTRO, no al cliente. La primera versión se comía
+     * el error y solo decía "prueba en un momento": el fallo real era
+     * `ENOENT: mkdir '/var/task/comic/out/jobs'` — el almacén de ficheros en
+     * un sitio sin disco — y para verlo había que rebuscar en Vercel.
+     */
+    console.error(`[comic] no se ha podido crear el pedido (STORE=${process.env.STORE || "files"}): ${e.message}`);
     res.statusCode = 503;
-    return res.end(JSON.stringify({ error: "no hemos podido guardar tu pedido, prueba en un momento" }));
+    return res.end(JSON.stringify({
+      // Y al cliente se le dice la verdad: reintentar no lo va a arreglar.
+      error: "Ahora mismo no podemos aceptar pedidos. No es cosa tuya y no hemos guardado nada; vuelve a probar más tarde.",
+    }));
   }
 
   res.statusCode = 202;

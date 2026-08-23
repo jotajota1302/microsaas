@@ -36,10 +36,26 @@ function health(env = {}) {
 
   const items = [
     {
+      /*
+       * En serverless el almacén de ficheros NO es "modo desarrollo", está
+       * roto: no hay disco donde escribir y el primer pedido muere con
+       * `ENOENT: mkdir '/var/task/comic/out/jobs'`.
+       *
+       * La primera versión de esta comprobación daba «ok» en ese caso, así que
+       * el panel decía que todo iba bien mientras el formulario devolvía 503 a
+       * cada visitante. Un panel que miente sobre lo único que puede tumbar el
+       * producto es peor que no tener panel.
+       */
       id: "store", name: "Almacén", required: true,
-      detail: env.STORE === "supabase" ? "Supabase · schema comic" : "ficheros en out/ (solo desarrollo)",
-      ok: env.STORE !== "supabase" || (has("SUPABASE_URL") && has("SUPABASE_SERVICE_ROLE_KEY")),
-      hint: "STORE=supabase con SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY",
+      detail: env.STORE === "supabase"
+        ? "Supabase · schema comic"
+        : (env.VERCEL
+            ? "ficheros: NO FUNCIONA aquí, no hay disco. Ningún pedido se guarda"
+            : "ficheros en out/ (solo desarrollo)"),
+      ok: env.STORE === "supabase"
+        ? (has("SUPABASE_URL") && has("SUPABASE_SERVICE_ROLE_KEY"))
+        : !env.VERCEL,
+      hint: "STORE=supabase y BLOBS=supabase, con SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY",
     },
     {
       id: "text", name: "Guion", detail: env.MINIMAX_MODEL || "MiniMax M3", required: true,

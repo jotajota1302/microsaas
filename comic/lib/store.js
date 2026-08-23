@@ -10,10 +10,11 @@
  *
  * Picking one is an env var, so nothing above this file knows which is running.
  *
- * Honest caveat, because the previous version of this comment claimed a file
- * that did not exist: the SQL is verified against the live database, but this
- * adapter has NOT been exercised from Node — that needs the service-role key,
- * which is not on this machine.
+ * Probado contra la base real el 2026-08-23: los veinte métodos de los dos
+ * backends, incluidos el cierre, la fusión de parches anidados y el borrado por
+ * retención. Salieron dos cosas que el SQL solo no habría revelado: crear el
+ * schema no lo expone en la API de PostgREST, y su filtro `or` no sabe leer una
+ * marca de tiempo ISO.
  */
 
 const fs = require("fs");
@@ -41,6 +42,9 @@ function hashIp(ip) {
 }
 
 const locks = new Map();
+
+/** "Libre" en la columna del cierre. Ver claim() del backend de Supabase. */
+const FREE = "1970-01-01T00:00:00.000Z";
 
 // --- files -------------------------------------------------------------------
 
@@ -272,17 +276,27 @@ function supabase() {
     async claim(token, seconds = 240) {
       const now = new Date().toISOString();
       const until = new Date(Date.now() + seconds * 1000).toISOString();
+      /*
+       * Un solo filtro, no un `or`. La primera version preguntaba
+       * "locked_until es null O es anterior a ahora", y PostgREST no sabe leer
+       * eso: el ISO 8601 lleva puntos, que son su separador de filtros, y
+       * responde "column previews.locked_until does not exist" — un error que
+       * apunta al sitio equivocado y cuesta una tarde.
+       *
+       * Libre se representa con `epoch` en vez de NULL (ver la migracion
+       * comic_lock_sentinel_instead_of_null), asi que basta con `lt`.
+       */
       const { data, error } = await table()
         .update({ locked_until: until })
         .eq("token", token)
-        .or(`locked_until.is.null,locked_until.lt.${now}`)
+        .lt("locked_until", now)
         .select("token");
       if (error) throw new Error(error.message);
       return Boolean(data && data.length);
     },
 
     async release(token) {
-      await table().update({ locked_until: null }).eq("token", token);
+      await table().update({ locked_until: FREE }).eq("token", token);
     },
   };
 
