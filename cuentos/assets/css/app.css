@@ -393,6 +393,49 @@ footer a { color: var(--muted); }
 #recent tr:last-child td { border-bottom: 0; }
 #recent code { font-size: .74rem; }
 
+/*
+ * On a narrow screen the nine-column table became a horizontal scrollbar with
+ * the interesting columns off the right edge, which on a phone is the same as
+ * not showing them. Each row becomes its own card instead: the headers move
+ * into the cells as labels, so nothing is lost and nothing has to be dragged
+ * into view. The row is still one tap that opens the order.
+ */
+@media (max-width: 56rem) {
+  .tablewrap { overflow-x: visible; }
+  #recent, #recent tbody, #recent tr, #recent td { display: block; width: auto; }
+  #recent thead { display: none; }
+  #recent tr[data-order] {
+    border: 1px solid var(--hair); border-radius: 12px; background: var(--surface);
+    padding: .5rem .85rem; margin-bottom: .6rem;
+  }
+  #recent td {
+    border-bottom: 0; padding: .22rem 0; white-space: normal; overflow-wrap: anywhere;
+    display: grid; grid-template-columns: 7.5rem 1fr; gap: .8rem; align-items: baseline;
+  }
+  #recent td::before {
+    content: attr(data-label);
+    color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; font-weight: 700;
+  }
+  /* "abrir ›" is a hint for a mouse; the whole card is the tap target here. */
+  #recent td[data-label=""] { display: none; }
+  #recent td[colspan] { display: block; padding: .8rem 0; }
+  #recent td[colspan]::before { content: none; }
+}
+
+/* the small two-column tables inside the traffic cards */
+.minitable { width: 100%; font-size: .9rem; border-collapse: collapse; table-layout: fixed; }
+.minitable td { padding: .18rem 0; overflow-wrap: anywhere; }
+.minitable td + td { text-align: right; width: 4.5rem; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/*
+ * Work that is owed and that nobody is doing. It is not a failure — nothing
+ * has said no — so it does not wear the alarm colour; it is a nudge, and the
+ * only thing it needs is somebody to press the button.
+ */
+.stuck { border-left: 3px solid var(--ochre); }
+.stuck .why { font-size: .86rem; color: var(--muted); }
+.stuck .why b { color: var(--ink); }
+
 .item .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .5rem; }
 .item .thumbs figure { margin: 0; }
 .item .thumbs img { width: 100%; border-radius: 8px; border: 1px solid var(--hair); display: block; }

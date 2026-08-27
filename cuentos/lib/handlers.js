@@ -16,7 +16,7 @@ const { send, readJson, rawBody, query, clientIp, requireMethod, requireSecret }
 const dashboard = require("./dashboard.js");
 const analytics = require("./analytics.js");
 const { recipientsOf } = require("./email.js");
-const { SAMPLE_PAGES } = require("./steps.js");
+const { SAMPLE_PAGES, PLAN } = require("./steps.js");
 
 const CAPS = () => ({
   scriptsPerDay: Number(process.env.MAX_SCRIPTS_PER_DAY || 200),
@@ -599,8 +599,37 @@ function adminHandler(deps) {
         return { funnel: analytics.funnel(ev, od), sources: analytics.sources(ev), devices: analytics.devices(ev), pages: analytics.pages(ev), events: ev.length };
       };
 
+      /*
+       * Work that is owed and that nobody is doing. This is the half the panel
+       * was blind to: a job only ever appeared here once it reached
+       * needs_review, so one that died mid-step — killed by the function's
+       * wall clock, leaving no error behind — was owed, unfinished and
+       * invisible, while the customer's page paid for another doomed attempt
+       * every time they opened it (a real paid book, 27-08-2026).
+       */
+      const stuck = [];
+      const owed = await Promise.resolve()
+        .then(() => deps.db.stuckJobs())
+        .catch((e) => { console.warn(`[cuentos] stuck jobs unavailable: ${e.message}`); return []; });
+      for (const job of owed || []) {
+        const s = await deps.db.getStoryByOrder(job.order_id);
+        const o = await deps.db.getOrder(job.order_id);
+        if (o && ["cancelled", "expired", "refunded"].includes(o.status)) continue;
+        stuck.push({
+          jobId: job.id, kind: job.kind, state: job.state, orderId: job.order_id,
+          error: job.error || null, attempts: job.attempts || 0,
+          step: (PLAN[job.kind] || []).find((n) => !(job.steps && job.steps[n] && job.steps[n].done)) || null,
+          since: job.updated_at || job.created_at,
+          email: o && o.email,
+          token: s && s.token,
+          illustrated: s ? Object.keys(s.page_paths || {}).length : 0,
+          missing: s && s.story ? s.story.pages.map((_, i) => i).filter((i) => !(s.page_paths || {})[String(i)]) : [],
+        });
+      }
+
       return send(res, 200, {
         items,
+        stuck,
         recent,
         overview: dashboard.overview({ orders, jobs: allJobs, env: process.env }),
         traffic: { today: inRange(1), week: inRange(7), month: inRange(30) },
@@ -695,11 +724,59 @@ function adminHandler(deps) {
         if (deps.sendEmail) await deps.sendEmail({ kind, to, locale: order.locale, token: story.token });
         return send(res, 200, { ok: true, sent: to.length });
       }
+      /*
+       * Unstick a job. It clears the lock and the failure count and hands the
+       * work back to the drive loop rather than doing it here: this endpoint
+       * has the same 60 s wall clock as any other, and it was a step that ran
+       * past that clock which got the job stuck in the first place. The panel
+       * polls /api/resume with the token, exactly as the customer's page does.
+       */
       case "retry": {
         const job = await deps.db.getJob(body.jobId);
         if (!job) return send(res, 404, { error: "not_found" });
         await deps.db.saveJob(job.id, { state: "pending", attempts: 0, error: null, locked_until: null });
+        const story = await deps.db.getStoryByOrder(job.order_id);
+        if (story) return send(res, 200, { queued: job.id, token: story.token });
+        // No story yet (the text step never got that far): nothing to poll with.
         return send(res, 200, await deps.runJob(job.id));
+      }
+      /*
+       * Draw a page again. Not the customer's retouch — that is one round,
+       * paid for, and it is theirs to spend. This is the shop's own repair for
+       * a page that came out as a catalogue fallback because the image
+       * provider was down or the credit had run out: the page is simply owed,
+       * and once the cause is fixed it should be drawn, not shipped blank.
+       */
+      case "redraw": {
+        const story = await deps.db.getStoryByToken(body.token);
+        if (!story) return send(res, 404, { error: "not_found" });
+        const pages = (body.pages || []).map(Number)
+          .filter((n) => Number.isInteger(n) && n >= 0 && n < C.PAGE_COUNT);
+        if (!pages.length) return send(res, 400, { error: "no_pages" });
+        const job = await deps.db.lastJobFor(story.order_id, "full");
+        if (!job) return send(res, 409, { error: "no_full_job" });
+
+        const steps = { ...(job.steps || {}) };
+        const attempted = ((steps.pages || {}).attempted || []).filter((i) => !pages.includes(Number(i)));
+        // "Attempted" is what stops the batcher asking for the same page for
+        // ever; forgetting it for these pages is the whole repair.
+        steps.pages = { ...(steps.pages || {}), done: false, partial: false, attempted };
+        steps.pdf = { done: false };
+        delete steps.approval;
+
+        const paths = { ...(story.page_paths || {}) };
+        let recovered = 0;
+        for (const i of pages) {
+          if (paths[String(i)]) delete paths[String(i)];
+          else recovered++;
+        }
+        await deps.db.updateStory(story.id, {
+          page_paths: paths,
+          fallbacks: Math.max(0, (story.fallbacks || 0) - recovered),
+        });
+        await deps.db.saveJob(job.id, { state: "pending", attempts: 0, error: null, locked_until: null, steps });
+        await deps.db.updateOrder(story.order_id, { needs_review: false });
+        return send(res, 200, { queued: job.id, token: story.token, pages });
       }
       case "retouch": {
         const story = await deps.db.getStoryByToken(body.token);

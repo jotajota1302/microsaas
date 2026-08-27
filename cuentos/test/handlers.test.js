@@ -55,6 +55,8 @@ function fakeDb(over = {}) {
     remove: async (...a) => calls.push(["remove", ...a]),
     purgeStory: async (...a) => calls.push(["purge", ...a]),
     jobsNeedingReview: async () => [],
+    stuckJobs: async () => [],
+    lastJobFor: async () => null,
     getJob: async () => null,
     saveJob: async (...a) => calls.push(["saveJob", ...a]),
     recordBilling: async (...a) => calls.push(["billing", ...a]),
@@ -912,4 +914,116 @@ test("the panel shows the titles a person can read, not the placeholders", async
   await H.adminHandler({ db })(req({ method: "GET", headers: { authorization: "Bearer adm" } }), r);
   delete process.env.ADMIN_TOKEN;
   assert.strictEqual(r.body.recent[0].story.title, "El Gran Viaje de Alejandro");
+});
+
+/*
+ * The panel used to see a job only once it reached needs_review. A run killed
+ * by the function's wall clock leaves the row "running" with an empty error:
+ * owed, unfinished and invisible, while every visit to the customer's page
+ * bought another doomed attempt. It cost a paid book an hour on 27-08-2026.
+ */
+test("the panel lists the work that is owed and that nobody is doing", async () => {
+  const db = fakeDb({
+    recentOrders: async () => [],
+    recentJobs: async () => [],
+    storiesForOrders: async () => [],
+    recentEvents: async () => [],
+    stuckJobs: async () => [{
+      id: "j9", order_id: "o1", kind: "full", state: "running", attempts: 0, error: null,
+      steps: { pages: { done: true }, lineart: { done: true } },
+      updated_at: new Date(Date.now() - 900000).toISOString(),
+    }],
+  });
+  db.story.page_paths = { 0: "a", 1: "b" };
+  db.story.story = { ...valid, pages: valid.pages };
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(req({ method: "GET", headers: { authorization: "Bearer adm" } }), r);
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.body.stuck.length, 1);
+  assert.strictEqual(r.body.stuck[0].step, "pdf", "it says which step is owed");
+  assert.strictEqual(r.body.stuck[0].token, db.story.token, "and gives the token the panel drives with");
+  assert.deepStrictEqual(r.body.stuck[0].missing.slice(0, 3), [2, 3, 4], "and which pages are still undrawn");
+});
+
+test("a cancelled order is not reported as stuck work", async () => {
+  const db = fakeDb({
+    recentOrders: async () => [], recentJobs: async () => [], storiesForOrders: async () => [], recentEvents: async () => [],
+    stuckJobs: async () => [{ id: "j9", order_id: "o1", kind: "full", state: "pending", steps: {}, updated_at: new Date(0).toISOString() }],
+  });
+  db.order.status = "cancelled";
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(req({ method: "GET", headers: { authorization: "Bearer adm" } }), r);
+  delete process.env.ADMIN_TOKEN;
+  assert.deepStrictEqual(r.body.stuck, []);
+});
+
+test("retry hands the work to the drive loop instead of running it inline", async () => {
+  // The endpoint has the same 60 s clock as the step that got stuck; doing the
+  // work here would just time out again.
+  let ran = 0;
+  const db = fakeDb({ getJob: async () => ({ id: "j9", order_id: "o1", kind: "full", steps: {} }) });
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db, runJob: async () => { ran++; return { state: "done" }; } })(
+    req({ method: "POST", headers: { authorization: "Bearer adm" }, body: { action: "retry", jobId: "j9" } }), r);
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(ran, 0);
+  assert.strictEqual(r.body.token, db.story.token);
+  const saved = db.calls.find((c) => c[0] === "saveJob");
+  assert.deepStrictEqual(saved[2], { state: "pending", attempts: 0, error: null, locked_until: null });
+});
+
+test("redraw forgets a fallback page so the batcher draws it again", async () => {
+  const db = fakeDb({
+    lastJobFor: async () => ({
+      id: "j9", order_id: "o1", kind: "full",
+      steps: { pages: { done: true, attempted: [1, 2, 3] }, lineart: { done: true }, pdf: { done: true }, approval: { done: false } },
+    }),
+  });
+  db.story.page_paths = { 1: "p1", 3: "p3" };
+  db.story.fallbacks = 1;
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(req({ method: "POST", headers: { authorization: "Bearer adm" }, body: { action: "redraw", token: db.story.token, pages: [2] } }), r);
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(r.body.token, db.story.token);
+  const saved = db.calls.filter((c) => c[0] === "saveJob").pop();
+  assert.deepStrictEqual(saved[2].steps.pages.attempted, [1, 3], "page 2 is owed again");
+  assert.strictEqual(saved[2].steps.pages.done, false);
+  assert.strictEqual(saved[2].steps.pdf.done, false, "the book has to be rebuilt around the new page");
+  assert.ok(!saved[2].steps.approval, "and looked at again before it goes out");
+  assert.strictEqual(saved[2].state, "pending");
+  // The fallback is no longer owed, so the whole-book fallback guard must not
+  // count it any more or the job would stop for review the moment it resumes.
+  const patched = db.calls.filter((c) => c[0] === "updateStory").pop();
+  assert.strictEqual(patched[1].fallbacks, 0);
+});
+
+test("redraw of a page that already has art throws that art away first", async () => {
+  const db = fakeDb({
+    lastJobFor: async () => ({ id: "j9", order_id: "o1", kind: "full", steps: { pages: { done: true, attempted: [0, 1] } } }),
+  });
+  db.story.page_paths = { 0: "p0", 1: "p1" };
+  db.story.fallbacks = 0;
+  const r = res();
+  process.env.ADMIN_TOKEN = "adm";
+  await H.adminHandler({ db })(req({ method: "POST", headers: { authorization: "Bearer adm" }, body: { action: "redraw", token: db.story.token, pages: [1] } }), r);
+  delete process.env.ADMIN_TOKEN;
+  const patched = db.calls.filter((c) => c[0] === "updateStory").pop();
+  assert.deepStrictEqual(Object.keys(patched[1].page_paths), ["0"]);
+  assert.strictEqual(patched[1].fallbacks, 0, "a page that had art was never a fallback");
+});
+
+test("redraw refuses a page number outside the book, and one with no full job", async () => {
+  process.env.ADMIN_TOKEN = "adm";
+  const bad = res();
+  await H.adminHandler({ db: fakeDb() })(req({ method: "POST", headers: { authorization: "Bearer adm" }, body: { action: "redraw", token: "abcdefghijklmnopqrstuv", pages: [99] } }), bad);
+  assert.strictEqual(bad.statusCode, 400);
+  const none = res();
+  await H.adminHandler({ db: fakeDb() })(req({ method: "POST", headers: { authorization: "Bearer adm" }, body: { action: "redraw", token: "abcdefghijklmnopqrstuv", pages: [2] } }), none);
+  delete process.env.ADMIN_TOKEN;
+  assert.strictEqual(none.statusCode, 409);
 });

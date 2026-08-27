@@ -119,7 +119,34 @@ function substitute(text, personalization) {
   });
 }
 
+/*
+ * Line breaking is memoised per font, and it is not a micro-optimisation.
+ *
+ * sceneLayout searches ~30 art heights and, for each, fitSize tries 7 type
+ * sizes — so one page asks for the same wrap over two hundred times, and every
+ * ask shapes the paragraph word by word through fontkit on a face that is NOT
+ * subset. Measured: thirty seconds to lay out twelve pages, which on Vercel's
+ * slower CPU went past the 60 s function limit and left the job wedged,
+ * retrying the same doomed step for ever (27-08-2026).
+ *
+ * The cache changes nothing about the output — same font, same size, same
+ * measure, same lines — it just stops asking the same question. The map hangs
+ * off the font object, so it dies with the document.
+ */
+const WRAP_CACHE = new WeakMap();
+
 function wrap(text, font, size, maxWidth) {
+  let byFont = WRAP_CACHE.get(font);
+  if (!byFont) { byFont = new Map(); WRAP_CACHE.set(font, byFont); }
+  const key = `${size}|${maxWidth}|${text}`;
+  const hit = byFont.get(key);
+  if (hit) return hit;
+  const lines = wrapUncached(text, font, size, maxWidth);
+  byFont.set(key, lines);
+  return lines;
+}
+
+function wrapUncached(text, font, size, maxWidth) {
   const lines = [];
   for (const paragraph of String(text).split(/\n+/)) {
     let line = "";

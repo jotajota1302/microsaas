@@ -93,7 +93,41 @@ Un cliente que teclea mal su correo se perdía entero: ni libro, ni enlace, ni r
 2. **El panel repara y reenvía**: acciones `set_email` (cambia la dirección y reenvía el enlace que toque según el estado) y `resend` (reenvía a todas las que tengamos). Es el mostrador donde se arregla «no me ha llegado».
 3. **Formulario de contacto** (`POST /api/contact` → `sendContact` → `CONTACT_EMAIL`, por defecto info@4bitsengineering.com) en el pie del visor, en todas las etapas. Lleva el token del cuento, que es lo que identifica el pedido sin preguntárselo. Un fallo al retransmitir se registra en los logs y al cliente se le dice que sí: contestar «algo ha fallado» a quien escribe porque algo ha fallado es la peor respuesta posible.
 
-**El panel** (`/admin/`) tiene menú de secciones: **Hoy** (cola de revisión, con contador), **Cuentos** (todos, con filtro y ficha por pedido), **Dinero** (embudo y márgenes) y **Sistema** (integraciones y cobro manual). La sección elegida se recuerda en localStorage.
+**El panel** (`/admin/`) tiene menú de secciones: **Hoy** (atascados + cola de revisión, con contador), **Cuentos** (todos, con filtro y ficha por pedido), **Dinero** (embudo y márgenes) y **Sistema** (integraciones y cobro manual). La sección elegida se recuerda en localStorage.
+En pantalla estrecha la tabla de **Cuentos** deja de ser tabla: cada fila es una tarjeta con las
+cabeceras convertidas en etiquetas (`data-label` + CSS), porque nueve columnas en un móvil eran una
+barra de desplazamiento con lo interesante fuera de la pantalla.
+
+## Cuando un libro se atasca (27-08)
+
+Un libro pagado se quedó a medias durante una hora y **nada lo dijo**. Tres cosas se arreglaron, y las
+tres importan por separado:
+
+- **El montaje del PDF se pasaba de los 60 s.** No eran las imágenes (medido: 30 s con ellas y 30 s
+  sin ellas). Era el maquetado: `sceneLayout` prueba ~30 alturas de ilustración y para cada una
+  `fitSize` prueba 7 cuerpos de letra, así que **una página pedía el mismo salto de línea más de
+  doscientas veces**, y cada vez se moldeaba el párrafo palabra a palabra con fontkit sobre una fuente
+  **sin subset**. `wrap()` ahora se memoiza por fuente (`WRAP_CACHE`, un `WeakMap`): misma salida,
+  30 s → 4 s. `test/pdf.test.js` pone un techo de 20 s para que la búsqueda cuadrática no vuelva.
+- **Una ejecución que muere no dice nada, así que ahora se cuenta.** Vercel mata la función y no da
+  tiempo a escribir el error: la fila queda en `running` con `error` vacío, fuera de la cola de
+  revisión, y **cada visita del cliente pagaba otro intento condenado**. `runJob` lee el job *antes*
+  de reclamarlo: si estaba en `running` con el candado caducado, la ejecución anterior murió → suma
+  un intento, y a los tres el job pasa a `needs_review` con un error legible.
+- **El panel era ciego a la mitad del problema.** Solo veía `needs_review`. Ahora `db.stuckJobs()`
+  (pending/running, sin candado vivo, sin tocar en 5 min) alimenta una sección **«Atascados»** en
+  *Hoy* con **Continuar** (empuja `/api/resume` con el token, igual que hace la página del cliente),
+  **Empezar el paso de cero** y **Redibujar las que faltan**.
+
+**`redraw` no es el retoque del cliente.** El retoque es uno, va incluido en el precio y es suyo.
+`redraw` es la reparación de la tienda para una página que salió del catálogo (el proveedor caído, el
+crédito agotado): olvida esos índices de `steps.pages.attempted` —que es justo lo que impedía volver
+a intentarlos—, borra el PDF y la aprobación, y descuenta el fallback de `stories.fallbacks` para que
+el guardián de «más de 2 páginas sin dibujar» no salte al reanudar.
+
+**`retry` ya no ejecuta el trabajo dentro de la petición.** `/api/admin` tiene el mismo reloj de 60 s
+que el paso que se atascó; ahora limpia el candado y devuelve el token para que el panel lo empuje
+por lotes.
 
 ## Medición de audiencia (22-08)
 

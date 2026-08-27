@@ -212,3 +212,24 @@ test("a missing field is refused, never printed as the word \"undefined\"", () =
   assert.throws(() => substitute(undefined, PERSON), /nothing to print/i);
   assert.throws(() => substitute(null, PERSON), /nothing to print/i);
 });
+
+/*
+ * The book that wedged the shop (27-08-2026): laying out twelve pages took
+ * thirty seconds here and more than sixty on Vercel, so the pdf step timed out,
+ * the job stayed "running" with no error and every visit to the viewer paid for
+ * another doomed attempt. Line breaking is now memoised per font.
+ *
+ * The budget is deliberately loose — this measures a machine, not a promise —
+ * but it is an order of magnitude under the 60 s function limit, so a change
+ * that brings the quadratic search back trips it long before a customer does.
+ */
+test("a whole book is laid out well inside the function's time limit", async () => {
+  const long = JSON.parse(JSON.stringify(story));
+  // The worst case for the layout search: the longest page a 9-12 band allows.
+  const filler = "Aquella tarde el viento traía sal y el faro parpadeaba despacio sobre las olas. ".repeat(3);
+  for (const page of long.pages) page.text = `{{NOMBRE}} miró el mar. ${filler}`;
+  const started = Date.now();
+  await renderPdf(base({ story: long }));
+  const seconds = (Date.now() - started) / 1000;
+  assert.ok(seconds < 20, `laying out the book took ${seconds.toFixed(1)} s — it used to time out at 60 s on Vercel`);
+});

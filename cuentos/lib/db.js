@@ -12,6 +12,9 @@ const { env, requireEnv } = require("./env.js");
 const SCRIPT_TTL_DAYS = 7;
 const FULL_TTL_DAYS = 30;
 const LOCK_MINUTES = 2; // longer than any single invocation can run, short enough that a timeout is forgiven fast
+// How long a job may sit owed and untouched before the panel calls it stuck.
+// Comfortably more than a batch takes, comfortably less than a customer waits.
+const STUCK_MINUTES = 5;
 
 function newToken() {
   // 16 random bytes -> 22 url-safe characters, not enumerable
@@ -166,6 +169,22 @@ function createDb(client) {
       return (rows && rows[0]) || null;
     },
     /**
+     * The most recent job of a kind on an order, whatever state it ended in.
+     * runnableJobFor only sees work still owed; redrawing a page has to reopen
+     * a job that already finished.
+     */
+    async lastJobFor(orderId, kind) {
+      const rows = await unwrap(
+        await t("jobs")
+          .select("*")
+          .eq("order_id", orderId)
+          .eq("kind", kind)
+          .order("created_at", { ascending: false })
+          .limit(1)
+      );
+      return (rows && rows[0]) || null;
+    },
+    /**
      * Stops whatever is still owed on an order. Used when it is cancelled:
      * without this the sweep would pick the job up again an hour later and
      * carry on spending on a book nobody is going to receive.
@@ -223,6 +242,28 @@ function createDb(client) {
     },
     async jobsNeedingReview(limit = 50) {
       return unwrap(await t("jobs").select("*").eq("state", "needs_review").order("created_at", { ascending: true }).limit(limit));
+    },
+    /*
+     * Work that is owed and that nobody is doing.
+     *
+     * Between batches a job is pending with no lock and that is perfectly
+     * healthy — the next caller picks it up in seconds. What is not healthy is
+     * a job in that shape that nothing has touched for minutes: the customer
+     * closed the page, or the run was killed, and on Hobby the cron only comes
+     * round once a day. It looked like nothing was wrong because nothing said
+     * so. The panel asks for these so a person can push them.
+     */
+    async stuckJobs(minutes = STUCK_MINUTES, limit = 25) {
+      const cutoff = new Date(Date.now() - minutes * 60000).toISOString();
+      return unwrap(
+        await t("jobs")
+          .select("*")
+          .in("state", ["pending", "running"])
+          .lt("updated_at", cutoff)
+          .or(`locked_until.is.null,locked_until.lt.${new Date().toISOString()}`)
+          .order("created_at", { ascending: true })
+          .limit(limit)
+      );
     },
 
     // --- audience measurement --------------------------------------------------
@@ -293,4 +334,4 @@ function getDb() {
   return singleton;
 }
 
-module.exports = { createDb, getDb, newToken, daysFromNow, hashIp, SCRIPT_TTL_DAYS, FULL_TTL_DAYS, LOCK_MINUTES };
+module.exports = { createDb, getDb, newToken, daysFromNow, hashIp, SCRIPT_TTL_DAYS, FULL_TTL_DAYS, LOCK_MINUTES, STUCK_MINUTES };

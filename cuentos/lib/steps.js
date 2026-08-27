@@ -253,6 +253,25 @@ async function runJob(jobId, deps) {
   const { db } = deps;
   const log = deps.log || ((m) => console.log(`[cuentos] ${m}`));
 
+  /*
+   * Read before claiming, because claiming overwrites the evidence.
+   *
+   * Every run that ends normally writes something back: a step, a failure, or
+   * "done". One that leaves the row exactly as it claimed it did not end — the
+   * function was killed mid-step (Vercel's wall clock, an out-of-memory) and
+   * nothing got the chance to say so. The row then reads "running" with an
+   * empty error: not in the review queue, not visibly broken, and every visit
+   * to the viewer buys another doomed attempt. That is how a paid book sat
+   * wedged for an hour on 27-08-2026.
+   *
+   * A death is a failure like any other, so it is counted like one. Three and
+   * the job stops and asks for a human, which is what it needed all along.
+   */
+  const before = await db.getJob(jobId);
+  const killed = Boolean(
+    before && before.state === "running" && before.locked_until && new Date(before.locked_until) < new Date()
+  );
+
   const job = await db.claimJob(jobId);
   if (!job) return { state: "locked" };
   if (job.state === "done") return { state: "done" };
@@ -261,6 +280,22 @@ async function runJob(jobId, deps) {
   if (!plan) {
     await db.saveJob(job.id, { state: "failed", error: `unknown job kind ${job.kind}` });
     return { state: "failed" };
+  }
+
+  if (killed) {
+    const steps = job.steps || {};
+    const where = plan.find((n) => !(steps[n] && steps[n].done)) || plan[plan.length - 1];
+    const attempts = (job.attempts || 0) + 1;
+    const reason = `${where}: the run was killed before it could finish (timed out or ran out of memory)`;
+    log(`job ${job.id} was killed during ${where} (attempt ${attempts})`);
+    if (attempts >= MAX_ATTEMPTS) {
+      await db.saveJob(job.id, { state: "needs_review", attempts, error: reason, locked_until: null });
+      const order = await db.getOrder(job.order_id);
+      if (order) await db.updateOrder(order.id, { needs_review: true });
+      return { state: "needs_review", reason, failedStep: where, attempts };
+    }
+    await db.saveJob(job.id, { attempts, error: reason });
+    job.attempts = attempts;
   }
 
   const ctx = {

@@ -10,7 +10,8 @@ function memDb({ job, order, story = null }) {
   const state = { job: { steps: {}, attempts: 0, cost_cents: 0, ...job }, order, story, files: {}, saves: [] };
   return {
     state,
-    async claimJob() { return { ...state.job }; },
+    async getJob() { return { ...state.job }; },
+    async claimJob() { state.job = { ...state.job, state: "running" }; return { ...state.job }; },
     async getOrder() { return state.order; },
     async getStoryByOrder() { return state.story; },
     async saveJob(_, patch) { state.job = { ...state.job, ...patch }; state.saves.push(patch); return state.job; },
@@ -215,6 +216,43 @@ test("a locked job is left alone", async () => {
   db.claimJob = async () => null;
   const r = await runJob("j1", okDeps(db));
   assert.strictEqual(r.state, "locked");
+});
+
+/*
+ * The failure that wedged a paid book on 27-08-2026: the pdf step ran past
+ * Vercel's 60 s wall clock, the function was killed, and nothing wrote back.
+ * The row stayed "running" with an empty error — invisible to the panel — and
+ * every visit to the viewer bought another doomed attempt.
+ */
+const killedJob = (over = {}) => ({
+  id: "j1", kind: "full", order_id: "o1", state: "running",
+  locked_until: new Date(Date.now() - 60000).toISOString(),
+  steps: { pages: { done: true }, lineart: { done: true } },
+  ...over,
+});
+
+test("a run that was killed mid-step counts as an attempt instead of vanishing", async () => {
+  const db = memDb({ job: killedJob({ attempts: 0 }), order: ORDER, story: { id: "s1", order_id: "o1", token: "t", story: valid, page_paths: {}, coloring_paths: [] } });
+  await runJob("j1", okDeps(db));
+  const recorded = db.state.saves.find((p) => p.error);
+  assert.match(recorded.error, /pdf: the run was killed/);
+  assert.strictEqual(recorded.attempts, 1);
+});
+
+test("three killed runs stop the job and ask for a human instead of looping for ever", async () => {
+  const db = memDb({ job: killedJob({ attempts: 2 }), order: ORDER, story: { id: "s1", order_id: "o1", token: "t", story: valid, page_paths: {}, coloring_paths: [] } });
+  const r = await runJob("j1", okDeps(db));
+  assert.strictEqual(r.state, "needs_review");
+  assert.match(r.reason, /killed before it could finish/);
+  assert.strictEqual(db.state.job.state, "needs_review");
+  assert.strictEqual(db.state.order.needs_review, true);
+});
+
+test("a job that simply waits its turn is not mistaken for a killed one", async () => {
+  // pending with no lock is the normal shape between batches: nothing died.
+  const db = memDb({ job: { id: "j1", kind: "script", order_id: "o1", state: "pending", locked_until: null }, order: ORDER });
+  await drain("j1", okDeps(db));
+  assert.ok(!db.state.saves.some((p) => /killed/.test(p.error || "")));
 });
 
 test("every plan ends in a notification or an approval, never in silence", () => {

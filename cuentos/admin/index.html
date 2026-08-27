@@ -71,6 +71,14 @@
       </form>
     </section>
 
+    <p class="note" id="status" hidden></p>
+
+    <section class="stack" data-s="hoy" id="stuckSection" hidden>
+      <h2>Atascados <span class="pill" id="stuckCount">0</span></h2>
+      <p class="muted" style="font-size:.92rem">Trabajo empezado que nadie está haciendo. Suele ser una ejecución que se pasó del tiempo de la función o un fallo del proveedor de imágenes. «Continuar» lo empuja desde donde se quedó, sin repetir lo que ya está hecho.</p>
+      <div id="stuckList" class="stack"></div>
+    </section>
+
     <section class="stack" data-s="hoy">
       <h2>Necesita tu revisión <span class="pill" id="queueCount">0</span></h2>
       <div id="list" class="stack"></div>
@@ -217,6 +225,54 @@
       (f.expired + f.failed ? `<p class="muted" style="font-size:.88rem">${f.expired} caducados · ${f.failed} fallidos</p>` : "");
   }
 
+  /*
+   * Work that is owed and that nobody is doing.
+   *
+   * The panel used to show a job only once it reached "needs_review". A run
+   * killed by the function's wall clock leaves no error behind, so a paid book
+   * could sit half made and perfectly invisible while the customer's page
+   * bought another doomed attempt on every visit. This is that blind spot, and
+   * the button that fixes it.
+   */
+  function renderStuck() {
+    const rows = data.stuck || [];
+    $("stuckCount").textContent = rows.length;
+    $("stuckSection").hidden = rows.length === 0;
+    const ago = (iso) => {
+      const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+      if (mins < 60) return `${mins} min`;
+      const h = Math.floor(mins / 60);
+      return h < 24 ? `${h} h` : `${Math.floor(h / 24)} días`;
+    };
+    const STEP = {
+      text: "escribir el guion", review: "revisar el guion", sheet: "la hoja de personaje",
+      pages: "dibujar las páginas", lineart: "las páginas de colorear", pdf: "montar el PDF",
+      approval: "tu aprobación", notify: "avisar por correo",
+    };
+    $("stuckList").innerHTML = rows.map((j) => `
+      <div class="card stack item stuck">
+        <div class="row" style="justify-content:space-between">
+          <div class="row" style="gap:.6rem">
+            <span class="pill">${esc(j.kind)}</span>
+            <b>${esc(j.email || "sin correo")}</b>
+          </div>
+          ${j.token ? `<a class="muted" href="/c/${j.token}" target="_blank" rel="noopener">ver como el cliente ↗</a>` : ""}
+        </div>
+        <p class="why">Se quedó en <b>${esc(STEP[j.step] || j.step || "un paso desconocido")}</b>, sin moverse desde hace <b>${ago(j.since)}</b>.
+          ${j.illustrated ? `Lleva <b>${j.illustrated} de 12</b> dibujos.` : ""}
+          ${j.missing && j.missing.length ? `Faltan las páginas <b>${j.missing.map((n) => n + 1).join(", ")}</b>.` : ""}
+          ${j.attempts ? ` Intentos fallidos: <b>${j.attempts}</b>.` : ""}</p>
+        ${j.error ? `<p class="note alarm" style="font-size:.88rem">${esc(j.error)}</p>` : ""}
+        <div class="row">
+          ${j.token ? `<button class="btn" data-a="push" data-t="${j.token}">Continuar</button>` : ""}
+          <button class="btn secondary" data-a="retry" data-j="${j.jobId}">Empezar el paso de cero</button>
+          ${j.token && j.kind === "full" && j.step !== "pages" && j.missing && j.missing.length ? `<button class="btn ghost" data-a="redraw" data-t="${j.token}" data-p="${j.missing.join(",")}">Redibujar las que faltan</button>` : ""}
+          <button class="btn ghost" data-a="cancel" data-o="${j.orderId}">Cancelar el pedido</button>
+        </div>
+      </div>`).join("");
+    $("stuckList").querySelectorAll("button[data-a]").forEach((b) => b.onclick = () => onAction(b));
+  }
+
   function renderQueue() {
     const items = data.items || [];
     $("queueCount").textContent = items.length;
@@ -239,6 +295,7 @@
           <button class="btn" data-a="approve" data-j="${job.id}">Aprobar y entregar</button>
           <button class="btn secondary" data-a="retry" data-j="${job.id}">Reintentar</button>
           ${story && story.pdf ? `<a class="btn secondary" href="${story.pdf}" target="_blank" rel="noopener">Ver PDF</a>` : ""}
+          ${story && (job.kind === "full" || job.kind === "retouch") && story.pages.some((p) => !p.image) ? `<button class="btn ghost" data-a="redraw" data-t="${story.token}" data-p="${story.pages.map((p, i) => (p.image ? -1 : i)).filter((i) => i >= 0).join(",")}">Redibujar las que faltan</button>` : ""}
           ${story ? `<button class="btn ghost" data-a="retouch" data-t="${story.token}">Retocar páginas…</button>` : ""}
           <button class="btn ghost" data-a="cancel" data-o="${order && order.id}">Cancelar el pedido</button>
         </div>
@@ -278,7 +335,7 @@
       </div>`).join("");
 
     const list = (rows, key, val) => rows.length
-      ? `<table style="width:100%;font-size:.9rem">${rows.map((r) => `<tr><td>${esc(String(r[key]))}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${r[val]}</td></tr>`).join("")}</table>`
+      ? `<table class="minitable">${rows.map((r) => `<tr><td>${esc(String(r[key]))}</td><td>${r[val]}</td></tr>`).join("")}</table>`
       : `<p class="muted" style="font-size:.9rem">Nada todavía.</p>`;
     $("tsources").innerHTML = list(t.sources, "source", "visits");
     $("tpages").innerHTML = list(t.pages, "path", "views");
@@ -302,15 +359,15 @@
       // a paid order can be half drawn.
       const drawn = st ? `${st.illustrated}/12${st.hasPdf ? " · PDF" : ""}` : "—";
       return `<tr data-order="${o.id}" tabindex="0">
-        <td class="muted">${when(o.createdAt)}</td>
-        <td>${esc(o.email)}</td>
-        <td><span class="tag ${cls}">${label}</span></td>
-        <td class="muted">${esc(o.channel || "web")} · ${esc(o.locale)}</td>
-        <td>${st ? `<a href="/c/${st.token}" target="_blank" rel="noopener">${esc(st.title || st.token)}</a>${st.revisions ? ` <span class="pill">${st.revisions} cambios</span>` : ""}` : `<span class="muted">sin guion</span>`}</td>
-        <td class="muted">${drawn}</td>
-        <td class="muted">${(o.costCents / 100).toFixed(2).replace(".", ",")} €</td>
-        <td>${st ? `<code>${st.token}</code>` : ""}</td>
-        <td class="muted" aria-hidden="true">abrir ›</td>
+        <td class="muted" data-label="Cuándo">${when(o.createdAt)}</td>
+        <td data-label="Email">${esc(o.email)}</td>
+        <td data-label="Estado"><span class="tag ${cls}">${label}</span></td>
+        <td class="muted" data-label="Canal">${esc(o.channel || "web")} · ${esc(o.locale)}</td>
+        <td data-label="Cuento">${st ? `<a href="/c/${st.token}" target="_blank" rel="noopener">${esc(st.title || st.token)}</a>${st.revisions ? ` <span class="pill">${st.revisions} cambios</span>` : ""}` : `<span class="muted">sin guion</span>`}</td>
+        <td class="muted" data-label="Dibujos">${drawn}</td>
+        <td class="muted" data-label="Coste IA">${(o.costCents / 100).toFixed(2).replace(".", ",")} €</td>
+        <td data-label="Enlace">${st ? `<code>${st.token}</code>` : ""}</td>
+        <td class="muted" data-label="" aria-hidden="true">abrir ›</td>
       </tr>`;
     }).join("") : `<tr><td class="muted" colspan="9">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
 
@@ -425,6 +482,22 @@
 
   async function onAction(b) {
     const a = b.dataset.a;
+    // Not an action on the server: the work is already owed, it just needs
+    // somebody to keep asking. Exactly what the customer's own page does.
+    if (a === "push") {
+      b.disabled = true;
+      try { await drive(b.dataset.t, $("status")); } finally { b.disabled = false; }
+      return load();
+    }
+    if (a === "redraw") {
+      const list = (b.dataset.p || "").split(",").filter(Boolean).map(Number);
+      const human = list.map((n) => n + 1).join(", ");
+      if (!(await confirmDlg(
+        "Redibujar las que faltan",
+        `Se vuelven a dibujar las páginas ${human} y se monta el libro otra vez. Úsalo cuando ya esté resuelto lo que las dejó sin dibujo (crédito de la API, proveedor caído). No gasta el retoque del cliente.`
+      ))) return;
+      return act({ action: "redraw", token: b.dataset.t, pages: list });
+    }
     if (a === "retouch") {
       const pages = await ask("Retocar páginas", "Números del 1 al 12, separados por comas. Máximo tres: cada una vuelve a dibujarse.", "1, 4, 9");
       if (!pages) return;
@@ -466,7 +539,7 @@
   }
 
   async function act(body) {
-    const msg = $("paidMsg");
+    const msg = $("status");
     let out = {};
     try {
       const res = await fetch("/api/admin", { method: "POST", headers: headers(), body: JSON.stringify(body) });
@@ -525,8 +598,8 @@
       data = await res.json();
       $("auth").hidden = true; $("panel").hidden = false;
       $("clock").textContent = "Actualizado a las " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-      renderHealth(); renderStats(); renderQueue(); renderRecent(); renderTraffic();
-      $("navQueue").textContent = (data.items || []).length;
+      renderHealth(); renderStats(); renderStuck(); renderQueue(); renderRecent(); renderTraffic();
+      $("navQueue").textContent = (data.items || []).length + (data.stuck || []).length;
       if (!started) {
         started = true;
         let last = "hoy";
