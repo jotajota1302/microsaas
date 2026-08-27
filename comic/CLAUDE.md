@@ -273,6 +273,39 @@ después termina el cómic y lo entrega **con una sola llamada**.
 Y el 404 del servidor local: «no hay endpoint /api/x» y «ese pedido no existe» decían exactamente
 lo mismo, que es lo que convirtió el diagnóstico de arriba en una tarde.
 
+### Y Vercel corta la cadena a los cuatro saltos: HTTP 508 (medido en producción)
+
+Esto NO se ve en el portátil, y por eso hubo que probarlo en producción con un pedido real:
+
+```
+08:43:05  cadena /api/job salto 1  ok
+08:43:07  cadena /api/job salto 2  ok
+08:43:37  cadena /api/job salto 3  ok
+08:43:38  cadena /api/job salto 4  ok
+08:44:21  la cadena /api/job ha sido RECHAZADA con 508
+```
+
+**508 Loop Detected**: Vercel detecta que una función se está invocando a sí misma y la corta. Es una
+protección deliberada de la plataforma —existe para que un bucle no genere una factura infinita— y
+no se intenta esquivar: es la misma protección que nosotros queremos.
+
+La causa es el ANIDAMIENTO. El padre dispara a la hija *antes* de responder (no puede hacerlo
+después sin `waitUntil`), así que cada salto es una petición dentro de otra y la profundidad crece:
+al quinto nivel, 508.
+
+La vista previa de prueba se quedó **parada en el 75 % durante más de dos minutos** y allí seguía.
+Así que la cadena mejora mucho las cosas —de cero saltos automáticos a cuatro— pero **no cierra el
+problema por sí sola**: hace falta algo EXTERNO que reanude, y ese algo es el barrido.
+
+Lo cazó la comprobación de «respuesta temprana» de `lib/chain.js`. Sin ella, el 508 se habría
+contado como un salto correcto y el pedido habría parecido ir lento en vez de estar roto.
+
+**Lo que falta, y es una decisión, no código**: un disparador de `/api/cron` que corra de verdad
+cada minuto. GitHub Actions no sirve (tres horas). Las opciones son Vercel Pro (cron nativo por
+minuto, y de paso legaliza la venta), un pinger externo tipo cron-job.org (gratis) o Vercel Queues.
+Con cualquiera de los tres, la cadena sigue valiendo: avanza cuatro pasos en ráfaga entre barridos
+en vez de uno por barrido.
+
 ### Lo que esto NO arregla
 
 - **La cuenta de Vercel está en plan Hobby, y Hobby prohíbe el uso comercial.** Ya se está cobrando
