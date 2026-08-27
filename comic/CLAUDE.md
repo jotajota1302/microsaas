@@ -691,7 +691,13 @@ vuelta por paso). Para medir contra Vercel hace falta la `SUPABASE_SERVICE_ROLE_
 - [x] Nombre y dominio elegidos: **MyOwnManga** / `myownmanga.com` (falta comprarlo)
 - [x] Un pedido de pago REAL: hecho el 2026-08-27, y destapó que el render dependía de la
       pestaña del comprador. Arreglado con `lib/chain.js` (cada paso llama al siguiente)
-- [ ] Pasar la cuenta de Vercel a Pro: Hobby prohíbe el uso comercial y ya se está cobrando
+- [ ] **Pasar la cuenta de Vercel a Pro** (decidido por JJ el 2026-08-27, pendiente de activar).
+      Dos cosas de una: Hobby prohíbe el uso comercial y ya se está cobrando, y el cron nativo
+      por minuto es lo que reanuda la cadena cuando Vercel la corta con el 508.
+      **Al activarlo**, un solo cambio: en `vercel.json`, el cron de `/api/cron` pasa de
+      `"0 3 * * *"` a `"* * * * *"`. NO se toca antes: en Hobby, Vercel RECHAZA el despliegue
+      entero con `cron_jobs_limits_reached`. Mientras tanto un pedido pagado avanza cuatro
+      pasos solo y luego espera al barrido de GitHub Actions, que en la práctica son horas.
 - [x] Páginas legales sin marcadores: identidad por `LEGAL_*` (falta que JJ ponga los valores)
 - [x] Borrado real a los 7 días / 12 meses, que la privacidad prometía y no existía
 - [x] `lib/names.js` + `scripts/check-privacy.js` — ningún nombre real llega a ningún proveedor
