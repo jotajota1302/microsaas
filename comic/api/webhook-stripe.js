@@ -13,7 +13,8 @@
 
 const { store } = require("../lib/store.js");
 const { readEvent } = require("../lib/stripe.js");
-const { send, requireMethod, rawBody } = require("../lib/http.js");
+const { send, requireMethod, rawBody, baseUrlOf } = require("../lib/http.js");
+const { kick } = require("../lib/chain.js");
 const { PRODUCT } = require("../lib/money.js");
 const { RENDER_STEPS } = require("../lib/render-job.js");
 
@@ -94,6 +95,22 @@ module.exports = async function handler(req, res) {
   }
 
   console.log(`[comic] paid ${token} · ${(patch.payment.amount_cents / 100).toFixed(2)} ${patch.payment.currency}`);
+
+  /*
+   * Y ARRANCA EL DIBUJO, aquí mismo.
+   *
+   * Antes esto solo dejaba el pedido en cola y confiaba en que la página de
+   * vuelta de Stripe lo empujara. El 2026-08-27 un comprador de verdad cerró
+   * esa pestaña y su cómic se quedó parado con cero viñetas: nadie había
+   * dibujado nada cinco horas después.
+   *
+   * Sigue sin dibujar NADA dentro del webhook —siete minutos de ilustración en
+   * un webhook es un webhook fallido, y Stripe reintentaría y empezaría el
+   * trabajo otra vez—: lo único que hace es dar el primer golpe, que tarda dos
+   * segundos, y la cadena tira del resto sola.
+   */
+  await kick(baseUrlOf(req), "/api/render", token, 0);
+
   return send(res, 200, { queued: token });
 };
 

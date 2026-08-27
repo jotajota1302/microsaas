@@ -16,6 +16,8 @@ const { advance } = require("../lib/preview-job.js");
 const { drawWithLadder } = require("../lib/images.js");
 const { checkPanel } = require("../lib/panel-check.js");
 const { previewReady } = require("../lib/email.js");
+const { baseUrlOf } = require("../lib/http.js");
+const { kick, hopOf } = require("../lib/chain.js");
 
 /** What the viewer is allowed to see. Never the email, never the IP hash. */
 function publicView(job) {
@@ -68,10 +70,12 @@ module.exports = async function handler(req, res) {
     return res.end(JSON.stringify(publicView(job)));
   }
 
+  let busy = false;
   try {
     if (job.status !== "ready") {
       const r = await advance(token);
       job = r.job;
+      busy = Boolean(r.busy);
     }
 
     /*
@@ -127,11 +131,35 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     // A step that throws has already recorded its own attempt count; anything
     // that escapes to here is reported without killing the job.
+    //
+    // La cadena sigue igualmente: lo que más lanza aquí es el redibujo de una
+    // portada que salió mal, y romper la cadena por eso deja la vista previa
+    // colgada hasta el siguiente barrido. El tope de saltos es lo que acota
+    // cuántas veces se reintenta.
+    await chainOn(req, job, busy);
     res.statusCode = 200;
     return res.end(JSON.stringify({ ...publicView(job), note: String(e.message).slice(0, 160) }));
   }
 
+  await chainOn(req, job, busy);
   res.end(JSON.stringify(publicView(job)));
 };
+
+/*
+ * Llama al siguiente paso de la VISTA PREVIA, por lo mismo que el render: sin
+ * esto, quien rellena el formulario y cierra la pestaña no recibe nunca el
+ * correo de "ya está tu historia", y ese correo es el embudo de captación
+ * entero.
+ *
+ * El tope es más corto que el del render —veinte saltos y no sesenta— porque
+ * son seis pasos, y porque el redibujo de la portada no lleva contador propio:
+ * aquí el tope es lo único que impide que una portada que siempre sale mal se
+ * dibuje indefinidamente.
+ */
+async function chainOn(req, job, busy) {
+  const finished = (job.status === "ready" && job.cover_url) || job.status === "failed";
+  if (finished || busy) return;
+  await kick(baseUrlOf(req), "/api/job", job.token, hopOf(req.url), { max: 20 });
+}
 
 module.exports.publicView = publicView;

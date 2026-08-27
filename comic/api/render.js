@@ -14,7 +14,8 @@
 
 const { store } = require("../lib/store.js");
 const { advanceRender } = require("../lib/render-job.js");
-const { send, requireMethod } = require("../lib/http.js");
+const { send, requireMethod, baseUrlOf } = require("../lib/http.js");
+const { kick, hopOf } = require("../lib/chain.js");
 
 /** What the buyer is allowed to see. Never the email, never the IP hash. */
 function view(job) {
@@ -53,13 +54,26 @@ module.exports = async function handler(req, res) {
     return send(res, 200, view(job));
   }
 
+  let r;
   try {
-    const r = await advanceRender(token);
+    r = await advanceRender(token);
     job = r.job;
   } catch (e) {
     console.error(`[comic] render step failed for ${token}: ${e.message}`);
     return send(res, 200, { ...view(job), note: String(e.message).slice(0, 160) });
   }
+
+  /*
+   * Y AHORA LLAMA AL SIGUIENTE PASO. Esta es la línea por la que un cómic
+   * pagado ya no depende de que el comprador deje la pestaña abierta: cada
+   * invocación arranca la que viene detrás.
+   *
+   * `busy` es la guarda que impide que haya dos cadenas: quien no se ha
+   * llevado el cierre sabe que hay otro trabajando y se limita a informar, que
+   * es justo lo que un sondeo del visor quería. Así el visor puede seguir
+   * mirando sin duplicar ni el gasto ni la cadena.
+   */
+  if (!r.done && !r.busy) await kick(baseUrlOf(req), "/api/render", token, hopOf(req.url));
 
   return send(res, 200, view(job));
 };

@@ -15,6 +15,7 @@
 const { parseOrder, pipelineOrder } = require("../lib/order.js");
 const { store, newToken, hashIp } = require("../lib/store.js");
 const { clientIp, baseUrlOf } = require("../lib/http.js");
+const { kick } = require("../lib/chain.js");
 const { verify: verifyHuman } = require("../lib/turnstile.js");
 
 const MAX_PER_DAY = Number(process.env.MAX_PREVIEWS_PER_DAY || 120);
@@ -161,11 +162,19 @@ module.exports = async function handler(req, res) {
     }));
   }
 
+  /*
+   * El primer golpe, para que la historia empiece a escribirse ya y no cuando
+   * el visitante llegue al visor. Dos segundos, y la cadena sigue sola aunque
+   * cierre la pestaña por el camino.
+   */
+  await kick(job.base_url, "/api/job", token, 0, { max: 20 });
+
   res.statusCode = 202;
   res.end(JSON.stringify({
     token,
     url: `/c/${token}`,
-    // The viewer polls this; the cron pushes the ones nobody is watching.
+    // El visor sondea esto; cada paso llama al siguiente y el barrido recoge
+    // lo que se haya quedado por el camino.
     poll: `/api/job?token=${token}`,
   }));
 };

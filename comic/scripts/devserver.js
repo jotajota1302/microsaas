@@ -61,7 +61,10 @@ const server = http.createServer(async (req, res) => {
   const api = pathname.match(/^\/api\/([\w-]+)$/);
   if (api) {
     const handler = apiHandler(api[1]);
-    if (!handler) return send(res, 404, "application/json", JSON.stringify({ error: "no existe" }));
+    // Distinto del 404 que devuelve un handler cuando el PEDIDO no existe: los
+    // dos decian "no existe" y una tarde entera se fue en no poder distinguir
+    // "no hay endpoint" de "no hay job".
+    if (!handler) return send(res, 404, "application/json", JSON.stringify({ error: `no hay endpoint /api/${api[1]}` }));
     try {
       return await handler(req, res);
     } catch (e) {

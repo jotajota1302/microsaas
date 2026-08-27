@@ -56,6 +56,16 @@ async function main() {
   const story = JSON.parse(fs.readFileSync(path.join(ROOT, storyArg), "utf8"));
   if (!fs.existsSync(imgDir)) throw new Error(`no hay imágenes en ${imgDir}`);
 
+  /*
+   * Las viñetas de la corrida ANTERIOR se borran antes de sembrar.
+   *
+   * Sin esto, `--holes 5` corrido después de una pasada normal da un verde
+   * falso: las cinco viñetas que este script retiene a propósito siguen en el
+   * almacén de la vez anterior, el render las encuentra dibujadas y el cómic se
+   * entrega tan contento. O sea, la prueba del portón que se salta el portón.
+   */
+  await blobs.removeAll(token);
+
   // --- seed the blobs from the earlier comic ---------------------------------
   let seeded = 0;
   let skipped = 0;

@@ -209,6 +209,79 @@ node scripts/check-panels.js --img out/nerea/img [--fix]
 y se encuentra el trabajo hecho. Lo que **no** demuestra es que el proveedor dibuje 78 viñetas
 usables en producción: eso necesita un pedido de verdad y es lo siguiente.
 
+## El comprador no puede ser el trabajador (2026-08-27)
+
+Primera venta de verdad, y se quedó a medias. El pedido `y876mG…` se cobró a las 08:04:48, dibujó
+las hojas de personaje, y a las 08:06:18 se paró en `panels` con **cero viñetas** y el cierre libre.
+No estaba roto: **no había nadie empujándolo.**
+
+La máquina era «quien mira, empuja», y eso pone de motor de un cómic de 14,99 € **una pestaña de
+navegador abierta veinticinco minutos**. El comprador hizo lo que hace cualquiera: miró un rato,
+cerró y se fue al panel. Los registros lo cuentan entero — dos llamadas a `/api/render` y
+veinticuatro a `/api/admin`, que solo lee.
+
+Y la red de seguridad no era lo que decía este fichero. El cron pide `*/5 * * * *`, pero GitHub
+Actions estrangula los crons de los repos pequeños y los runs reales iban **cada tres horas**
+(03:20, 22:10, 19:09, 16:54). En seis horas de registro de Vercel: **cero** llamadas a `/api/cron`.
+
+**El arreglo es `lib/chain.js`: cada invocación llama a la siguiente.** El webhook de Stripe da el
+primer golpe, cada paso arranca el que viene detrás, y el cron pasa de ser el motor a ser lo que
+siempre debió ser: el desfibrilador de una cadena rota. Lo mismo en la mitad gratis
+(`/api/preview` → `/api/job`), donde el fallo costaba el correo de «ya está tu historia», que es el
+embudo de captación entero.
+
+Se puede colgar la espera del disparo porque en Vercel **la desconexión del cliente solo cancela la
+función si el proyecto declara `supportsCancellation`**, y no lo declaramos (verificado en la
+documentación, no supuesto). Se esperan dos segundos —lo que tarda el apretón de manos— y se cuelga.
+
+Tres guardas, porque una función que se llama a sí misma con dinero de por medio es exactamente
+como se hace una factura infinita. Las tres **probadas**, no razonadas:
+
+| Guarda | Qué impide | Comprobado |
+|---|---|---|
+| solo encadena quien tiene el cierre | dos cadenas dibujando lo mismo | dos llamantes a la vez: uno trabaja, el otro `busy` |
+| `done` corta | seguir tirando de un cómic acabado | la cadena para en `done` |
+| `CHAIN_MAX_HOPS` (60 render / 20 previa) | una cadena que no converge | con tope 1 se planta y lo grita |
+
+`CHAIN_MAX_HOPS=0` apaga la cadena entera sin desplegar, si algún día hace falta.
+
+**Un disparo rechazado se denuncia, no se celebra.** La primera versión daba por bueno cualquier
+disparo que no fuera un plantón: un 401 de la protección de despliegue o una URL base mal puesta
+rompían la cadena y el registro decía que todo iba bien. Ahora una respuesta que llega *antes* del
+plantón es sospechosa por definición —el paso siguiente tarda minutos— y se registra como error.
+
+### La prueba: `node scripts/dry-run-chain.js`
+
+Da **un solo golpe** a `/api/render` y a partir de ahí no vuelve a tocar ningún endpoint: el
+progreso se lee del almacén en disco, nunca por HTTP, porque consultar por HTTP sería empujar y la
+prueba se aprobaría a sí misma. Antes del arreglo se quedaba en `panels` igual que en producción;
+después termina el cómic y lo entrega **con una sola llamada**.
+
+### Y dos tests que mentían, encontrados por el camino
+
+1. **`lib/llm.js` pisaba el entorno al cargar `.env`.** Asignaba sin mirar, así que
+   `STORE=files node scripts/devserver.js` —local a propósito, para no tocar producción— volvía a
+   `STORE=supabase` en cuanto cualquier módulo cargaba ese fichero: **un servidor de pruebas
+   escribiendo en la base de datos de verdad**, con el banner del arranque diciendo «almacén:
+   files». Que fallara o no dependía del ORDEN de los require. `lib/images.js` ya traía la guarda
+   correcta (`&& !process.env[k]`); ahora la traen los dos.
+2. **`dry-run-paid.js --holes 5` daba verde sin probar nada** si se corría después de una pasada
+   normal: las cinco viñetas que retiene a propósito seguían en el almacén de la vez anterior, el
+   render las encontraba dibujadas y entregaba tan contento. La prueba del portón saltándose el
+   portón. Ahora limpia los blobs del token antes de sembrar.
+
+Y el 404 del servidor local: «no hay endpoint /api/x» y «ese pedido no existe» decían exactamente
+lo mismo, que es lo que convirtió el diagnóstico de arriba en una tarde.
+
+### Lo que esto NO arregla
+
+- **La cuenta de Vercel está en plan Hobby, y Hobby prohíbe el uso comercial.** Ya se está cobrando
+  con Stripe. `../CLAUDE.md` decidió Pro precisamente por esto y sigue sin hacerse: es el mismo
+  riesgo asimétrico que se cuida con Etsy y el MoR — perder el canal por una cláusula, no por el
+  producto. Pro además da crons por minuto, que dejarían el barrido de GitHub Actions en anécdota.
+- El cron sigue corriendo cada tres horas en la práctica. Con la cadena tirando ya no es el motor,
+  pero como desfibrilador tres horas es flojo.
+
 ## Nombre y dominio (2026-08-22)
 
 **MyOwnManga**, `myownmanga.com` (11,25 $/año, libre y verificado). `mipropiomanga.com` también libre,
@@ -583,7 +656,9 @@ vuelta por paso). Para medir contra Vercel hace falta la `SUPABASE_SERVICE_ROLE_
 - [x] Backend de la mitad de pago: `/api/checkout`, webhook de Stripe, render de 78 viñetas, PDF, correo, cron
 - [x] Validador de imagen (`lib/panel-check.js`) — la última salida de modelo que no pasaba por un validador
 - [x] Nombre y dominio elegidos: **MyOwnManga** / `myownmanga.com` (falta comprarlo)
-- [ ] Un pedido de pago REAL de punta a punta: es lo único que no está probado
+- [x] Un pedido de pago REAL: hecho el 2026-08-27, y destapó que el render dependía de la
+      pestaña del comprador. Arreglado con `lib/chain.js` (cada paso llama al siguiente)
+- [ ] Pasar la cuenta de Vercel a Pro: Hobby prohíbe el uso comercial y ya se está cobrando
 - [x] Páginas legales sin marcadores: identidad por `LEGAL_*` (falta que JJ ponga los valores)
 - [x] Borrado real a los 7 días / 12 meses, que la privacidad prometía y no existía
 - [x] `lib/names.js` + `scripts/check-privacy.js` — ningún nombre real llega a ningún proveedor

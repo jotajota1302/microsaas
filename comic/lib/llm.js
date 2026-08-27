@@ -23,7 +23,22 @@ if (fs.existsSync(ENV_FILE)) {
     const t = line.trim();
     if (!t || t.startsWith("#")) continue;
     const i = t.indexOf("=");
-    if (i > 0) process.env[t.slice(0, i).trim()] = t.slice(i + 1).trim();
+    /*
+     * RELLENA lo que falta; NUNCA pisa lo que el entorno ya trae. La versión
+     * anterior asignaba sin mirar, y eso no era un matiz de estilo:
+     *
+     *   STORE=files node scripts/devserver.js
+     *
+     * fija el almacén local a propósito — para no tocar producción — y en
+     * cuanto cualquier módulo cargaba este fichero, `.env` lo devolvía a
+     * STORE=supabase. Un servidor de pruebas escribiendo en la base de datos
+     * de verdad, y el banner del arranque diciendo "almacén: files".
+     *
+     * Que fallara o no dependía del ORDEN de los require: si lib/store.js se
+     * cargaba antes, ya había leído el valor bueno. Es lo mismo que hace
+     * lib/images.js, que sí traía la guarda, y es lo que hace dotenv.
+     */
+    if (i > 0 && !process.env[t.slice(0, i).trim()]) process.env[t.slice(0, i).trim()] = t.slice(i + 1).trim();
   }
 }
 
