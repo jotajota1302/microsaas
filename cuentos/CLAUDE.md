@@ -113,8 +113,17 @@ Un cliente que teclea mal su correo se perdía entero: ni libro, ni enlace, ni r
 
 **El panel** (`/admin/`) tiene menú de secciones: **Hoy** (atascados + cola de revisión, con contador), **Cuentos** (todos, con filtro y ficha por pedido), **Dinero** (embudo y márgenes) y **Sistema** (integraciones y cobro manual). La sección elegida se recuerda en localStorage.
 En pantalla estrecha la tabla de **Cuentos** deja de ser tabla: cada fila es una tarjeta con las
-cabeceras convertidas en etiquetas (`data-label` + CSS), porque nueve columnas en un móvil eran una
-barra de desplazamiento con lo interesante fuera de la pantalla.
+cabeceras convertidas en etiquetas (`data-label` + CSS, celdas en **flex** y no en grid — una celda
+lleva a veces dos cosas, el título y su pastilla de «2 cambios», y en grid la segunda caía a una fila
+suelta). El panel además usa `.wrap.ops` (96 rem) en vez de las 68 rem de una página de lectura, y ya
+no muestra la columna del token: **a 68 rem las nueve columnas no cabían y las de la derecha —cuántos
+dibujos, cuánto costó— quedaban fuera, detrás de una barra de desplazamiento que nadie arrastra.**
+
+⚠️ **Medir el responsive con Chrome headless en Windows engaña**: la ventana no baja de **500 px CSS**,
+así que `--window-size=390` da un viewport de 500 y una captura de 390 — todo *parece* cortado y no lo
+está. Para medir de verdad: `--dump-dom` (sin `--virtual-time-budget`, que no deja correr ni timers ni
+rAF) y forzar el ancho con `html{width:NNNpx}` desde la página. Medido así: nada desborda a 320, 360
+ni 390.
 
 ## Cuando un libro se atasca (27-08)
 

@@ -387,9 +387,22 @@ footer a { color: var(--muted); }
 .tag.wait { background: var(--sea-soft); color: var(--sea-dark); }
 .tag.off { background: var(--sunken); color: var(--muted); }
 
+/*
+ * The panel is an operations tool: it gets the window, not the measure of a
+ * page meant to be read. At 68 rem the nine columns did not fit and the ones
+ * on the right — how many drawings, what it cost — were simply off the edge,
+ * behind a horizontal scrollbar nobody thinks to drag.
+ */
+.wrap.ops { max-width: 96rem; }
+
 .tablewrap { overflow-x: auto; }
 #recent { width: 100%; border-collapse: collapse; font-size: .88rem; }
-#recent td { border-bottom: 1px solid var(--hair); padding: .55rem .7rem; vertical-align: top; white-space: nowrap; }
+#recent td { border-bottom: 1px solid var(--hair); padding: .55rem .7rem; vertical-align: top; }
+/* nowrap only where the value is short by nature; an address may wrap */
+#recent td:nth-child(1), #recent td:nth-child(3), #recent td:nth-child(4),
+#recent td:nth-child(6), #recent td:nth-child(7), #recent td:nth-child(8) { white-space: nowrap; }
+#recent td:nth-child(2) { overflow-wrap: anywhere; max-width: 20rem; }
+#recent td:nth-child(5) { overflow-wrap: anywhere; }
 #recent tr:last-child td { border-bottom: 0; }
 #recent code { font-size: .74rem; }
 
@@ -408,12 +421,19 @@ footer a { color: var(--muted); }
     border: 1px solid var(--hair); border-radius: 12px; background: var(--surface);
     padding: .5rem .85rem; margin-bottom: .6rem;
   }
-  #recent td {
-    border-bottom: 0; padding: .22rem 0; white-space: normal; overflow-wrap: anywhere;
-    display: grid; grid-template-columns: 7.5rem 1fr; gap: .8rem; align-items: baseline;
+  /*
+   * Flex, not grid: a cell can hold more than one thing — the story's title and
+   * its "2 cambios" pill — and in a two-column grid the second one fell to a
+   * row of its own under the label. A tag also stretched to the full column
+   * instead of being as wide as its word.
+   */
+  #recent td, #recent td:nth-child(n) {
+    border-bottom: 0; padding: .22rem 0; white-space: normal; overflow-wrap: anywhere; max-width: none;
+    display: flex; flex-wrap: wrap; gap: .2rem .8rem; align-items: baseline;
   }
   #recent td::before {
     content: attr(data-label);
+    flex: 0 0 6.5rem;
     color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; font-weight: 700;
   }
   /* "abrir ›" is a hint for a mouse; the whole card is the tap target here. */
@@ -435,6 +455,13 @@ footer a { color: var(--muted); }
 .stuck { border-left: 3px solid var(--ochre); }
 .stuck .why { font-size: .86rem; color: var(--muted); }
 .stuck .why b { color: var(--ink); }
+
+/*
+ * A long address is one unbreakable token, and in a flex row it pokes out of
+ * the card. Measured on the panel: nothing overflows at 390 px, but at 360 the
+ * reviewer's email ran past the card's right edge by a few pixels.
+ */
+.item .row > .muted, .item .row > b { overflow-wrap: anywhere; min-width: 0; }
 
 .item .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .5rem; }
 .item .thumbs figure { margin: 0; }

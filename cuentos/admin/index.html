@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body>
-<div class="wrap wide stack-lg" style="padding-bottom:4rem">
+<div class="wrap wide ops stack-lg" style="padding-bottom:4rem">
 
   <header class="top">
     <a class="brand-mark" href="/"><svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L33 16"/><path d="M20 6 L7 16"/><path d="M9.5 17.5 V32 h21 V17.5"/><path d="M20 6 V32"/></g><circle cx="14.5" cy="23" r="1.8" fill="currentColor"/><circle cx="25.5" cy="23" r="1.8" fill="currentColor"/></svg><span class="wordmark">Familia de <b>cuento</b></span><span class="tag">panel de operaciones</span></a>
@@ -109,7 +109,7 @@
       </div>
       <div class="tablewrap">
         <table id="recent">
-          <thead><tr><th>Cuándo</th><th>Email</th><th>Estado</th><th>Canal</th><th>Cuento</th><th>Dibujos</th><th>Coste IA</th><th>Enlace</th><th></th></tr></thead>
+          <thead><tr><th>Cuándo</th><th>Email</th><th>Estado</th><th>Canal</th><th>Cuento</th><th>Dibujos</th><th>Coste IA</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -366,10 +366,9 @@
         <td data-label="Cuento">${st ? `<a href="/c/${st.token}" target="_blank" rel="noopener">${esc(st.title || st.token)}</a>${st.revisions ? ` <span class="pill">${st.revisions} cambios</span>` : ""}` : `<span class="muted">sin guion</span>`}</td>
         <td class="muted" data-label="Dibujos">${drawn}</td>
         <td class="muted" data-label="Coste IA">${(o.costCents / 100).toFixed(2).replace(".", ",")} €</td>
-        <td data-label="Enlace">${st ? `<code>${st.token}</code>` : ""}</td>
         <td class="muted" data-label="" aria-hidden="true">abrir ›</td>
       </tr>`;
-    }).join("") : `<tr><td class="muted" colspan="9">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
+    }).join("") : `<tr><td class="muted" colspan="8">${q ? "Nada coincide con ese filtro." : "Todavía no hay cuentos."}</td></tr>`;
 
     // A row opens the order rather than being a dead line of text: what state
     // it is in, and what can be done about it from here.
