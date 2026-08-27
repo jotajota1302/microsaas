@@ -37,20 +37,6 @@ const brand = require("./brand.js");
 const MM = 72 / 25.4;
 const PAGE_PT = 200 * MM; // 20 cm
 const SAFE_PT = 10 * MM; // text margin
-const ART_RATIO = 0.58; // share of the page height the illustration takes
-
-/**
- * Where the illustration sits on a scene page. Inset on all four sides: the
- * art used to bleed to the top edge, which read as unbalanced against the
- * text resting on a margin below.
- */
-const ART_BOX = {
-  x: SAFE_PT,
-  top: SAFE_PT,
-  width: PAGE_PT - 2 * SAFE_PT,
-  height: PAGE_PT * ART_RATIO - SAFE_PT,
-};
-
 const FONT_DIR = path.join(__dirname, "..", "assets", "fonts");
 const ROOT = path.join(__dirname, "..");
 const MODES = ["screen", "preview"];
@@ -211,7 +197,12 @@ async function cropToBox(buffer, box) {
   const target = box.width / box.height;
   const meta = await sharp(buffer).metadata();
   if (!meta.width || !meta.height) return buffer;
-  if (Math.abs(meta.width / meta.height - target) < 0.01) return buffer;
+  // Square plate, square illustration: nothing to crop, but it still has to be
+  // re-encoded. Handing the raw PNG to pdf-lib took the book from 4.5 MB to
+  // 7.6 MB the day the box became square — and Etsy refuses a file over 20 MB.
+  if (Math.abs(meta.width / meta.height - target) < 0.01) {
+    return sharp(buffer).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+  }
 
   const height = meta.width / target <= meta.height ? Math.round(meta.width / target) : meta.height;
   const width = height === meta.height ? Math.round(meta.height * target) : meta.width;
@@ -230,32 +221,99 @@ async function cropToBox(buffer, box) {
  * the most detail, which on these watercolours is the middle: it cut the
  * parents' heads off. Reported on a delivered book.
  *
- * The picture now takes as much height as the text can spare, up to a full
- * square (no crop at all), and the text gets the rest. A short page for a
- * three-year-old gets an uncropped illustration; a long one for a ten-year-old
- * gets a slightly shallower picture instead of unreadable type.
+ * The fix after that took the picture as high as the text could spare, which
+ * turned out to be the same mistake wearing a different hat: the search
+ * started at the biggest possible picture and shrank it only until the words
+ * fitted AT THE SMALLEST TYPE ALLOWED. The text was never a claimant, only a
+ * remainder. Measured over a delivered book: the plate took 68 % of the page
+ * height on average and every single one of the twelve pages came out at the
+ * 11 pt floor, packed edge to edge under the picture like a caption.
+ *
+ * So the order is reversed. The type is chosen first — the largest body size
+ * the page can carry — and the picture takes what is left, with a floor so it
+ * never becomes a stamp and a ceiling so a two-line page does not become a
+ * poster. Same book, now 13.5-14 pt type and a plate around half the page.
+ *
+ * The plate is SQUARE and centred, not full measure. The illustrations are
+ * square, so any other box crops them: the old full-width band at 68 % height
+ * was throwing away a quarter of every picture to look big. A smaller square
+ * shows more of the drawing than a bigger letterbox does.
  */
-const GAP_PT = 16;
+const GAP_PT = 24; // between the plate and the first line of text
+const FOOT_PT = 14; // room under the text for the page number
+const BODY_MAX = 17; // a page with thirty words is a toddler's page: big type
+const BODY_MIN = 11.5;
+const BODY_FLOOR = 10; // only for the longest pages of the oldest band
+const LEAD = 1.6; // a child reads line by line; the leading is generous on purpose
+const ART_MAX = 0.58; // of the page height — beyond this the text is a caption again
+const ART_MIN = 0.44; // below this the picture stops carrying the page
+const ART_FLOOR = 0.36; // and below THIS nothing fits at all, so something must give
+const ART_ASPECT = 1.32; // how wide the plate may be for its height — see sceneLayout
 
-function sceneLayout(text, font) {
-  const width = PAGE_PT - 2 * SAFE_PT;
-  const maxArt = width; // square
-  const minArt = PAGE_PT * 0.44;
-  for (let art = maxArt; art >= minArt; art -= 6) {
-    const top = SAFE_PT + art + GAP_PT;
-    const height = PAGE_PT - SAFE_PT - top;
-    if (height < 24) continue;
-    const size = fitSize(text, font, width, height, { max: 14, min: 11 });
-    if (wrap(text, font, size, width).length * size * 1.55 <= height) {
-      return { art: { x: SAFE_PT, y: PAGE_PT - SAFE_PT - art, width, height: art }, size, textTop: PAGE_PT - top, textHeight: height };
-    }
-  }
-  // Nothing fits comfortably: give the text the floor size and the art what is
-  // left, rather than letting a paragraph run off the page.
-  const art = minArt;
-  const top = SAFE_PT + art + GAP_PT;
-  const height = PAGE_PT - SAFE_PT - top;
-  return { art: { x: SAFE_PT, y: PAGE_PT - SAFE_PT - art, width, height: art }, size: fitSize(text, font, width, height, { max: 12, min: 9 }), textTop: PAGE_PT - top, textHeight: height };
+const room = (textHeight) => PAGE_PT - SAFE_PT - GAP_PT - textHeight - (SAFE_PT + FOOT_PT);
+
+function textHeightAt(text, font, size) {
+  return wrap(text, font, size, PAGE_PT - 2 * SAFE_PT).length * size * LEAD;
+}
+
+/**
+ * ONE body size for the whole book: the largest that leaves every page a
+ * picture worth printing.
+ *
+ * Sizing each page on its own read as a mistake — a four-line page at 17 pt
+ * facing a nine-line page at 13 pt looks like two different books. What varies
+ * from page to page in a picture book is how much room the picture takes, not
+ * how big the letters are. So the type is decided once, by the page that needs
+ * the most room, and every page is set in it.
+ */
+function bookBodySize(texts, font) {
+  const fits = (size, floor) => texts.every((t) => room(textHeightAt(t, font, size)) >= PAGE_PT * floor);
+  for (let size = BODY_MAX; size >= BODY_MIN; size -= 0.5) if (fits(size, ART_MIN)) return size;
+  // The longest pages of the oldest band do not fit at 11.5 pt beside a
+  // picture that size. Ten point is still comfortable at that age; a picture
+  // below the floor is not a picture any more, so the type gives first.
+  for (let size = BODY_MIN - 0.5; size >= BODY_FLOOR; size -= 0.5) if (fits(size, ART_FLOOR)) return size;
+  return BODY_FLOOR;
+}
+
+/*
+ * The plate shrinks in BOTH directions, and that is the whole point.
+ *
+ * Three things cannot all be true at once, because the illustrations come out
+ * of the model square:
+ *
+ *   full measure  ·  shallow crop  ·  room for readable type
+ *
+ * Full measure at a safe 1.32:1 needs 68 % of the page height, which is the
+ * book that was delivered: 11 pt type packed underneath like a caption. Full
+ * measure at half the height means a 1.73:1 letterbox, and a letterbox on
+ * these watercolours is what cut the parents' heads off on an earlier
+ * delivered book. A square plate keeps every pixel but is 22 % of the page,
+ * and then the picture stops being the point of the page.
+ *
+ * So the plate keeps its aspect ratio and gets smaller: it is as wide as
+ * ART_ASPECT allows for the height the text leaves it, centred, never wider
+ * than the measure. The crop stays exactly as shallow as it is today.
+ *
+ * The way to stop paying for this at all is not a layout change: it is to stop
+ * generating square art for a hole that is not square — the image model takes
+ * an aspect ratio, and lib/images.js already passes one.
+ */
+function sceneLayout(text, font, size) {
+  const measure = PAGE_PT - 2 * SAFE_PT;
+  const body = size || bookBodySize([text], font);
+  const free = room(textHeightAt(text, font, body));
+  const height = Math.max(PAGE_PT * ART_FLOOR, Math.min(free, PAGE_PT * ART_MAX));
+  const width = Math.min(measure, height * ART_ASPECT);
+  const top = SAFE_PT + height + GAP_PT;
+  return {
+    // Centred, because the plate is narrower than the measure of the text.
+    art: { x: SAFE_PT + (measure - width) / 2, y: PAGE_PT - SAFE_PT - height, width, height },
+    size: body,
+    lead: body * LEAD,
+    textTop: PAGE_PT - top,
+    textHeight: PAGE_PT - (SAFE_PT + FOOT_PT) - top,
+  };
 }
 
 function drawCover(page, image, box) {
@@ -312,7 +370,6 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   // The illustration sits inside a margin, like a plate on a page, instead of
   // bleeding to the top edge: bled, the page read as if the art had slipped
   // upwards and the whole spread felt off balance.
-  const artBox = { x: ART_BOX.x, y: PAGE_PT - ART_BOX.top - ART_BOX.height, width: ART_BOX.width, height: ART_BOX.height };
 
   // --- 1. title page ---------------------------------------------------------
   {
@@ -357,11 +414,13 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   }
 
   // --- 3-14. scenes ----------------------------------------------------------
+  const scenes = story.pages.map((p) => substitute(p.text, personalization));
+  const body = bookBodySize(scenes, regular);
   for (let i = 0; i < C.PAGE_COUNT; i++) {
     const page = newPage(doc);
     const buffer = illustrationBuffer(images[i]);
-    const text = substitute(story.pages[i].text, personalization);
-    const L = sceneLayout(text, regular);
+    const text = scenes[i];
+    const L = sceneLayout(text, regular, body);
     if (buffer) {
       drawCover(page, await embedImage(doc, await cropToBox(buffer, L.art)), L.art);
       // A hairline keeps the plate from floating loose on the paper.
@@ -369,7 +428,7 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
     } else {
       page.drawRectangle({ ...L.art, color: TINT });
     }
-    drawParagraph(page, { text, font: regular, size: L.size, lineHeight: L.size * 1.55, x: margin, top: L.textTop, maxWidth: textWidth });
+    drawParagraph(page, { text, font: regular, size: L.size, lineHeight: L.lead, x: margin, top: L.textTop, maxWidth: textWidth });
     page.drawText(String(i + 1), { x: PAGE_PT / 2 - 3, y: margin - 4, size: 8, font: regular, color: MUTED });
     if (mode === "preview") stampWatermark(page, bold);
   }
@@ -437,4 +496,4 @@ async function renderPdf({ story, images, coloring, personalization, sheet, mode
   return Buffer.from(await doc.save());
 }
 
-module.exports = { renderPdf, substitute, wrap, fitSize, words, MM, PAGE_PT, SAFE_PT, ART_RATIO, ART_BOX, MODES };
+module.exports = { renderPdf, substitute, wrap, fitSize, sceneLayout, bookBodySize, words, MM, PAGE_PT, SAFE_PT, ART_MIN, ART_MAX, BODY_MIN, BODY_MAX, MODES };

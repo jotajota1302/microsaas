@@ -17,6 +17,18 @@ const PERSON = {
 const base = (over = {}) => ({ story, images: IMAGES, coloring: COLORING, personalization: PERSON, sheet: PIXEL, ...over });
 const load = (buffer) => PDFDocument.load(buffer);
 
+/* The book's own face: every width in the layout is measured with it. */
+async function measuringFont() {
+  const fontkit = require("@pdf-lib/fontkit");
+  const fs = require("fs");
+  const path = require("path");
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+  return doc.embedFont(fs.readFileSync(path.join(__dirname, "..", "assets", "fonts", "Andika-Regular.ttf")), {
+    subset: false, features: { liga: false, clig: false, rlig: false },
+  });
+}
+
 test("produces exactly 20 pages, and 20 is a multiple of four", async () => {
   const doc = await load(await renderPdf(base()));
   assert.strictEqual(doc.getPageCount(), C.BOOK_PAGE_COUNT);
@@ -147,10 +159,60 @@ test("the finished book stays well under Etsy's 20 MB limit", async () => {
 // The illustration bled to the top edge with no air above it, and the page
 // read as unbalanced. It sits inside a margin now, like a plate on a page.
 test("the illustration is inset from the page edges, not bled to the top", async () => {
-  const { ART_BOX } = require("../lib/pdf.js");
-  assert.ok(ART_BOX.top > 0, "there must be air above the illustration");
-  assert.ok(ART_BOX.x > 0, "and a margin at the sides");
-  assert.ok(ART_BOX.top + ART_BOX.height < PAGE_PT, "the art must not reach the bottom either");
+  const { sceneLayout } = require("../lib/pdf.js");
+  const font = await measuringFont();
+  const L = sceneLayout(story.pages[0].text, font);
+  assert.ok(L.art.y + L.art.height < PAGE_PT, "there must be air above the illustration");
+  assert.ok(L.art.x > 0, "and a margin at the sides");
+  assert.ok(L.art.y > 0, "the art must not reach the bottom either");
+});
+
+/*
+ * The complaint that started this, on a delivered book: "las fotos son
+ * demasiado grandes en comparación con el texto". They were. The layout search
+ * began at the biggest possible plate and shrank it only until the words fitted
+ * AT THE SMALLEST TYPE ALLOWED, so the picture took 68 % of the page height on
+ * average and all twelve pages came out at the 11 pt floor.
+ */
+test("the type is chosen before the picture, not after it", async () => {
+  const { sceneLayout, bookBodySize, BODY_MIN } = require("../lib/pdf.js");
+  const font = await measuringFont();
+  const texts = story.pages.map((p) => p.text);
+  const size = bookBodySize(texts, font);
+  assert.ok(size > BODY_MIN, `the book was set at ${size} pt, the floor is ${BODY_MIN}`);
+  for (const t of texts) {
+    const share = sceneLayout(t, font, size).art.height / PAGE_PT;
+    assert.ok(share <= 0.60, `the plate takes ${(100 * share).toFixed(0)} % of the page height`);
+    assert.ok(share >= 0.34, `the plate is down to ${(100 * share).toFixed(0)} %: that is not a picture book`);
+  }
+});
+
+test("one body size for the whole book, whatever each page is worth", async () => {
+  // A four-line page at 17 pt facing a nine-line page at 13 pt reads as two
+  // different books. The plate is what varies from page to page, not the type.
+  const { sceneLayout, bookBodySize } = require("../lib/pdf.js");
+  const font = await measuringFont();
+  const mixed = ["Corrió.", story.pages[0].text, story.pages[0].text + " " + story.pages[1].text];
+  const size = bookBodySize(mixed, font);
+  const sizes = mixed.map((t) => sceneLayout(t, font, size).size);
+  assert.deepStrictEqual(sizes, [size, size, size]);
+  // And the longest page still fits: the size is set by whoever needs most room.
+  const heights = mixed.map((t) => sceneLayout(t, font, size));
+  for (const L of heights) assert.ok(L.textHeight > 0, "every page must have somewhere to put its words");
+});
+
+test("no page lets its text run past the bottom of the page", async () => {
+  const { sceneLayout, bookBodySize, wrap, SAFE_PT } = require("../lib/pdf.js");
+  const font = await measuringFont();
+  // Longer than anything the validator allows, which is exactly the case that
+  // used to overflow silently.
+  const texts = [story.pages[0].text, "melodía ".repeat(150).trim()];
+  const size = bookBodySize(texts, font);
+  for (const t of texts) {
+    const L = sceneLayout(t, font, size);
+    const used = wrap(t, font, L.size, PAGE_PT - 2 * SAFE_PT).length * L.lead;
+    assert.ok(used <= L.textHeight + 1, `the text needs ${used.toFixed(0)} pt and has ${L.textHeight.toFixed(0)}`);
+  }
 });
 
 test("the book can be quoted: every letter comes back out as itself", async () => {

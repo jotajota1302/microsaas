@@ -41,6 +41,24 @@ Las dos páginas recogen correo para la futura edición impresa (`waitlist`, `re
 ### Producto
 
 - **Formato**: **20 páginas** cuadradas 20×20 cm — portadilla + dedicatoria («Este cuento es de X», página propia) + 12 escenas de una página (ilustración arriba, texto de 60-90 palabras abajo) + 4 colorear con escenas del propio cuento + ficha de personajes + colofón con aviso de IA. **20 y no 18 porque es múltiplo de cuatro** (22-08): un libro encuadernado se hace con pliegos de cuatro páginas y las imprentas lo exigen — Blurb lo dice explícitamente. Las dos páginas que cierran el hueco no son relleno: la dedicatoria sale de debajo del título, y la ficha deja de compartir hoja con el colofón. `C.BOOK_PAGE_COUNT` es la única fuente y un test exige `% 4 === 0`. Imágenes a 1K: basta para pantalla e impresión en casa. Sin sangrado ni lomo. **Los textos propios del libro** (dedicatoria, «Así es X», colofón) van por `words(locale)` en `lib/pdf.js`: eran literales en español, así que el libro en inglés se entregaba con el colofón en español.
+- **Reparto imagen/texto de la página de escena (27-08)**: **el cuerpo de letra se decide antes que
+  la lámina, y es uno solo para todo el libro**. Se entregó un libro con la ilustración ocupando el
+  **68 % del alto** y las doce páginas al suelo de **11 pt**, porque la búsqueda arrancaba en la
+  lámina más grande posible y solo la encogía hasta que el texto cupiera *con la letra más pequeña
+  permitida*: el texto nunca era un pretendiente, era el resto. Ahora `bookBodySize()` elige el
+  cuerpo mayor (17 → 10 pt) con el que **todas** las páginas conservan lámina, y `sceneLayout()` le
+  da a cada página la lámina que le sobre (44-58 % del alto). Mismo libro: **14 pt y lámina al 52 %**.
+  Un cuerpo por libro y no por página, porque una página de cuatro líneas a 17 pt junto a otra de
+  nueve a 13 pt parecen dos libros distintos; lo que varía de página a página en un álbum es cuánto
+  ocupa el dibujo, no el tamaño de la letra.
+  **La lámina encoge de ancho también.** Tres cosas no pueden ser ciertas a la vez con ilustraciones
+  cuadradas: medida completa, recorte suave y sitio para leer. A medida completa y 1,32:1 hacen falta
+  el 68 % del alto (el libro entregado); a medida completa y media altura sale un **1,73:1**, y un
+  letterbox sobre estas acuarelas es lo que cortó cabezas en un libro anterior; una lámina cuadrada
+  no recorta nada pero es el **22 % de la página** y el dibujo deja de ser el asunto. Así que la
+  lámina mantiene su proporción (`ART_ASPECT` 1,32) y se hace más pequeña, centrada. **Lo que quita
+  este peaje del todo no es maquetación: es dejar de generar arte cuadrado para un hueco que no lo
+  es** — `lib/images.js` ya pasa un `aspect_ratio` al modelo.
 - **Estilo visual**: colección «Acuarela» — acuarela infantil suave, línea de tinta ligera, paleta cálida limitada, papel visible, sin texto en la imagen. Sufijo de prompt inmutable (`STYLE` en `lib/collection.js`). Cambiarlo = colección nueva.
 - **Listas del formulario (revisadas 2026-08-21)**: los *sitios* son sitios (fuera «fútbol», que era una afición colada entre lugares; dentro «El desierto»), ordenados del mundo del niño hacia afuera; las *aficiones* son cosas que un niño hace, porque la afición es lo que resuelve el conflicto en la página 12 (fuera «las plantas» y «las estrellas», dentro cantar, baloncesto, patinar, manualidades); las *relaciones* incluyen tío y tía. Todo sale de `lib/collection.js` → `scripts/build-options.js` → `assets/js/options.js`: **el formulario no se edita a mano**.
 - **Edad del lector = longitud de la página**: cuatro bandas (`2-3`, `4-5`, `6-8`, `9-12`), cada una con `words` (lo que exige el validador), `target` (lo que se le pide al modelo, más estrecho para que un fallo pequeño no tire el cuento entero), `reading_hint` (registro) y `visual` (la edad que se dibuja). `C.ageBand(id)` nunca devuelve `undefined`: una banda desconocida cae a `6-8` y la antigua `3-5` se mapea a `4-5`, para que un pedido viejo se pueda revisar. El validador recibe el rango en `options.words`.
